@@ -39,22 +39,27 @@ const map = new Map();
 map.loadLevel(levelData);
 
 const player = new Player(map.playerSpawn.x, map.playerSpawn.y, input);
-
+//Зум карты
 const zoom = 1.5;
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     player.update(map, canvas, zoom);
 
+    //Сохраняем текущий canvas
     ctx.save();
+    //Перемещаемся в центр canvas
     ctx.translate(canvas.width / 2, canvas.height / 2);
+    //Увеличаем массштаб
     ctx.scale(zoom, zoom);
+    //Смещаемся на координаты игрока, дабы он стал центром (учитываем ширину и высоту)
     ctx.translate(-player.x - player.w / 2, -player.y - player.h / 2);
 
     map.draw(ctx, assets);
 
     player.draw(ctx, assets.soldier);
 
+    //Восстанавливаем остальной canvas
     ctx.restore();
 
     requestAnimationFrame(gameLoop);

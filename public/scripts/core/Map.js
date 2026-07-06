@@ -15,7 +15,7 @@ export class Map {
         this.boxes = [];
 
         const lines = levelString.trim().split('\n');
-
+        //Рассчитываем высоту и ширину умножая на размер клетки
         this.height = lines.length * this.cellSize;
 
         this.width = lines[0].trim().length * this.cellSize;
@@ -29,12 +29,15 @@ export class Map {
                 const y = row * this.cellSize;
 
                 switch (char) {
+                    //Стена
                     case "#":
                         this.walls.push({x, y, w: this.cellSize, h: this.cellSize});
                         break;
+                    //Коробка
                     case "B":
                         this.boxes.push({x, y, w: this.cellSize, h: this.cellSize});
                         break;
+                    //Спавн игрока
                     case "P":
                         this.playerSpawn = {
                             x: x + (this.cellSize - this.playerSize) / 2,
@@ -47,16 +50,17 @@ export class Map {
     }
 
     draw(ctx, assets) {
+        //Рисуем пол
         for (let x = 0; x < this.width; x += this.cellSize) {
             for (let y = 0; y < this.height; y += this.cellSize) {
                 ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
             }
         }
-
+        //Рисуем стены
         for (let wall of this.walls) {
             ctx.drawImage(assets.wall, wall.x, wall.y, wall.w, wall.h);
         }
-
+        //Рисуем коробки
         for (let box of this.boxes) {
             ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }

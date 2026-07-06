@@ -8,6 +8,7 @@ export class Input {
         window.addEventListener('keyup', (e) => this.keys[e.code] = false);
 
         canvas.addEventListener('mousemove', (e) => {
+            //Находим реальные координаты мышки на canvas, вычитая отступы canvas от обшей координаты
             const rect = canvas.getBoundingClientRect();
             this.mouseX = e.clientX - rect.left;
             this.mouseY = e.clientY - rect.top;
