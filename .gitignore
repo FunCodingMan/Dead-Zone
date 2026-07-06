@@ -1,0 +1,28 @@
+# Секретные файлы (пароли от БД Артёма)
+server/config.php
+.env
+
+# === Зависимости и библиотеки ===
+# Сюда Composer накачает библиотеки для веб-сокетов
+server/vendor/
+
+# Системный мусор Windows и macOS
+Thumbs.db
+Desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Настройки вашего редактора кода (VS Code / WebStorm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.iws
+*.iml
+
+# Логи сервера и временные файлы (если будут)
+*.log
+*.tmp
