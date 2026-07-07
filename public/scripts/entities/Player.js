@@ -1,12 +1,24 @@
+const SHOOT_DELAY_ZERO = 0;
+const SHOOT_DELAY = 5;
+const PLAYER_WIDTH = 48;
+const PLAYER_HEIGHT = 48;
+const SPEED = 4;
+const BULLET_SPEED = 10;
+const BULLET_SIZE = 30;
+const SPREAD_FACTOR = 10;
+
 export class Player {
     constructor(x, y, input) {
         this.x = x;
         this.y = y;
-        this.w = 48;
-        this.h = 48;
-        this.speed = 4;
+        this.w = PLAYER_WIDTH;
+        this.h = PLAYER_HEIGHT;
+        this.speed = SPEED;
         this.input = input;
         this.angle = 0;
+        this.bullets = [];
+        this.shootDelay = SHOOT_DELAY;
+        this.shotsFired = 0;
     }
 
     update(map, canvas, zoom) {
@@ -23,6 +35,16 @@ export class Player {
         let nextX = this.x;
         let nextY = this.y;
 
+        if (this.input.isMouseDown) {
+            if (this.shootDelay == SHOOT_DELAY_ZERO) {
+                this.createBullet(worldMouseX, worldMouseY, zoom);
+                this.shootDelay = SHOOT_DELAY;
+            } else {
+                this.shootDelay--;
+            }            
+        } else {
+            this.shootDelay = SHOOT_DELAY_ZERO;
+        }
 
         if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
             //X - COS, Y - SIN
@@ -58,9 +80,64 @@ export class Player {
         if (!map.checkCollision({x: this.x, y: nextY, w: this.w, h: this.h})) {
             this.y = nextY;
         }
+
+        this.handleBullets(map);
     }
 
-    draw(ctx, soldierImg) {
+    createBullet(targetX, targetY, zoom) {
+        const centerX = this.x + this.w / 2;
+        const centerY = this.y + this.h / 2;
+
+        const dx = targetX - centerX;
+        const dy = targetY - centerY;
+        const length = Math.sqrt(dx * dx + dy * dy);
+
+        let directionX = dx / length;
+        let directionY = dy / length;
+
+        this.shotsFired++;
+
+        if (this.shotsFired > 1) {
+            directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
+            directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
+        }
+        
+        this.bullets.push({
+            x: centerX,
+            y: centerY,
+            xDirection: directionX,
+            yDirection: directionY,
+            bulletSpeed: BULLET_SPEED
+        });
+    }
+
+    handleBullets(map) {
+        const toRemove = [];
+
+        this.bullets.forEach((bullet, index) => {
+            bullet.x += bullet.xDirection * bullet.bulletSpeed;
+            bullet.y += bullet.yDirection * bullet.bulletSpeed;
+
+            if (map.checkCollision({x: bullet.x - BULLET_SIZE / 2, y: bullet.y - BULLET_SIZE / 2, 
+                w: BULLET_SIZE, h: BULLET_SIZE})
+            ) {
+                toRemove.push(index);
+            }
+        });  
+
+        for (let i = toRemove.length - 1; i >= 0; i--) {
+            this.bullets.splice(toRemove[i], 1);
+            this.shotsFired--;
+        }
+    }
+
+    raycast() {
+
+    }
+
+    draw(ctx, soldierImg, bulletImg) {
+        this.drawBullets(ctx, bulletImg);
+
         //Сохраняем текущий canvas
         ctx.save();
         //Смещаем начальную точку координат на цетр игрока
@@ -69,7 +146,26 @@ export class Player {
         ctx.rotate(this.angle + Math.PI / 2);
         //Отрисовываем игрока, при этом смещая его на половинку. так как до этого перемещали начальную точку координат
         ctx.drawImage(soldierImg, -this.w / 2, -this.h / 2, this.w, this.h);
-        //Восстанавливаем остальной canvas
+
         ctx.restore();
+    }
+
+    drawBullets(ctx, bulletImg) {
+        this.bullets.forEach(bullet => {
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            
+            // Поворачиваем в направлении движения
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection);
+            ctx.rotate(angle);
+            
+            ctx.drawImage(
+                bulletImg,
+                -BULLET_SIZE/2, -BULLET_SIZE/2, 
+                BULLET_SIZE, BULLET_SIZE      
+            );
+
+            ctx.restore();
+        });
     }
 }

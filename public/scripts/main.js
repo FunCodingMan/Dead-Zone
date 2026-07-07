@@ -9,13 +9,15 @@ const assets = {
     wall: new Image(),
     box: new Image(),
     floor: new Image(),
-    soldier: new Image()
+    soldier: new Image(),
+    bullet: new Image()
 };
 
 assets.wall.src = './assets/wall.png';
 assets.box.src = './assets/box.png';
 assets.floor.src = './assets/floor.png';
 assets.soldier.src = './assets/soldier.png';
+assets.bullet.src = './assets/bullet.png';
 
 const levelData = `
 ################
@@ -57,7 +59,7 @@ function gameLoop() {
 
     map.draw(ctx, assets);
 
-    player.draw(ctx, assets.soldier);
+    player.draw(ctx, assets.soldier, assets.bullet);
 
     //Восстанавливаем остальной canvas
     ctx.restore();
