@@ -1,11 +1,10 @@
-const SHOOT_DELAY_ZERO = 0;
-const SHOOT_DELAY = 5;
 const PLAYER_WIDTH = 48;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 const BULLET_SPEED = 10;
 const BULLET_SIZE = 30;
 const SPREAD_FACTOR = 10;
+const SHOOT_COOLDOWN_MS = 150;
 
 export class Player {
     constructor(x, y, input) {
@@ -17,8 +16,8 @@ export class Player {
         this.input = input;
         this.angle = 0;
         this.bullets = [];
-        this.shootDelay = SHOOT_DELAY;
         this.shotsFired = 0;
+        this.lastShootTime = performance.now();
     }
 
     update(map, canvas, zoom) {
@@ -36,14 +35,14 @@ export class Player {
         let nextY = this.y;
 
         if (this.input.isMouseDown) {
-            if (this.shootDelay == SHOOT_DELAY_ZERO) {
-                this.createBullet(worldMouseX, worldMouseY, zoom);
-                this.shootDelay = SHOOT_DELAY;
-            } else {
-                this.shootDelay--;
-            }            
-        } else {
-            this.shootDelay = SHOOT_DELAY_ZERO;
+            //Используем perfomance, т.к. он не зависит от системного времени
+            //Отсчёт времени с отрытия вкладки
+            const now = performance.now();
+
+            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS) {
+                this.createBullet(worldMouseX, worldMouseY);
+                this.lastShootTime = now;
+            }
         }
 
         if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
@@ -84,7 +83,7 @@ export class Player {
         this.handleBullets(map);
     }
 
-    createBullet(targetX, targetY, zoom) {
+    createBullet(targetX, targetY) {
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
