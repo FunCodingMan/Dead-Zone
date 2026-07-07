@@ -16,9 +16,6 @@ export class Input {
         });
 
         canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            this.clickX = e.clientX - rect.left;
-            this.clickY = e.clientY - rect.top;
             this.isMouseDown = true;
         });
 
