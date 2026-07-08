@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Model;
+
+class User
+{
+    private Stats $stats;
+    private ?int $user_id;
+    private string $nickname;
+    private string $username;
+    private string $password;
+
+    public function __construct(string $nickname, string $username, string $password, ?int $user_id = null, ?Stats $stats = null)
+    {
+        $this->nickname = $nickname;
+        $this->username = $username;
+        $this->password = $password;
+        $this->user_id = $user_id;
+        $this->stats = $stats ?? new Stats();
+    }
+
+    public function getStats(): Stats
+    {
+        return $this->stats;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->user_id;
+    }
+
+    public function getUsername(): string
+    {
+        return $this->username;
+    }
+
+    public function getNickname(): string
+    {
+        return $this->nickname;
+    }
+
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+}
