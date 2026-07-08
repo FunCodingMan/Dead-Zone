@@ -14,29 +14,39 @@ class UserTable
         $this->connection = $provider->connectDatabase();
     }
 
-    public function saveUserToDatabase(User $user): array
+    public function saveUserToDatabase(User $user): string
     {
         $userId = bin2hex(random_bytes(32));
         $token = bin2hex(random_bytes(32));
 
         $queryUser = "INSERT INTO `user` (`user_id`, `nickname`, `username`, `password`, `token`) VALUES (:user_id, :nickname, :username, :password, :token);";
         $stmt = $this->connection->prepare($queryUser);
-        $stmt->execute([
-            'user_id' => $userId,
-            'nickname' => $user->getNickname(),
-            'username' => $user->getUsername(),
-            'password' => password_hash($user->getPassword(), PASSWORD_DEFAULT),
-            'token' => $token,
-        ]);
+        $this->connection->beginTransaction();
+        try {
+            $stmt->execute([
+                'user_id' => $userId,
+                'nickname' => $user->getNickname(),
+                'username' => $user->getUsername(),
+                'password' => password_hash($user->getPassword(), PASSWORD_DEFAULT),
+                'token' => $token,
+            ]);
 
-        $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`) VALUES (:user_id, :wins, :loses);";
-        $stmt = $this->connection->prepare($queryStats);
-        $stmt->execute([
-            'user_id' => $userId,
-            'wins' => $user->getStats()->getWins(),
-            'loses' => $user->getStats()->getLoses(),
-        ]);
-        return ['user_id' => $userId, 'token' => $token];
+            $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`) VALUES (:user_id, :wins, :loses);";
+            $stmt = $this->connection->prepare($queryStats);
+            $stmt->execute([
+                'user_id' => $userId,
+                'wins' => $user->getStats()->getWins(),
+                'loses' => $user->getStats()->getLoses(),
+            ]);
+            $this->connection->commit();
+        }catch (\PDOException $error) {
+            $this->connection->rollBack();
+            if ($error->getCode() === '23000') {
+                throw new RuntimeException('Логин занят');
+            }
+            throw $error;
+        }
+        return $token;
     }
 
     public function getUserByToken(string $token): ?User

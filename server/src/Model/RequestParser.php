@@ -8,6 +8,7 @@ class RequestParser
 {
     private const USER_LOGIN_URL = "/api/users/login";
     private const USER_SAVE_URL = "/api/users/save";
+    private const USER_LOGOUT_URL = "/api/users/logout";
 
     public function getDataFromLogin(): array
     {
@@ -51,6 +52,8 @@ class RequestParser
             return 'save';
         } else if ($method === "POST" && $url === self::USER_LOGIN_URL) {
             return 'login';
+        } else if ($method === "POST" && $url === self::USER_LOGOUT_URL) {
+            return 'logout';
         } else if ($method === "GET" && isset($_COOKIE["token"])) {
             return 'show';
         } else {
