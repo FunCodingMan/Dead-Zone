@@ -23,7 +23,7 @@ const imagePaths = {
     box: './assets/box.png',
     floor: './assets/floor.png',
     soldier: './assets/soldier.png',
-    bullet: './assets/bullet.png',
+    bullet: './assets/bullet_new.png',
     blood: './assets/blood.png'
 };
 
@@ -68,7 +68,7 @@ const levelData = `
 ################
 `;
 
-let player, player2, map, input, zoom;
+let player, map, input, zoom;
 let enemies = [];
 
 function startGame() {

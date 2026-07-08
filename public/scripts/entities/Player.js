@@ -6,10 +6,13 @@ const SPEED = 4;
 
 //константы стрельбы
 const BULLET_SPEED = 20;
-const BULLET_SIZE = 30;
+const BULLET_WIDTH = 5;
+const BULLET_HEIGHT = 10;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 10;
+const DIFF_GUN_FORWARD = 1;
+const DIFF_GUN_SIDE = 5;
 
 export class Player extends Character{
     constructor(map, input) {
@@ -91,13 +94,18 @@ export class Player extends Character{
     }
 
     createBullet(targetX, targetY) {
-        //создаём единичный вектор между начальной и конечной точкой (x^2 + y^2 = 1)
-
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        const dx = targetX - centerX;
-        const dy = targetY - centerY;
+        let spawnX = centerX + Math.cos(this.angle) * DIFF_GUN_FORWARD;
+        let spawnY = centerY + Math.sin(this.angle) * DIFF_GUN_FORWARD;
+
+        // Шаг вбок (в правую руку, поэтому прибавляем 90 градусов = Math.PI / 2)
+        spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+
+        const dx = targetX - spawnX;
+        const dy = targetY - spawnY;
         const length = Math.sqrt(dx * dx + dy * dy);
 
         let directionX = dx / length;
@@ -105,16 +113,14 @@ export class Player extends Character{
 
         this.shotsFired++;
 
-        //первые 2 пули летят без разброса, остальные с ним
         if (this.shotsFired > 1) {
             directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
             directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
         }
-        
-        //параметры: текущие координаты, направление по единичному вектору, множитель скорости
+
         this.bullets.push({
-            x: centerX,
-            y: centerY,
+            x: spawnX,
+            y: spawnY,
             xDirection: directionX,
             yDirection: directionY,
             bulletSpeed: BULLET_SPEED
@@ -131,10 +137,10 @@ export class Player extends Character{
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
 
             const r1 = {
-                x: bullet.x - BULLET_SIZE / 2,
-                y: bullet.y - BULLET_SIZE / 2,
-                w: BULLET_SIZE,
-                h: BULLET_SIZE
+                x: bullet.x - BULLET_WIDTH / 2,
+                y: bullet.y - BULLET_HEIGHT / 2,
+                w: BULLET_WIDTH,
+                h: BULLET_HEIGHT
             };
 
             enemies.forEach((enemy) => {
@@ -164,13 +170,13 @@ export class Player extends Character{
             ctx.translate(bullet.x, bullet.y);
             
             // Поворачиваем в направлении движения
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection);
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
             
             ctx.drawImage(
                 bulletImg,
-                -BULLET_SIZE/2, -BULLET_SIZE/2, 
-                BULLET_SIZE, BULLET_SIZE      
+                -BULLET_WIDTH/2, -BULLET_HEIGHT/2,
+                BULLET_WIDTH, BULLET_HEIGHT
             );
 
             ctx.restore();
