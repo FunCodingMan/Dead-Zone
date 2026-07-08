@@ -1,30 +1,35 @@
+import { Character } from './Character.js';
+
 const PLAYER_WIDTH = 48;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
 //константы стрельбы
-const BULLET_SPEED = 10;
-const BULLET_SIZE = 30;
+const BULLET_SPEED = 20;
+const BULLET_WIDTH = 5;
+const BULLET_HEIGHT = 10;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
+const DAMAGE = 10;
+const DIFF_GUN_FORWARD = 1;
+const DIFF_GUN_SIDE = 5;
 
-export class Player {
-    constructor(x, y, input) {
-        this.x = x;
-        this.y = y;
-        this.w = PLAYER_WIDTH;
-        this.h = PLAYER_HEIGHT;
+export class Player extends Character{
+    constructor(map, input) {
+        super(map.findFreeSpawn(), PLAYER_WIDTH, PLAYER_HEIGHT);
+
         this.speed = SPEED;
         this.input = input;
-        this.angle = 0;
 
         //параметры стрельбы
         this.bullets = [];
         this.shotsFired = 0;
         this.lastShootTime = performance.now();
+        this.damage = DAMAGE;
     }
 
-    update(map, canvas, zoom) {
+    update(map, canvas, zoom, enemies) {
+        if (!this.isAlive) return;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -85,17 +90,22 @@ export class Player {
             this.y = nextY;
         }
 
-        this.handleBullets(map);
+        this.handleBullets(map, enemies);
     }
 
     createBullet(targetX, targetY) {
-        //создаём единичный вектор между начальной и конечной точкой (x^2 + y^2 = 1)
-
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        const dx = targetX - centerX;
-        const dy = targetY - centerY;
+        let spawnX = centerX + Math.cos(this.angle) * DIFF_GUN_FORWARD;
+        let spawnY = centerY + Math.sin(this.angle) * DIFF_GUN_FORWARD;
+
+        // Шаг вбок (в правую руку, поэтому прибавляем 90 градусов = Math.PI / 2)
+        spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+
+        const dx = targetX - spawnX;
+        const dy = targetY - spawnY;
         const length = Math.sqrt(dx * dx + dy * dy);
 
         let directionX = dx / length;
@@ -103,23 +113,21 @@ export class Player {
 
         this.shotsFired++;
 
-        //первые 2 пули летят без разброса, остальные с ним
         if (this.shotsFired > 1) {
             directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
             directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
         }
-        
-        //параметры: текущие координаты, направление по единичному вектору, множитель скорости
+
         this.bullets.push({
-            x: centerX,
-            y: centerY,
+            x: spawnX,
+            y: spawnY,
             xDirection: directionX,
             yDirection: directionY,
             bulletSpeed: BULLET_SPEED
         });
     }
 
-    handleBullets(map) {
+    handleBullets(map, enemies) {
         //двигаем пули
         //если попали в объект, удаляем их из массива
         const toRemove = [];
@@ -128,32 +136,31 @@ export class Player {
             bullet.x += bullet.xDirection * bullet.bulletSpeed;
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
 
-            if (map.checkCollision({x: bullet.x - BULLET_SIZE / 2, y: bullet.y - BULLET_SIZE / 2, 
-                w: BULLET_SIZE, h: BULLET_SIZE})
-            ) {
+            const r1 = {
+                x: bullet.x - BULLET_WIDTH / 2,
+                y: bullet.y - BULLET_HEIGHT / 2,
+                w: BULLET_WIDTH,
+                h: BULLET_HEIGHT
+            };
+
+            enemies.forEach((enemy) => {
+                if (enemy.isAlive) {
+                    const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                    if (map.isIntersecting(r1, r2)) {
+                        enemy.takeDamage(this.damage, map);
+                        toRemove.push(index);
+                    }
+                }
+            });
+
+            if (map.checkCollision(r1)) {
                 toRemove.push(index);
             }
         });  
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
-            this.shotsFired--;
         }
-    }
-
-    draw(ctx, soldierImg, bulletImg) {
-        this.drawBullets(ctx, bulletImg);
-
-        //Сохраняем текущий canvas
-        ctx.save();
-        //Смещаем начальную точку координат на цетр игрока
-        ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-        //Поворачиваем игрока на угол между мышкой и игроком
-        ctx.rotate(this.angle + Math.PI / 2);
-        //Отрисовываем игрока, при этом смещая его на половинку. так как до этого перемещали начальную точку координат
-        ctx.drawImage(soldierImg, -this.w / 2, -this.h / 2, this.w, this.h);
-
-        ctx.restore();
     }
 
     //отрисовываем пули из массива
@@ -163,13 +170,13 @@ export class Player {
             ctx.translate(bullet.x, bullet.y);
             
             // Поворачиваем в направлении движения
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection);
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
             
             ctx.drawImage(
                 bulletImg,
-                -BULLET_SIZE/2, -BULLET_SIZE/2, 
-                BULLET_SIZE, BULLET_SIZE      
+                -BULLET_WIDTH/2, -BULLET_HEIGHT/2,
+                BULLET_WIDTH, BULLET_HEIGHT
             );
 
             ctx.restore();

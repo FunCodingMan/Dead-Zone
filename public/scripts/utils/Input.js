@@ -1,34 +1,62 @@
 export class Input {
-    constructor(canvas) {
+    constructor(canvas, callbacks = {}) {
+        this.canvas = canvas;
         this.keys = {};
         this.mouseX = 0;
         this.mouseY = 0;
         this.isMouseDown = false;
 
-        window.addEventListener('keydown', (e) => this.keys[e.code] = true);
-        window.addEventListener('keyup', (e) => this.keys[e.code] = false);
 
-        canvas.addEventListener('mousemove', (e) => {
-            //Находим реальные координаты мышки на canvas, вычитая отступы canvas от обшей координаты
-            const rect = canvas.getBoundingClientRect();
-            this.mouseX = e.clientX - rect.left;
-            this.mouseY = e.clientY - rect.top;
-        });
+        this.onEscape = callbacks.onEscape || null;
 
-        canvas.addEventListener('mousedown', (e) => {
-            this.isMouseDown = true;
-        });
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.handleKeyUp = this.handleKeyUp.bind(this);
+        this.handleMouseMove = this.handleMouseMove.bind(this);
+        this.handleMouseDown = this.handleMouseDown.bind(this);
+        this.handleMouseUp = this.handleMouseUp.bind(this);
 
-        canvas.addEventListener('mouseup', (e) => {
-            this.isMouseDown = false;
-        })
+        window.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('keyup', this.handleKeyUp);
+        this.canvas.addEventListener('mousemove', this.handleMouseMove);
+        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        this.canvas.addEventListener('mouseup', this.handleMouseUp);
     }
 
-    isMouseDown() {
-        return this.isMouseDown;
+
+    handleKeyDown(e) {
+        this.keys[e.code] = true;
+        if (e.key === 'Escape' && this.onEscape) {
+            this.onEscape();
+        }
+    }
+
+    handleKeyUp(e) {
+        this.keys[e.code] = false;
+    }
+
+    handleMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        this.mouseX = e.clientX - rect.left;
+        this.mouseY = e.clientY - rect.top;
+    }
+
+    handleMouseDown() {
+        this.isMouseDown = true;
+    }
+
+    handleMouseUp() {
+        this.isMouseDown = false;
     }
 
     isPressed(code) {
         return this.keys[code] === true;
+    }
+
+    destroyListeners() {
+        window.removeEventListener('keydown', this.handleKeyDown);
+        window.removeEventListener('keyup', this.handleKeyUp);
+        this.canvas.removeEventListener('mousemove', this.handleMouseMove);
+        this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+        this.canvas.removeEventListener('mouseup', this.handleMouseUp);
     }
 }

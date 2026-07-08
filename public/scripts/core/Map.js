@@ -7,7 +7,25 @@ export class Map {
 
         this.walls = [];
         this.boxes = [];
-        this.playerSpawn = {x: 50, y: 50};
+        this.playerSpawns = [];
+
+        this.bloodSpots = []
+    }
+
+    findFreeSpawn() {
+        let freePlace = this.playerSpawns.find(place => place.isFree);
+
+        if (freePlace) {
+            freePlace.isFree = false;
+            return freePlace;
+        }
+
+        this.playerSpawns.forEach((place) => {
+            place.isFree = true;
+        });
+
+        this.playerSpawns[0].isFree = false;
+        return this.playerSpawns[0];
     }
 
     loadLevel(levelString) {
@@ -39,10 +57,11 @@ export class Map {
                         break;
                     //Спавн игрока
                     case "P":
-                        this.playerSpawn = {
+                        this.playerSpawns.push({
                             x: x + (this.cellSize - this.playerSize) / 2,
-                            y: y + (this.cellSize - this.playerSize) / 2
-                        }
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        });
                         break;
                 }
             }
@@ -64,6 +83,24 @@ export class Map {
         for (let box of this.boxes) {
             ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }
+    }
+
+    drawBlood(ctx, bloodImg) {
+        this.bloodSpots.forEach(spot => {
+            ctx.save();
+            ctx.translate(spot.x, spot.y);
+            
+            //Угол поворота случайный
+            ctx.rotate(spot.angle);
+            
+            ctx.drawImage(
+                bloodImg,
+                -spot.size/2, -spot.size/2, 
+                spot.size, spot.size      
+            );
+
+            ctx.restore();
+        });
     }
 
     checkCollision(rect) {
