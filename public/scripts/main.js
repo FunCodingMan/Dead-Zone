@@ -27,31 +27,27 @@ const imagePaths = {
     blood: './assets/blood.png'
 };
 
+function loadImage(img, src) {
+    return new Promise(resolve => {
+        img.onload = resolve;
+        img.src = src;
+    });
+}
+
+const promises = [];
+
 for (let key in imagePaths) {
-    assets[key].src = imagePaths[key];
+    promises.push(loadImage(assets[key], imagePaths[key]));
 }
 
 for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
     assets.explosions[i] = new Image();
-    assets.explosions[i].src = `./assets/burst${i + 1}.png`;
+    promises.push(loadImage(assets.explosions[i], `./assets/burst${i + 1}.png`));
 }
+Promise.all(promises).then(() => {
+    startGame();
+});
 
-let loaded = 0;
-const total = Object.keys(imagePaths).length + DEATH_FRAMES_AMOUNT;
-
-function checkLoad() {
-    loaded++;
-    if (loaded === total) {
-        startGame();
-    }
-}
-
-for (let key in imagePaths) {
-    assets[key].onload = checkLoad;
-}
-for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
-    assets.explosions[i].onload = checkLoad;
-}
 
 const levelData = `
 ################
