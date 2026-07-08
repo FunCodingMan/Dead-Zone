@@ -3,28 +3,32 @@ const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
 //константы стрельбы
-const BULLET_SPEED = 10;
+const BULLET_SPEED = 20;
 const BULLET_SIZE = 30;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
+const DAMAGE = 10;
 
 export class Player {
-    constructor(x, y, input) {
-        this.x = x;
-        this.y = y;
+    constructor(map, input) {
+        this.x = map.playerSpawn.x;
+        this.y = map.playerSpawn.y;
         this.w = PLAYER_WIDTH;
         this.h = PLAYER_HEIGHT;
         this.speed = SPEED;
         this.input = input;
         this.angle = 0;
 
+        this.isAlive = true;
+
         //параметры стрельбы
         this.bullets = [];
         this.shotsFired = 0;
         this.lastShootTime = performance.now();
+        this.damage = DAMAGE;
     }
 
-    update(map, canvas, zoom) {
+    update(map, canvas, zoom, otherPlayer) {
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -85,7 +89,7 @@ export class Player {
             this.y = nextY;
         }
 
-        this.handleBullets(map);
+        this.handleBullets(map, otherPlayer);
     }
 
     createBullet(targetX, targetY) {
@@ -119,7 +123,7 @@ export class Player {
         });
     }
 
-    handleBullets(map) {
+    handleBullets(map, otherPlayer) {
         //двигаем пули
         //если попали в объект, удаляем их из массива
         const toRemove = [];
@@ -127,6 +131,25 @@ export class Player {
         this.bullets.forEach((bullet, index) => {
             bullet.x += bullet.xDirection * bullet.bulletSpeed;
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
+
+            const r1 = {
+                x: bullet.x - BULLET_SIZE / 2,
+                y: bullet.y - BULLET_SIZE / 2,
+                w: BULLET_SIZE,
+                h: BULLET_SIZE
+            };
+
+            const r2 = {
+                x: otherPlayer.x - BULLET_SIZE / 2,
+                y: otherPlayer.y - BULLET_SIZE / 2,
+                w: otherPlayer.w,
+                h: otherPlayer.h
+            };
+
+            //если другой игрок коснулся пули, он получает урон
+            if (map.isIntersecting(r1, r2)) {
+                otherPlayer.takeDamage(this.damage);
+            }
 
             if (map.checkCollision({x: bullet.x - BULLET_SIZE / 2, y: bullet.y - BULLET_SIZE / 2, 
                 w: BULLET_SIZE, h: BULLET_SIZE})

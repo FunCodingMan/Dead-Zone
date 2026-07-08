@@ -8,6 +8,9 @@ export class Map {
         this.walls = [];
         this.boxes = [];
         this.playerSpawn = {x: 50, y: 50};
+        this.player2Spawn = {x: 400, y: 330};
+
+        this.bloodSpots = []
     }
 
     loadLevel(levelString) {
@@ -64,6 +67,24 @@ export class Map {
         for (let box of this.boxes) {
             ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }
+    }
+
+    drawBlood(ctx, bloodImg) {
+        this.bloodSpots.forEach(spot => {
+            ctx.save();
+            ctx.translate(spot.x, spot.y);
+            
+            //Угол поворота случайный
+            ctx.rotate(spot.angle);
+            
+            ctx.drawImage(
+                bloodImg,
+                -spot.size/2, -spot.size/2, 
+                spot.size, spot.size      
+            );
+
+            ctx.restore();
+        });
     }
 
     checkCollision(rect) {
