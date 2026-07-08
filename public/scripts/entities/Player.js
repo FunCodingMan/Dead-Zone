@@ -1,3 +1,5 @@
+import { Character } from './Character.js';
+
 const PLAYER_WIDTH = 48;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
@@ -9,17 +11,12 @@ const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 10;
 
-export class Player {
+export class Player extends Character{
     constructor(map, input) {
-        this.x = map.playerSpawn.x;
-        this.y = map.playerSpawn.y;
-        this.w = PLAYER_WIDTH;
-        this.h = PLAYER_HEIGHT;
+        super(map.findFreeSpawn(), PLAYER_WIDTH, PLAYER_HEIGHT);
+
         this.speed = SPEED;
         this.input = input;
-        this.angle = 0;
-
-        this.isAlive = true;
 
         //параметры стрельбы
         this.bullets = [];
@@ -28,7 +25,8 @@ export class Player {
         this.damage = DAMAGE;
     }
 
-    update(map, canvas, zoom, otherPlayer) {
+    update(map, canvas, zoom, enemies) {
+        if (!this.isAlive) return;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -89,7 +87,7 @@ export class Player {
             this.y = nextY;
         }
 
-        this.handleBullets(map, otherPlayer);
+        this.handleBullets(map, enemies);
     }
 
     createBullet(targetX, targetY) {
@@ -123,7 +121,7 @@ export class Player {
         });
     }
 
-    handleBullets(map, otherPlayer) {
+    handleBullets(map, enemies) {
         //двигаем пули
         //если попали в объект, удаляем их из массива
         const toRemove = [];
@@ -139,44 +137,24 @@ export class Player {
                 h: BULLET_SIZE
             };
 
-            const r2 = {
-                x: otherPlayer.x - BULLET_SIZE / 2,
-                y: otherPlayer.y - BULLET_SIZE / 2,
-                w: otherPlayer.w,
-                h: otherPlayer.h
-            };
+            enemies.forEach((enemy) => {
+                if (enemy.isAlive) {
+                    const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                    if (map.isIntersecting(r1, r2)) {
+                        enemy.takeDamage(this.damage, map);
+                        toRemove.push(index);
+                    }
+                }
+            });
 
-            //если другой игрок коснулся пули, он получает урон
-            if (map.isIntersecting(r1, r2)) {
-                otherPlayer.takeDamage(this.damage);
-            }
-
-            if (map.checkCollision({x: bullet.x - BULLET_SIZE / 2, y: bullet.y - BULLET_SIZE / 2, 
-                w: BULLET_SIZE, h: BULLET_SIZE})
-            ) {
+            if (map.checkCollision(r1)) {
                 toRemove.push(index);
             }
         });  
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
-            this.shotsFired--;
         }
-    }
-
-    draw(ctx, soldierImg, bulletImg) {
-        this.drawBullets(ctx, bulletImg);
-
-        //Сохраняем текущий canvas
-        ctx.save();
-        //Смещаем начальную точку координат на цетр игрока
-        ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-        //Поворачиваем игрока на угол между мышкой и игроком
-        ctx.rotate(this.angle + Math.PI / 2);
-        //Отрисовываем игрока, при этом смещая его на половинку. так как до этого перемещали начальную точку координат
-        ctx.drawImage(soldierImg, -this.w / 2, -this.h / 2, this.w, this.h);
-
-        ctx.restore();
     }
 
     //отрисовываем пули из массива
