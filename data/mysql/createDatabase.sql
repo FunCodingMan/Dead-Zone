@@ -3,7 +3,7 @@ USE game_server;
 
 CREATE TABLE user
 (
-    `user_id` INT NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(255) NOT NULL,
     `nickname` VARCHAR(255) NOT NULL,
     `username` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE user
 
 CREATE TABLE stats
 (
-    `user_id` INT NOT NULL,
+    `user_id` VARCHAR(255) NOT NULL,
     `wins` INT NOT NULL,
     `loses` INT NOT NULL,
     PRIMARY KEY(`user_id`),

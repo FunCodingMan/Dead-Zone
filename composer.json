@@ -5,5 +5,7 @@
             "App\\": "server/src/"
         }
     },
-    "require": {}
+    "require": {
+      "ext-pdo": "*"
+    }
 }

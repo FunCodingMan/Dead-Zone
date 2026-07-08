@@ -5,12 +5,12 @@ namespace App\Model;
 class User
 {
     private Stats $stats;
-    private ?int $user_id;
+    private ?string $user_id;
     private string $nickname;
     private string $username;
     private string $password;
 
-    public function __construct(string $nickname, string $username, string $password, ?int $user_id = null, ?Stats $stats = null)
+    public function __construct(string $nickname, string $username, string $password, ?string $user_id = null, ?Stats $stats = null)
     {
         $this->nickname = $nickname;
         $this->username = $username;
@@ -24,7 +24,7 @@ class User
         return $this->stats;
     }
 
-    public function getUserId(): ?int
+    public function getUserId(): ?string
     {
         return $this->user_id;
     }
