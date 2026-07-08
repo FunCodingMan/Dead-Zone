@@ -1,0 +1,29 @@
+# Секретные файлы (пароли от БД и настройки)
+.env
+
+# Локальный Composer и его зависимости
+/vendor/
+bin/composer
+composer.phar
+
+# Настройки вашего редактора кода (VS Code / WebStorm / PhpStorm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.iws
+*.iml
+config.ini
+
+# Системный мусор Windows и macOS
+Thumbs.db
+Desktop.ini
+.DS_Store
+$RECYCLE.BIN/
+
+# Логи сервера и временные файлы
+*.log
+*.tmp
