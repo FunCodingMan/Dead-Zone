@@ -7,8 +7,10 @@ CREATE TABLE user
     `nickname` VARCHAR(255) NOT NULL,
     `username` VARCHAR(255) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
+    `token` VARCHAR(255) NOT NULL,
     PRIMARY KEY(`user_id`),
-    UNIQUE KEY(`username`)
+    UNIQUE KEY(`username`),
+    UNIQUE KEY(`token`)
 );
 
 CREATE TABLE stats
