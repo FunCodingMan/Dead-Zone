@@ -2,6 +2,7 @@ import { Input } from './utils/Input.js';
 import { Map } from './core/Map.js';
 import { Player } from './entities/Player.js';
 import {Enemy} from './entities/Enemy.js';
+import { initMenu, togglePauseUI } from './ui/Menu.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -45,8 +46,32 @@ for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
     promises.push(loadImage(assets.explosions[i], `./assets/burst${i + 1}.png`));
 }
 Promise.all(promises).then(() => {
-    startGame();
+    initMenu({
+        onStart: startGame,
+        onResume: togglePause,
+        onRestart: () => {
+            togglePause();
+            startGame();
+        },
+        onExitToMenu: () => {
+            isPaused = false;
+
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+
+            if (input) {
+                input.destroyListeners();
+                input = null;
+            }
+        }
+    });
 });
+
+function togglePause() {
+    isPaused = !isPaused;
+    togglePauseUI(isPaused);
+}
 
 
 const levelData = `
@@ -64,11 +89,23 @@ const levelData = `
 ################
 `;
 
-let player, map, input, zoom;
+let player, map, input, zoom, animationId;
 let enemies = [];
+let isPaused = false;
 
 function startGame() {
-    input = new Input(canvas);
+
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+    }
+
+    if (input) {
+        input.destroyListeners();
+    }
+
+    input = new Input(canvas, {
+        onEscape: togglePause
+    });
     map = new Map();
     map.loadLevel(levelData);
     zoom = 1.5;
@@ -84,9 +121,12 @@ function startGame() {
 }
 
 function gameLoop() {
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    player.update(map, canvas, zoom, enemies);
+    if (!isPaused) {
+        player.update(map, canvas, zoom, enemies);
+    }
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -113,5 +153,5 @@ function gameLoop() {
 
     ctx.restore();
 
-    requestAnimationFrame(gameLoop);
+    animationId = requestAnimationFrame(gameLoop);
 }

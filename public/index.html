@@ -4,9 +4,65 @@
     <meta charset="UTF-8">
     <title>Мёртвая зона</title>
     <script type="module" src="scripts/main.js"></script>
+    <link href="styles/fonts-styles.css" rel="stylesheet">
     <link href="styles/index.css" rel="stylesheet">
 </head>
 <body>
-    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+    <div id="ui-layer" class="active">
+        <div id="screen-main-menu" class="ui-layer__main-menu menu-screen active">
+            <img width="946" height="517" class="main-menu__logo" src="assets/logo.png" alt="Логотип игры">
+            <div class="main-menu__buttons menu-buttons">
+                <button id="btn-play" class="main-menu__btn-play btn">ИГРАТЬ</button>
+                <button id="btn-profile" class="main-menu__btn-play btn">ПРОФИЛЬ</button>
+                <button id="btn-exit" class="main-menu__btn-play btn">ВЫЙТИ</button>
+            </div>
+
+        </div>
+
+        <div id="screen-mode" class="ui-layer__mode-menu menu-screen menu-choose">
+            <h2 class="mode-menu__title menu-title">ВЫБЕРИ РЕЖИМ ИГРЫ</h2>
+            <div class="mode-menu__buttons menu-buttons">
+                <button id="btn-singleplayer" class="mode-menu_btn-play btn">ОДИНОЧНАЯ ИГРА</button>
+                <button id="btn-multiplayer" class="mode-menu__btn-play btn disabled" title="В разработке...">МНОГОПОЛЬЗОВАТЕЛЬСКАЯ ИГРА</button>
+                <button class="mode-menu__btn-back btn-back btn" data-target="screen-main-menu">НАЗАД</button>
+            </div>
+
+        </div>
+
+        <div id="screen-singleplayer" class="ui-layer__singleplayer-menu menu-screen menu-choose">
+            <h2 class="singleplayer-menu__title menu-title">ВЫБЕРИ ИГРУ</h2>
+            <div class="singleplayer-menu__buttons menu-buttons">
+                <button id="btn-singleplayer-first-game" class="singleplayer-menu__btn-play btn">ТРЕНИРОВКА</button>
+                <button id="btn-singleplayer-second-game" class="singleplayer-menu___btn-play btn disabled" title="В разработке...">ВОЛНЫ</button>
+                <button id="btn-singleplayer-third-game" class="singleplayer-menu___btn-play btn disabled" title="В разработке...">ЗАКЛАДКА БОМБЫ</button>
+                <button class="mode-menu__btn-back btn-back btn" data-target="screen-mode">НАЗАД</button>
+            </div>
+        </div>
+
+        <div id="screen-multiplayer" class="ui-layer__multiplayer-menu menu-screen menu-choose">
+
+        </div>
+
+        <div id="screen-profile" class="ui-layer__profile-menu menu-screen">
+            <h2 class="profile-menu__title menu-title">ПРОФИЛЬ</h2>
+            <div class="profile-menu__stats">
+                <p class="stats__name stats-text">Имя: <span id="stats-name"></span></p>
+                <p class="stats__kills stats-text">Убийств: <span id="stats-kills"></span></p>
+                <p class="stats__wins stats-text">Победы: <span id="stats-wins"></span></p>
+                <p class="stats__defeats stats-text">Проигрыши: <span id="stats-defeats"></span></p>
+            </div>
+            <button class="mode-menu__btn-back btn-back btn" data-target="screen-main-menu">НАЗАД</button>
+        </div>
+
+        <div id="screen-pause" class="ui-layer__pause-menu menu-screen menu-choose">
+            <h2 class="pause-menu__title menu-title">ПАУЗА</h2>
+            <div class="pause-menu__buttons menu-buttons">
+                <button id="btn-continue" class="pause-menu__btn-contunue btn">ПРОДОЛЖИТЬ</button>
+                <button id="btn-new-game" class="pause-menu__btn-new-game btn">ПЕРЕЗАГРУЗКА</button>
+                <button class="pause-menu__btn-back btn" data-target="screen-singleplayer">ВЫЙТИ</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
