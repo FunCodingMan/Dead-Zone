@@ -48,7 +48,8 @@ class UserTable
         ]);
         $arrayUser = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($arrayUser) {
-            $stats = $this->getStatsByUserId($token);
+            $userId = $arrayUser["user_id"];
+            $stats = $this->getStatsByUserId($userId);
             return new User($arrayUser['nickname'], $arrayUser['username'], $arrayUser['password'], $arrayUser['user_id'], $arrayUser['token'], $stats);
         }
         return null;
