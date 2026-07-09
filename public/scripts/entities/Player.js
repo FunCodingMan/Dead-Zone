@@ -70,21 +70,28 @@ export class Player extends Character {
             this.isShooting = false;
         }
 
+        let dx = 0;
+        let dy = 0;
+
         if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
-            nextX += Math.cos(this.angle) * this.speed;
-            nextY += Math.sin(this.angle) * this.speed;
+            dy -= 1;
         }
         if (this.input.isPressed('KeyS') || this.input.isPressed('ArrowDown')) {
-            nextX -= Math.cos(this.angle) * this.speed;
-            nextY -= Math.sin(this.angle) * this.speed;
+            dy += 1;
         }
         if (this.input.isPressed('KeyA') || this.input.isPressed('ArrowLeft')) {
-            nextX += Math.cos(this.angle - Math.PI / 2) * this.speed;
-            nextY += Math.sin(this.angle - Math.PI / 2) * this.speed;
+            dx -= 1;
         }
         if (this.input.isPressed('KeyD') || this.input.isPressed('ArrowRight')) {
-            nextX += Math.cos(this.angle + Math.PI / 2) * this.speed;
-            nextY += Math.sin(this.angle + Math.PI / 2) * this.speed;
+            dx += 1;
+        }
+        if (dx !== 0 || dy !== 0) {
+            const length = Math.sqrt(dx * dx + dy * dy);
+            dx /= length;
+            dy /= length;
+
+            nextX += dx * this.speed;
+            nextY += dy * this.speed;
         }
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {

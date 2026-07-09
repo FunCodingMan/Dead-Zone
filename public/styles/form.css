@@ -1,0 +1,15 @@
+.form-login {
+    display: block;
+}
+
+.form-registration {
+    display: block;
+}
+
+.error__message {
+    display: block;
+}
+
+.hidden {
+    display: none;
+}

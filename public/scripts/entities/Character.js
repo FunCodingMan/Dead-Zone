@@ -6,6 +6,7 @@ const SHOT_FRAME_Y_OFFSET = 4;
 
 export class Character {
     constructor(spawn, width, height) {
+        this.spawnPoint = spawn;
         this.x = spawn.x;
         this.y = spawn.y;
         this.w = width;
@@ -34,6 +35,10 @@ export class Character {
             this.isAlive = false;
             this.isDying = true;
             this.deathStartTime = performance.now();
+
+            if (this.spawnPoint) {
+                this.spawnPoint.isFree = true;
+            }
         }
     }
 

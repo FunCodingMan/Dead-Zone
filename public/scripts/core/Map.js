@@ -13,27 +13,12 @@ export class Map {
     }
 
     findFreeSpawn() {
-        let freePlace = this.playerSpawns.find(place => place.isFree);
+        let freePlaces = this.playerSpawns.filter(place => place.isFree);
 
-        if (freePlace) {
-            freePlace.isFree = false;
-            return freePlace;
-        }
-
-        this.playerSpawns.forEach((place) => {
-            place.isFree = true;
-        });
-
-        this.playerSpawns[0].isFree = false;
-        return this.playerSpawns[0];
-    }
-
-    findFreeSpawn() {
-        let freePlace = this.playerSpawns.find(place => place.isFree);
-
-        if (freePlace) {
-            freePlace.isFree = false;
-            return freePlace;
+        if (freePlaces.length > 0) {
+            const randomIndex = Math.floor(Math.random() * freePlaces.length);
+            freePlaces[randomIndex].isFree = false;
+            return freePlaces[randomIndex];
         }
 
         this.playerSpawns.forEach((place) => {
