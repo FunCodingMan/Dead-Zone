@@ -28,8 +28,32 @@ class UserController
             'show' => $this->showMenu(),
             'login' => $this->checkUser(),
             'logout' => $this->logoutMenu(),
+            'mode-selection' => $this->playGame(),
+            'profile' => $this->showProfile(),
+            'singleplayer' => $this->showSingleplayer(),
+            'training' => $this->openShowTraining(),
             default => $this->showForm()
         };
+    }
+
+    private function openShowTraining(): void
+    {
+        include_once __DIR__ . "/../View/training.html";
+    }
+
+    private function showSingleplayer(): void
+    {
+        include_once __DIR__ . "/../View/singleplayer.html";
+    }
+
+    private function showProfile(): void
+    {
+        include_once __DIR__ . "/../View/profile.html";
+    }
+
+    private function playGame(): void
+    {
+        include_once __DIR__ . "/../View/mode-selection.html";
     }
 
     #[NoReturn]
@@ -73,8 +97,6 @@ class UserController
     {
         $user = $this->userTable->getUserByToken($_COOKIE["token"]);
         if ($user) {
-            echo $user->getNickname() . "<br>";
-            echo $user->getUsername() . "<br>";
             include_once __DIR__ . "/../View/menu.html";
         } else {
             http_response_code(401);

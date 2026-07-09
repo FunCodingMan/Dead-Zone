@@ -4,14 +4,15 @@
         <meta charset="UTF-8">
         <title>DeadZone</title>
         <link rel="stylesheet" href="styles/menu.css">
-        <script src="scripts/navigate.js" defer></script>
-        <script src="scripts/form/exitMenu.js" defer></script>
+        <script src="/scripts/pages/menu/exitMenu.js" defer></script>
+        <script src="/scripts/pages/menu/openModeSelection.js" defer></script>
+        <script src="/scripts/pages/menu/openProfile.js" defer></script>
     </head>
     <body>
         <div class="menu-screen">
             <img width="946" height="517" class="main-menu__logo" src="assets/logo.png" alt="Логотип игры">
             <div class="menu-buttons">
-                <button class="btn" data-target="mode">ИГРАТЬ</button>
+                <button id="btn-play" class="btn" data-target="mode">ИГРАТЬ</button>
                 <button id="btn-profile" class="btn">ПРОФИЛЬ</button>
                 <button id="btn-exit" class="btn">ВЫЙТИ</button>
             </div>
