@@ -2,13 +2,14 @@ export class Input {
     constructor(canvas, callbacks = {}) {
         this.canvas = canvas;
         this.keys = {};
+        this.justPressed = {};
         this.mouseX = 0;
         this.mouseY = 0;
         this.isMouseDown = false;
 
-
         this.onEscape = callbacks.onEscape || null;
 
+        // Привязка контекста
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleKeyUp = this.handleKeyUp.bind(this);
         this.handleMouseMove = this.handleMouseMove.bind(this);
@@ -19,14 +20,16 @@ export class Input {
         window.addEventListener('keyup', this.handleKeyUp);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
-
-        //Чтобы не было залипания мыши при выходе в паузу
         window.addEventListener('mouseup', this.handleMouseUp);
     }
 
-
     handleKeyDown(e) {
+        if (!this.keys[e.code]) {
+            this.justPressed[e.code] = true;
+        }
+
         this.keys[e.code] = true;
+
         if (e.key === 'Escape' && this.onEscape) {
             this.onEscape();
         }
@@ -52,6 +55,20 @@ export class Input {
 
     isPressed(code) {
         return this.keys[code] === true;
+    }
+
+    isJustPressed(code) {
+        if (this.justPressed[code]) {
+            this.justPressed[code] = false;
+            return true;
+        }
+        return false;
+    }
+
+    reset() {
+        this.keys = {};
+        this.justPressed = {};
+        this.isMouseDown = false;
     }
 
     destroyListeners() {

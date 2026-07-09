@@ -1,7 +1,7 @@
 import { Input } from './utils/Input.js';
 import { Map } from './core/Map.js';
 import { Player } from './entities/Player.js';
-import {Enemy} from './entities/Enemy.js';
+import { Enemy } from './entities/Enemy.js';
 import { initMenu, togglePauseUI } from './ui/Menu.js';
 
 const canvas = document.getElementById('gameCanvas');
@@ -16,7 +16,12 @@ const assets = {
     soldier: new Image(),
     bullet: new Image(),
     blood: new Image(),
-    explosions: []
+    explosions: [],
+    reloadIcon: new Image(),
+    reloadSoldier: new Image(),
+    shot1: new Image(),
+    shot2: new Image(),
+    heartIcon: new Image()
 };
 
 const imagePaths = {
@@ -25,7 +30,12 @@ const imagePaths = {
     floor: './assets/floor.png',
     soldier: './assets/soldier.png',
     bullet: './assets/bullet_new.png',
-    blood: './assets/blood.png'
+    blood: './assets/blood.png',
+    reloadIcon: './assets/reload_icon.png',
+    reloadSoldier: './assets/reload_soldier.png',
+    shot1: './assets/shot1.png',
+    shot2: './assets/shot2.png',
+    heartIcon: './assets/heart.png'
 };
 
 function loadImage(img, src) {
@@ -45,6 +55,7 @@ for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
     assets.explosions[i] = new Image();
     promises.push(loadImage(assets.explosions[i], `./assets/burst${i + 1}.png`));
 }
+
 Promise.all(promises).then(() => {
     initMenu({
         onStart: startGame,
@@ -55,11 +66,9 @@ Promise.all(promises).then(() => {
         },
         onExitToMenu: () => {
             isPaused = false;
-
             if (animationId) {
                 cancelAnimationFrame(animationId);
             }
-
             if (input) {
                 input.destroyListeners();
                 input = null;
@@ -71,15 +80,17 @@ Promise.all(promises).then(() => {
 function togglePause() {
     isPaused = !isPaused;
     togglePauseUI(isPaused);
+    if (isPaused && input) {
+        input.reset();
+    }
 }
-
 
 const levelData = `
 ################
 #P      #     B#
-#  ###  #  B   #
-#  #B#  #  B   #
-#  ###  ####   #
+# ###   #  B   #
+# #B#   #  B   #
+# ###  ####    #
 #        P     #
 #   #BBB#      #
 #   # P #   BB #
@@ -94,34 +105,26 @@ let enemies = [];
 let isPaused = false;
 
 function startGame() {
-
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
-
-    if (input) {
-        input.destroyListeners();
-    }
+    if (animationId) cancelAnimationFrame(animationId);
+    if (input) input.destroyListeners();
 
     input = new Input(canvas, {
-        onEscape: togglePause
+        onEscape: () => {
+            if (player && player.isAlive) togglePause();
+        }
     });
+
     map = new Map();
     map.loadLevel(levelData);
     zoom = 1.5;
 
-
     player = new Player(map, input);
-    enemies.push(new Enemy(map));
-    enemies.push(new Enemy(map));
-    enemies.push(new Enemy(map));
-    enemies.push(new Enemy(map));
+    enemies = [new Enemy(map), new Enemy(map), new Enemy(map), new Enemy(map)];
 
     gameLoop();
 }
 
 function gameLoop() {
-
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!isPaused) {
@@ -137,7 +140,14 @@ function gameLoop() {
     map.drawBlood(ctx, assets.blood);
 
     if (player.isAlive) {
-        player.draw(ctx, assets.soldier);
+        if (!player.isReloading) {
+            player.draw(ctx, assets.soldier);
+            if (!isPaused) {
+                player.animateShots(ctx, assets.shot1, assets.shot2, player);
+            }
+        } else {
+            player.draw(ctx, assets.reloadSoldier);
+        }
         player.drawBullets(ctx, assets.bullet);
     } else if (player.isDying) {
         player.drawDeath(ctx, assets.explosions);
@@ -152,6 +162,11 @@ function gameLoop() {
     });
 
     ctx.restore();
+
+    if (player.isAlive) {
+        player.drawReloadInterface(ctx, assets.reloadIcon, canvas);
+        player.drawHPInterface(ctx, assets.heartIcon, canvas);
+    }
 
     animationId = requestAnimationFrame(gameLoop);
 }
