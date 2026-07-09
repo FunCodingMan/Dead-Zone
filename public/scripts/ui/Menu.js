@@ -25,8 +25,12 @@ export function initMenu(actions) {
 
     document.getElementById('btn-singleplayer-first-game').addEventListener('click', () => {
         document.getElementById('ui-layer').classList.remove('active');
+        actions.onStart('training'); // Передаем название режима
+    });
 
-        actions.onStart();
+    document.getElementById('btn-singleplayer-second-game').addEventListener('click', () => {
+        document.getElementById('ui-layer').classList.remove('active');
+        actions.onStart('waves'); // Передаем название режима
     });
 
     document.querySelectorAll('.btn-back').forEach(btn => {
