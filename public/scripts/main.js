@@ -29,6 +29,7 @@ async function init() {
         onResume: () => game.togglePause(),
         onRestart: () => {
             game.start(lastSelectedMode);
+            togglePauseUI(false);
         },
         onExitToMenu: () => {
             game.stop();
