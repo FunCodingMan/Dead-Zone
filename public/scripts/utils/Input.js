@@ -19,7 +19,9 @@ export class Input {
         window.addEventListener('keyup', this.handleKeyUp);
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
-        this.canvas.addEventListener('mouseup', this.handleMouseUp);
+
+        //Чтобы не было залипания мыши при выходе в паузу
+        window.addEventListener('mouseup', this.handleMouseUp);
     }
 
 
@@ -57,6 +59,6 @@ export class Input {
         window.removeEventListener('keyup', this.handleKeyUp);
         this.canvas.removeEventListener('mousemove', this.handleMouseMove);
         this.canvas.removeEventListener('mousedown', this.handleMouseDown);
-        this.canvas.removeEventListener('mouseup', this.handleMouseUp);
+        window.removeEventListener('mouseup', this.handleMouseUp);
     }
 }
