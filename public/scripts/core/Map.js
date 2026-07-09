@@ -7,10 +7,25 @@ export class Map {
 
         this.walls = [];
         this.boxes = [];
-        this.playerSpawn = {x: 50, y: 50};
-        this.player2Spawn = {x: 400, y: 330};
+        this.playerSpawns = [];
 
-        this.bloodSpots = []
+        this.bloodSpots = [];
+    }
+
+    findFreeSpawn() {
+        let freePlace = this.playerSpawns.find(place => place.isFree);
+
+        if (freePlace) {
+            freePlace.isFree = false;
+            return freePlace;
+        }
+
+        this.playerSpawns.forEach((place) => {
+            place.isFree = true;
+        });
+
+        this.playerSpawns[0].isFree = false;
+        return this.playerSpawns[0];
     }
 
     loadLevel(levelString) {
@@ -42,10 +57,11 @@ export class Map {
                         break;
                     //Спавн игрока
                     case "P":
-                        this.playerSpawn = {
+                        this.playerSpawns.push({
                             x: x + (this.cellSize - this.playerSize) / 2,
-                            y: y + (this.cellSize - this.playerSize) / 2
-                        }
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        });
                         break;
                 }
             }

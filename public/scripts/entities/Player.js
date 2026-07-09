@@ -1,34 +1,53 @@
+import { Character } from './Character.js';
+
 const PLAYER_WIDTH = 48;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
 //константы стрельбы
 const BULLET_SPEED = 20;
-const BULLET_SIZE = 30;
+const BULLET_WIDTH = 5;
+const BULLET_HEIGHT = 10;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 10;
+const DIFF_GUN_FORWARD = 1;
+const DIFF_GUN_SIDE = 5;
+const MAX_SHOTS_AMOUNT = 50;
+const RELOAD_TIME = 2000;
 
-export class Player {
+const MAX_HITPOINTS = 100;
+
+const RELOAD_PADDING = 10;
+const RELOAD_SIZE = 50;
+
+const HP_PADDING = 10;
+const HP_SIZE = 80;
+
+const RELOAD_TEXT_PADDING = 20;
+const RELOAD_TEXT_SIZE = 10;
+
+export class Player extends Character {
     constructor(map, input) {
-        this.x = map.playerSpawn.x;
-        this.y = map.playerSpawn.y;
-        this.w = PLAYER_WIDTH;
-        this.h = PLAYER_HEIGHT;
+        super(map.findFreeSpawn(), PLAYER_WIDTH, PLAYER_HEIGHT);
+
         this.speed = SPEED;
         this.input = input;
-        this.angle = 0;
-
-        this.isAlive = true;
 
         //параметры стрельбы
         this.bullets = [];
         this.shotsFired = 0;
         this.lastShootTime = performance.now();
         this.damage = DAMAGE;
+        this.shotsAmount = MAX_SHOTS_AMOUNT;
+        this.isReloading = false;
+        this.reloadStartTime = 0;
+
+        this.hitpoints = 100;
     }
 
-    update(map, canvas, zoom, otherPlayer) {
+    update(map, canvas, zoom, enemies) {
+        if (!this.isAlive) return;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -47,11 +66,16 @@ export class Player {
             //Отсчёт времени с отрытия вкладки
             const now = performance.now();
 
-            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS) {
-                //добавляем пулю в массив и вешаем кулдаун
+            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
                 this.createBullet(worldMouseX, worldMouseY);
                 this.lastShootTime = now;
+
+                this.isShooting = true;
+            } else if (this.shotsAmount <= 0 || this.isReloading) {
+                this.isShooting = false;
             }
+        } else {
+            this.isShooting = false;
         }
 
         if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
@@ -73,6 +97,15 @@ export class Player {
             nextY += Math.sin(this.angle + Math.PI / 2) * this.speed;
         }
 
+        if (this.input.isJustPressed('KeyR')) {
+            this.isReloading = true;
+            this.reloadStartTime = performance.now();
+        }
+
+        if (this.isReloading) {
+            this.updateReload();
+        }
+
         //Проверяем выход за пределы
         if (nextX < 0) nextX = 0;
         if (nextY < 0) nextY = 0;
@@ -89,17 +122,24 @@ export class Player {
             this.y = nextY;
         }
 
-        this.handleBullets(map, otherPlayer);
+        this.handleBullets(map, enemies);
     }
 
     createBullet(targetX, targetY) {
-        //создаём единичный вектор между начальной и конечной точкой (x^2 + y^2 = 1)
+        this.shotsAmount--;
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        const dx = targetX - centerX;
-        const dy = targetY - centerY;
+        let spawnX = centerX + Math.cos(this.angle) * DIFF_GUN_FORWARD;
+        let spawnY = centerY + Math.sin(this.angle) * DIFF_GUN_FORWARD;
+
+        // Шаг вбок (в правую руку, поэтому прибавляем 90 градусов = Math.PI / 2)
+        spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
+
+        const dx = targetX - spawnX;
+        const dy = targetY - spawnY;
         const length = Math.sqrt(dx * dx + dy * dy);
 
         let directionX = dx / length;
@@ -107,23 +147,21 @@ export class Player {
 
         this.shotsFired++;
 
-        //первые 2 пули летят без разброса, остальные с ним
         if (this.shotsFired > 1) {
             directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
             directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
         }
-        
-        //параметры: текущие координаты, направление по единичному вектору, множитель скорости
+
         this.bullets.push({
-            x: centerX,
-            y: centerY,
+            x: spawnX,
+            y: spawnY,
             xDirection: directionX,
             yDirection: directionY,
             bulletSpeed: BULLET_SPEED
         });
     }
 
-    handleBullets(map, otherPlayer) {
+    handleBullets(map, enemies) {
         //двигаем пули
         //если попали в объект, удаляем их из массива
         const toRemove = [];
@@ -133,50 +171,30 @@ export class Player {
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
 
             const r1 = {
-                x: bullet.x - BULLET_SIZE / 2,
-                y: bullet.y - BULLET_SIZE / 2,
-                w: BULLET_SIZE,
-                h: BULLET_SIZE
+                x: bullet.x - BULLET_WIDTH / 2,
+                y: bullet.y - BULLET_HEIGHT / 2,
+                w: BULLET_WIDTH,
+                h: BULLET_HEIGHT
             };
 
-            const r2 = {
-                x: otherPlayer.x - BULLET_SIZE / 2,
-                y: otherPlayer.y - BULLET_SIZE / 2,
-                w: otherPlayer.w,
-                h: otherPlayer.h
-            };
+            enemies.forEach((enemy) => {
+                if (enemy.isAlive) {
+                    const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                    if (map.isIntersecting(r1, r2)) {
+                        enemy.takeDamage(this.damage, map);
+                        toRemove.push(index);
+                    }
+                }
+            });
 
-            //если другой игрок коснулся пули, он получает урон
-            if (map.isIntersecting(r1, r2)) {
-                otherPlayer.takeDamage(this.damage);
-            }
-
-            if (map.checkCollision({x: bullet.x - BULLET_SIZE / 2, y: bullet.y - BULLET_SIZE / 2, 
-                w: BULLET_SIZE, h: BULLET_SIZE})
-            ) {
+            if (map.checkCollision(r1)) {
                 toRemove.push(index);
             }
         });  
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
-            this.shotsFired--;
         }
-    }
-
-    draw(ctx, soldierImg, bulletImg) {
-        this.drawBullets(ctx, bulletImg);
-
-        //Сохраняем текущий canvas
-        ctx.save();
-        //Смещаем начальную точку координат на цетр игрока
-        ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
-        //Поворачиваем игрока на угол между мышкой и игроком
-        ctx.rotate(this.angle + Math.PI / 2);
-        //Отрисовываем игрока, при этом смещая его на половинку. так как до этого перемещали начальную точку координат
-        ctx.drawImage(soldierImg, -this.w / 2, -this.h / 2, this.w, this.h);
-
-        ctx.restore();
     }
 
     //отрисовываем пули из массива
@@ -186,16 +204,76 @@ export class Player {
             ctx.translate(bullet.x, bullet.y);
             
             // Поворачиваем в направлении движения
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection);
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
             
             ctx.drawImage(
                 bulletImg,
-                -BULLET_SIZE/2, -BULLET_SIZE/2, 
-                BULLET_SIZE, BULLET_SIZE      
+                -BULLET_WIDTH / 2, -BULLET_HEIGHT / 2,
+                BULLET_WIDTH, BULLET_HEIGHT
             );
 
             ctx.restore();
         });
+    }
+
+    drawReloadInterface(ctx, reloadImg, canvas) {
+        ctx.save();
+
+        ctx.drawImage(
+            reloadImg, 
+            canvas.width - RELOAD_PADDING - RELOAD_SIZE, 
+            canvas.height - RELOAD_PADDING - RELOAD_SIZE, 
+            RELOAD_SIZE, 
+            RELOAD_SIZE
+        );
+
+        ctx.fillStyle = 'white';
+        ctx.font = '18px Arial';
+        ctx.fillText(
+            this.shotsAmount, 
+            canvas.width - RELOAD_PADDING - RELOAD_SIZE - RELOAD_TEXT_PADDING - RELOAD_TEXT_SIZE,
+            canvas.height - RELOAD_PADDING - RELOAD_TEXT_SIZE
+        )
+
+        ctx.restore();
+    }
+
+    drawHPInterface(ctx, hearthImg, canvas) {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = HP_SIZE;
+        tempCanvas.height = HP_SIZE;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        tempCtx.drawImage(hearthImg, 0, 0, HP_SIZE, HP_SIZE);
+
+        tempCtx.globalCompositeOperation = 'source-in';
+
+        const percent = this.hitpoints / MAX_HITPOINTS;
+        const height = HP_SIZE * percent;
+        
+        tempCtx.fillStyle = '#ff0000';
+        tempCtx.fillRect(0, HP_SIZE - height, HP_SIZE, height);
+
+        ctx.save();
+        ctx.globalAlpha = 0.3;
+        ctx.drawImage(hearthImg, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING, HP_SIZE, HP_SIZE);
+        ctx.restore();
+
+        ctx.drawImage(
+            tempCanvas,
+            HP_PADDING,
+            canvas.height - HP_SIZE - HP_PADDING
+        );
+    }
+
+    updateReload() {
+        if (!this.isReloading) return;
+
+        const now = performance.now();
+        if (now - this.reloadStartTime >= RELOAD_TIME) {
+            this.shotsAmount = MAX_SHOTS_AMOUNT;
+            this.isReloading = false;
+        }
     }
 }

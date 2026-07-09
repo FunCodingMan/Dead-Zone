@@ -1,7 +1,7 @@
 import { Input } from './utils/Input.js';
 import { Map } from './core/Map.js';
 import { Player } from './entities/Player.js';
-import { Player2 } from './entities/Player2.js';
+import {Enemy} from './entities/Enemy.js';
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -15,7 +15,12 @@ const assets = {
     soldier: new Image(),
     bullet: new Image(),
     blood: new Image(),
-    exposions: []
+    explosions: [],
+    reloadIcon: new Image(),
+    reloadSoldier: new Image,
+    shot1: new Image(),
+    shot2: new Image(),
+    heartIcon: new Image()
 };
 
 const imagePaths = {
@@ -23,35 +28,36 @@ const imagePaths = {
     box: './assets/box.png',
     floor: './assets/floor.png',
     soldier: './assets/soldier.png',
-    bullet: './assets/bullet.png',
-    blood: './assets/blood.png'
-};
+    bullet: './assets/bullet_new.png',
+    blood: './assets/blood.png',
+    reloadIcon: './assets/reload_icon.png',
+    reloadSoldier: './assets/reload_soldier.png',
+    shot1: './assets/shot1.png',
+    shot2: './assets/shot2.png',
+    heartIcon: './assets/hearth.png'
+}
+
+function loadImage(img, src) {
+    return new Promise(resolve => {
+        img.onload = resolve;
+        img.src = src;
+    });
+}
+
+const promises = [];
 
 for (let key in imagePaths) {
-    assets[key].src = imagePaths[key];
+    promises.push(loadImage(assets[key], imagePaths[key]));
 }
 
 for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
-    assets.exposions[i] = new Image();
-    assets.exposions[i].src = `./assets/burst${i + 1}.png`;
+    assets.explosions[i] = new Image();
+    promises.push(loadImage(assets.explosions[i], `./assets/burst${i + 1}.png`));
 }
+Promise.all(promises).then(() => {
+    startGame();
+});
 
-let loaded = 0;
-const total = Object.keys(imagePaths).length + DEATH_FRAMES_AMOUNT;
-
-function checkLoad() {
-    loaded++;
-    if (loaded == total) {
-        startGame();
-    }
-}
-
-for (let key in imagePaths) {
-    assets[key].onload = checkLoad;
-}
-for (let i = 0; i < DEATH_FRAMES_AMOUNT; i++) {
-    assets.exposions[i].onload = checkLoad;
-}
 
 const levelData = `
 ################
@@ -59,33 +65,38 @@ const levelData = `
 #  ###  #  B   #
 #  #B#  #  B   #
 #  ###  ####   #
-#              #
+#        P     #
 #   #BBB#      #
-#   #   #   BB #
+#   # P #   BB #
 #   #####   BB #
 #              #
-#B            B#
+#B   P        B#
 ################
 `;
 
-let player, player2, map, input, zoom;
+let player, map, input, zoom;
+let enemies = [];
 
 function startGame() {
     input = new Input(canvas);
     map = new Map();
     map.loadLevel(levelData);
     zoom = 1.5;
-    
+
+
     player = new Player(map, input);
-    player2 = new Player2(map);
-    
+    enemies.push(new Enemy(map));
+    enemies.push(new Enemy(map));
+    enemies.push(new Enemy(map));
+    enemies.push(new Enemy(map));
+
     gameLoop();
 }
 
 function gameLoop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    player.update(map, canvas, zoom, player2);
+    player.update(map, canvas, zoom, enemies);
 
     ctx.save();
     ctx.translate(canvas.width / 2, canvas.height / 2);
@@ -96,16 +107,31 @@ function gameLoop() {
     map.drawBlood(ctx, assets.blood);
 
     if (player.isAlive) {
-        player.draw(ctx, assets.soldier, assets.bullet);
-    }
-    
-    if (player2.isAlive) {
-        player2.draw(ctx, assets.soldier);
-    } else if (player2.isDying) {
-        player2.drawDeath(ctx, assets.exposions);
+        if (!player.isReloading) {
+            player.draw(ctx, assets.soldier);
+            player.animateShots(ctx, assets.shot1, assets.shot2, player);
+        } else {
+            player.draw(ctx, assets.reloadSoldier);
+        }        
+        player.drawBullets(ctx, assets.bullet);
+    } else if (player.isDying) {
+        player.drawDeath(ctx, assets.explosions);
     }
 
+    enemies.forEach(enemy => {
+        if (enemy.isAlive) {
+            enemy.draw(ctx, assets.soldier);
+        } else if (enemy.isDying) {
+            enemy.drawDeath(ctx, assets.explosions);
+        }
+    });
+
     ctx.restore();
+
+    if (player.isAlive) {
+        player.drawReloadInterface(ctx, assets.reloadIcon, canvas);
+        player.drawHPInterface(ctx, assets.heartIcon, canvas);
+    }
 
     requestAnimationFrame(gameLoop);
 }
