@@ -53,7 +53,6 @@ export class Character {
         ctx.drawImage(image, -this.w / 2, -this.h / 2, this.w, this.h);
         ctx.restore();
     }
-
     drawDeath(ctx, explosions) {
         if (!this.isDying) return;
 

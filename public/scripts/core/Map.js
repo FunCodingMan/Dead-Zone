@@ -28,6 +28,22 @@ export class Map {
         return this.playerSpawns[0];
     }
 
+    findFreeSpawn() {
+        let freePlace = this.playerSpawns.find(place => place.isFree);
+
+        if (freePlace) {
+            freePlace.isFree = false;
+            return freePlace;
+        }
+
+        this.playerSpawns.forEach((place) => {
+            place.isFree = true;
+        });
+
+        this.playerSpawns[0].isFree = false;
+        return this.playerSpawns[0];
+    }
+
     loadLevel(levelString) {
         this.walls = [];
         this.boxes = [];
