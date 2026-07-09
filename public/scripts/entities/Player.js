@@ -1,6 +1,6 @@
 import { Character } from './Character.js';
 
-const PLAYER_WIDTH = 48;
+const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 

@@ -1,6 +1,6 @@
 import {Character} from "./Character.js";
 
-const ENEMY_WIDTH = 48;
+const ENEMY_WIDTH = 28;
 const ENEMY_HEIGHT = 48;
 
 export class Enemy extends Character{
