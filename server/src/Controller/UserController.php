@@ -1,11 +1,12 @@
 <?php
+declare(strict_types=1);
 
 namespace App\Controller;
 
 use App\Model\ConnectionProvider;
 use App\Model\RequestParser;
 use App\Model\UserTable;
-use JetBrains\PhpStorm\NoReturn;
+use JetBrains\PhpStorm\NoReturn; // TODO нужно посмотреть для чего и убрать
 
 class UserController
 {

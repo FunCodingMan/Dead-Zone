@@ -5,6 +5,8 @@ namespace App\Model;
 use PDO;
 use RuntimeException;
 
+// TODO UserRepository узнать что такое репозиторий. Нужен интерфейс
+
 class UserTable
 {
     private PDO $connection;

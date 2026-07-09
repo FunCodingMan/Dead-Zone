@@ -4,7 +4,6 @@
 # Локальный Composer и его зависимости
 /vendor/
 bin/composer
-composer.phar
 
 # Настройки вашего редактора кода (VS Code / WebStorm / PhpStorm)
 .vscode/
