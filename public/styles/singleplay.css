@@ -1,0 +1,54 @@
+body {
+    margin: 0;
+    background: rgb(20, 20, 20);
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.menu-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+.menu-choose {
+    align-self: center;
+    align-items: center;
+}
+
+.menu-title {
+    font: 45px/18px 'Spielarcade Regular', sans-serif;
+}
+
+.menu-buttons {
+    margin-top: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+}
+
+.btn {
+    width: 1000px;
+    padding: 15px;
+    background-color: #333;
+    color: white;
+    border: 2px solid #555;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+    font: 45px/18px 'Spielarcade Regular', sans-serif;
+}
+
+.btn:hover {
+    background-color: #444;
+}
+
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
