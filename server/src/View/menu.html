@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Мёртвая зона</title>
-    <script type="module" src="scripts/main.js"></script>
-    <link href="styles/fonts-styles.css" rel="stylesheet">
-    <link href="styles/index.css" rel="stylesheet">
+    <script type="module" src="./scripts/main.js"></script>
+    <script src="./scripts/form/exitMenu.js" defer></script>
+    <link href="./styles/fonts-styles.css" rel="stylesheet">
+    <link href="./styles/index.css" rel="stylesheet">
 </head>
 <body>
     <canvas id="gameCanvas" width="1280" height="720"></canvas>
     <div id="ui-layer" class="active">
         <div id="screen-main-menu" class="ui-layer__main-menu menu-screen active">
-            <img width="946" height="517" class="main-menu__logo" src="assets/logo.png" alt="Логотип игры">
+            <img width="946" height="517" class="main-menu__logo" src="./assets/logo.png" alt="Логотип игры">
             <div class="main-menu__buttons menu-buttons">
                 <button id="btn-play" class="main-menu__btn-play btn">ИГРАТЬ</button>
                 <button id="btn-profile" class="main-menu__btn-play btn">ПРОФИЛЬ</button>
