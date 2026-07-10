@@ -16,25 +16,30 @@ export class AssetManager {
         };
 
         this.imagePaths = {
-            wall: './assets/wall.png',
-            box: './assets/box.png',
-            floor: './assets/floor.png',
-            soldier: './assets/soldier.png',
-            bullet: './assets/bullet_new.png',
-            blood: './assets/blood.png',
-            reloadIcon: './assets/reload_icon.png',
-            reloadSoldier: './assets/reload_soldier.png',
-            shot1: './assets/shot1.png',
-            shot2: './assets/shot2.png',
-            heartIcon: './assets/heart.png'
+            wall: '/assets/wall.png',
+            box: '/assets/box.png',
+            floor: '/assets/floor.png',
+            soldier: '/assets/soldier.png',
+            bullet: '/assets/bullet_new.png',
+            blood: '/assets/blood.png',
+            reloadIcon: '/assets/reload_icon.png',
+            reloadSoldier: '/assets/reload_soldier.png',
+            shot1: '/assets/shot1.png',
+            shot2: '/assets/shot2.png',
+            heartIcon: '/assets/heart.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;
     }
 
     loadImage(img, src) {
-        return new Promise(resolve => {
+        return new Promise((resolve, reject) => {
             img.onload = resolve;
+            img.onerror = () => {
+                const errorMsg = `Ошибка загрузки картинки: ${src}`;
+                console.error(errorMsg);
+                reject(new Error(errorMsg));
+            };
             img.src = src;
         });
     }
@@ -48,7 +53,7 @@ export class AssetManager {
 
         for (let i = 0; i < this.DEATH_FRAMES_AMOUNT; i++) {
             this.assets.explosions[i] = new Image();
-            promises.push(this.loadImage(this.assets.explosions[i], `./assets/burst${i + 1}.png`));
+            promises.push(this.loadImage(this.assets.explosions[i], `/assets/burst${i + 1}.png`));
         }
 
         await Promise.all(promises);
