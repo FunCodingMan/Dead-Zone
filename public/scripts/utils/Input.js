@@ -21,6 +21,12 @@ export class Input {
         this.canvas.addEventListener('mousemove', this.handleMouseMove);
         this.canvas.addEventListener('mousedown', this.handleMouseDown);
         window.addEventListener('mouseup', this.handleMouseUp);
+
+        this.canvas.addEventListener('contextmenu', this.handleContextMenu);
+    }
+
+    handleContextMenu(e) {
+        e.preventDefault();
     }
 
     handleKeyDown(e) {
