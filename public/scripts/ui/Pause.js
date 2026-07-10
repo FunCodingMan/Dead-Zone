@@ -1,4 +1,4 @@
-export function initMenu(actions) {
+export function initPause(actions) {
     document.getElementById('btn-continue').addEventListener('click', () => {
         actions.onResume();
     });

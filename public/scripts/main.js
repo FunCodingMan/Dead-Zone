@@ -1,6 +1,6 @@
 import { AssetManager } from './utils/AssetManager.js';
 import { Game } from './core/Game.js';
-import { initMenu, togglePauseUI } from './ui/Menu.js';
+import { initPause, togglePauseUI } from './ui/Pause.js';
 
 import { TrainingMode } from './single-player-games/TrainingMode.js';
 import { WavesMode } from './single-player-games/WavesMode.js';
@@ -16,7 +16,7 @@ async function init() {
 
     game = new Game(canvas, assets, togglePauseUI);
 
-    initMenu({
+    initPause({
         onResume: () => game.togglePause(),
         onRestart: () => {
             game.start(lastSelectedMode);
