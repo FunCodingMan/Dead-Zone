@@ -1,22 +1,24 @@
 <?php
 
-namespace App\Model;
+namespace App\infrastructure\controller;
 
+use App\app\model\Stats;
+use App\app\model\User;
+use App\infrastructure\repository\IConnectionProvider;
+use App\infrastructure\repository\IUserRepository;
 use PDO;
 use RuntimeException;
 
-// TODO UserRepository узнать что такое репозиторий. Нужен интерфейс
-
-class UserTable
+class UserTable implements IUserRepository
 {
     private PDO $connection;
 
-    public function __construct(ConnectionProvider $provider)
+    public function __construct(IConnectionProvider $provider)
     {
         $this->connection = $provider->connectDatabase();
     }
 
-    public function saveUserToDatabase(User $user): string
+    public function saveUser(User $user): string
     {
         $userId = bin2hex(random_bytes(32));
         $token = bin2hex(random_bytes(32));

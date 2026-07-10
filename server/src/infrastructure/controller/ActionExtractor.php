@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Model;
+namespace App\infrastructure\controller;
 
-use RuntimeException;
+use App\infrastructure\repository\IActionExtractor;
 
-class RequestParser
+class ActionExtractor implements IActionExtractor
 {
     private const USER_LOGIN_URL = "/api/users/login";
     private const USER_SAVE_URL = "/api/users/save";
@@ -14,41 +14,17 @@ class RequestParser
     private const USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
     private const USER_TRAINING_URL = '/mode-selection/singleplayer/training';
 
-    public function getDataFromLogin(): array
-    {
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-        if (isset($data['username']) && isset($data['password'])) {
-            return $data;
-        } else {
-            throw new RuntimeException('Invalid JSON from Login');
-        }
-    }
 
-    public function getNewUserFromJson(): User
+    public function getAction(): string
     {
-        $requiredKeys = ['nickname', 'username', 'password'];
-        $json = file_get_contents('php://input');
-        $data = json_decode($json, true);
-        foreach ($requiredKeys as $key) {
-            if (!isset($data[$key]) || $data[$key] === "") {
-                http_response_code(400);
-                throw new RuntimeException("{$key} was not specified");
-            }
-        }
-        return new User($data['nickname'], $data['username'], $data['password']);
-    }
-
-    public function getResponse(): string
-    {
-        $request = $this->readRequest();
+        $request = $this->determineRequest();
         if ($request) {
             return $request;
         }
         return 'index';
     }
 
-    private function readRequest(): ?string
+    private function determineRequest(): ?string
     {
         $url = $_SERVER["REQUEST_URI"];
         $method = $_SERVER["REQUEST_METHOD"];

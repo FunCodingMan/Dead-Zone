@@ -2,12 +2,6 @@
 
 namespace App\app\model;
 
-use App\Model\Stats;
-
-interface UserRepository {
-    function Add(): void;
-}
-
 class User
 {
     private Stats $stats;

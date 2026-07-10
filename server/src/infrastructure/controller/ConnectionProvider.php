@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Model;
+namespace App\infrastructure\controller;
 
+use App\infrastructure\repository\IConnectionProvider;
 use PDO;
 use RuntimeException;
 
-class ConnectionProvider
+class ConnectionProvider implements IConnectionProvider
 {
     private string $pathConf;
 
-    public function __construct(string $pathConf = __DIR__ . "/../../../config.ini")
+    public function __construct(string $pathConf = __DIR__ . "/../../../../config.ini")
     {
         $this->pathConf = $pathConf;
     }
