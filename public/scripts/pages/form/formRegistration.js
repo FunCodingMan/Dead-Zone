@@ -12,7 +12,7 @@
        let formDataJson = JSON.stringify(formDataObj);
 
        try {
-           let response = await fetch('/api/users/save', {
+           let response = await fetch('/api/users/registration', {
                method: 'POST',
                headers: {
                    'Content-Type': 'application/json; charset=UTF-8'

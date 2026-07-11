@@ -26,10 +26,10 @@ class UserController implements IExecuteAction
     {
         $response = $this->requestParser->getAction();
         match ($response) {
-            'save' => $this->showRegistration(),
-            'show' => $this->showMenu(),
-            'login' => $this->showLogin(),
-            'logout' => $this->logout(),
+            'registration' => $this->registrationUser(),
+            'menu' => $this->showMenu(),
+            'login' => $this->loginUser(),
+            'logout' => $this->logoutUser(),
             'mode-selection' => $this->pagesRender->showModeSelection(),
             'profile' => $this->pagesRender->showProfile(),
             'singleplayer' => $this->pagesRender->showSinglePlayer(),
@@ -38,7 +38,7 @@ class UserController implements IExecuteAction
         };
     }
 
-    private function showRegistration(): void
+    private function registrationUser(): void
     {
         try {
             $token = $this->userService->registration();
@@ -54,7 +54,7 @@ class UserController implements IExecuteAction
         die();
     }
 
-    private function showLogin(): void
+    private function loginUser(): void
     {
         $user = $this->userService->login();
         if ($user) {
@@ -69,7 +69,7 @@ class UserController implements IExecuteAction
         die();
     }
 
-    private function logout(): void
+    private function logoutUser(): void
     {
         $this->userService->deleteTokenCookie();
         $redirectUrl = "/";
