@@ -21,15 +21,32 @@ class RequestDataParser implements IRequestDataParser
 
     public function getNewUserFromJson(): User
     {
-        $requiredKeys = ['nickname', 'username', 'password'];
+        $requiredKeys = [
+            'nickname' => 'Введите имя пользователя!',
+            'username' => 'Введите логин пользователя!',
+            'password' => 'Введите пароль!'
+        ];
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
-        foreach ($requiredKeys as $key) {
-            if (!isset($data[$key]) || $data[$key] === "") {
+
+        foreach ($requiredKeys as $key => $errorMessage) {
+            if (empty($data[$key])) {
                 http_response_code(400);
-                throw new RuntimeException("{$key} was not specified");
+                throw new RuntimeException($errorMessage);
             }
         }
-        return new User($data['nickname'], $data['username'], $data['password']);
+
+        $usernamePattern = '/^[a-zA-Z0-9]([a-zA-Z0-9_-]*[a-zA-Z0-9])?$/';
+        if (!preg_match($usernamePattern, $data['username']) || strlen($data['username']) < 4) {
+            http_response_code(400);
+            throw new RuntimeException('Логин пользователя не действителен');
+        }
+
+        if (strlen($data['password']) < 6) {
+            http_response_code(400);
+            throw new RuntimeException("Пароль слишком маленький. Миним 6 символов!");
+        }
+
+        return new User(trim($data['nickname']), $data['username'], $data['password']);
     }
 }
