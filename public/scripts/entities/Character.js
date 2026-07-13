@@ -46,7 +46,7 @@ export class Character {
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
         const spotSize = MAX_HITPOINTS - this.hitpoints;
-        const randomAngle = Math.random() * Math.PI * 2;
+        const randomAngle = Math.random() * Math.PI * 2; // 🔥 Добавлена ;
 
         map.bloodSpots.push({ x: centerX, y: centerY, size: spotSize, angle: randomAngle });
     }

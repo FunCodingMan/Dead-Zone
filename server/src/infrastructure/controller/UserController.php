@@ -34,6 +34,7 @@ class UserController implements IExecuteAction
             'profile' => $this->pagesRender->showProfile(),
             'singleplayer' => $this->pagesRender->showSinglePlayer(),
             'training' => $this->pagesRender->showFirstGame(),
+            'waves' => $this->pagesRender->showSecondGame(),
             default => $this->pagesRender->showForm(),
         };
     }
