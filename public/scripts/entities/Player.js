@@ -1,6 +1,7 @@
+import { CONFIG } from '../core/Config.js';
 import { Character } from './Character.js';
 
-const PLAYER_WIDTH = 48;
+const PLAYER_WIDTH = 36;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
@@ -9,7 +10,7 @@ const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
-const DAMAGE = 10;
+const DAMAGE = 40;
 const DIFF_GUN_FORWARD = 1;
 const DIFF_GUN_SIDE = 5;
 const MAX_SHOTS_AMOUNT = 50;
@@ -22,10 +23,13 @@ const HP_PADDING = 10;
 const HP_SIZE = 80;
 const RELOAD_TEXT_PADDING = 20;
 const RELOAD_TEXT_SIZE = 10;
+const HITBOX = 28;
 
 export class Player extends Character {
     constructor(map, input) {
-        super(map.findFreeSpawn(), PLAYER_WIDTH, PLAYER_HEIGHT);
+        const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
+        const spawnIndex = map.playerSpawns.indexOf(spawn);
+        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex);
 
         this.speed = SPEED;
         this.input = input;
@@ -42,9 +46,12 @@ export class Player extends Character {
         this.hpCanvas.width = HP_SIZE;
         this.hpCanvas.height = HP_SIZE;
         this.hpCtx = this.hpCanvas.getContext('2d');
+
+        this.appliedDamage = 0;
+        this.kills = 0;
     }
 
-    update(map, canvas, zoom, enemies) {
+    update(map, canvas, zoom, enemies, targets) {
         if (!this.isAlive) return;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
@@ -108,14 +115,18 @@ export class Player extends Character {
         if (nextX + this.w > map.width) nextX = map.width - this.w;
         if (nextY + this.h > map.height) nextY = map.height - this.h;
 
-        if (!map.checkCollision({x: nextX, y: this.y, w: this.w, h: this.h})) {
+        if (!map.checkCollision({
+            x: nextX + (this.w - HITBOX) / 2, y: this.y + (this.w - HITBOX) / 2, w: this.w, h: this.h
+        }, enemies, targets)) {
             this.x = nextX;
         }
-        if (!map.checkCollision({x: this.x, y: nextY, w: this.w, h: this.h})) {
+        if (!map.checkCollision({
+            x: this.x + (this.w - HITBOX) / 2, y: nextY + (this.w - HITBOX) / 2, w: this.w, h: this.h
+        }, enemies, targets)) {
             this.y = nextY;
         }
 
-        this.handleBullets(map, enemies);
+        this.handleBullets(map, enemies, targets);
     }
 
     createBullet(targetX, targetY) {
@@ -149,20 +160,33 @@ export class Player extends Character {
         });
     }
 
-    handleBullets(map, enemies) {
+    handleBullets(map, enemies, targets) {
         const toRemove = [];
 
         this.bullets.forEach((bullet, index) => {
             bullet.x += bullet.xDirection * bullet.bulletSpeed;
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
 
-            const r1 = { x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT };
+            const r1 = { 
+                x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT 
+            };
 
             enemies.forEach((enemy) => {
                 if (enemy.isAlive) {
                     const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
                     if (map.isIntersecting(r1, r2)) {
-                        enemy.takeDamage(this.damage, map);
+                        enemy.takeDamage(this.damage, map, CONFIG.PLAYER_SYMBOL);
+                        toRemove.push(index);
+                    }
+                }
+            });
+
+            targets.forEach((target) => {
+                if (target.isAlive) {
+                    const r2 = {x: target.x, y: target.y, w: target.w, h: target.h};
+                    if (map.isIntersecting(r1, r2)) {
+                        this.appliedDamage += this.damage;
+                        target.takeDamage(this.damage, map, CONFIG.TARGET_SYMBOL);
                         toRemove.push(index);
                     }
                 }

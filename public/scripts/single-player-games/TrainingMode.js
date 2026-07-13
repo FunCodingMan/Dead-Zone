@@ -1,20 +1,22 @@
 import { BaseGameTemplate } from './BaseGameTemplate.js';
 import { Map } from '../core/Map.js';
 import { Player } from '../entities/Player.js';
-import { Enemy } from '../entities/Enemy.js';
+import { Target } from '../entities/Target.js';
+
+const TARGETS_AMOUNT = 4;
 
 const levelData = `
 ################
 #P      #     B#
-# ###   #  B  P#
+# ###   #  B  T#
 # #B#   #  B   #
 # ###  ####    #
-#  P     P     #
+#  T     T     #
 #   #BBB#      #
-#   # P #   BB #
+#   # T #   BB #
 #   #####   BB #
-# P            #
-#B   P        B#
+# T            #
+#B   T        B#
 ################
 `;
 export class TrainingMode extends BaseGameTemplate {
@@ -26,21 +28,28 @@ export class TrainingMode extends BaseGameTemplate {
         // 2. Создаем игрока
         this.engine.player = new Player(this.engine.map, this.engine.input);
 
-        // 3. Создаем врагов
-        this.engine.enemies = [
-            new Enemy(this.engine.map),
-            new Enemy(this.engine.map),
-            new Enemy(this.engine.map),
-            new Enemy(this.engine.map)
-        ];
+        // 3. Создаем мишени
+        this.engine.targets = [];
+        for (let i = 0; i < TARGETS_AMOUNT; i++) {
+            const target = new Target(this.engine.map);
+            
+            target.onDeath(() => {
+                this.engine.player.kills++;
+            });
+            this.engine.targets.push(target);
+        }            
     }
 
     update() {
-        this.engine.enemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
+        this.engine.targets = this.engine.targets.filter(t => t.isAlive || t.isDying);
 
-        const aliveEnemies = this.engine.enemies.filter(e => e.isAlive);
-        if (aliveEnemies.length < 4) {
-            this.engine.enemies.push(new Enemy(this.engine.map));
+        const aliveTargets = this.engine.targets.filter(t => t.isAlive);
+        if (aliveTargets.length < TARGETS_AMOUNT) {
+            const target = new Target(this.engine.map);
+            this.engine.targets.push(target);
+            target.onDeath(() => {
+                this.engine.player.kills++;
+            });
         }
     }
 
@@ -48,5 +57,7 @@ export class TrainingMode extends BaseGameTemplate {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
         ctx.font = '24px Arial';
         ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", 20, 40);
+        ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, 20, 60);
+        ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, 20, 80);
     }
 }

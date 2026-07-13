@@ -12,7 +12,9 @@ export class AssetManager {
             reloadSoldier: new Image(),
             shot1: new Image(),
             shot2: new Image(),
-            heartIcon: new Image()
+            heartIcon: new Image(),
+            target: new Image(),
+            zombie: new Image()
         };
 
         this.imagePaths = {
@@ -26,7 +28,9 @@ export class AssetManager {
             reloadSoldier: './assets/reload_soldier.png',
             shot1: './assets/shot1.png',
             shot2: './assets/shot2.png',
-            heartIcon: './assets/heart.png'
+            heartIcon: './assets/heart.png',
+            target: './assets/target.png',
+            zombie: './assets/zombie.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;
