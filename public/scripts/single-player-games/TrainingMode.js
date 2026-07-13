@@ -21,11 +21,9 @@ const levelData = `
 `;
 export class TrainingMode extends BaseGameTemplate {
     init() {
-        // 1. Создаем карту
         this.engine.map = new Map();
         this.engine.map.loadLevel(levelData);
 
-        // 2. Создаем игрока
         this.engine.player = new Player(this.engine.map, this.engine.input);
 
         // 3. Создаем мишени
