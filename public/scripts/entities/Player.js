@@ -25,7 +25,7 @@ const RELOAD_TEXT_PADDING = 20;
 const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
 
-class Player extends Character {
+export class Player extends Character {
     constructor(map, input) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
@@ -261,5 +261,3 @@ class Player extends Character {
         }
     }
 }
-
-export default Player

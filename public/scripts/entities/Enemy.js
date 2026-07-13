@@ -1,7 +1,7 @@
 import { CONFIG } from "../core/Config.js";
 import {Character} from "./Character.js";
 
-const ENEMY_WIDTH = 28;
+const ENEMY_WIDTH = 48;
 const ENEMY_HEIGHT = 48;
 const SPEED = 2;
 const ATTACK_DISTANCE = 60;

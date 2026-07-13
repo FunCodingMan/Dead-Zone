@@ -1,6 +1,6 @@
 import { BaseGameTemplate } from './BaseGameTemplate.js';
 import { Map } from '../core/Map.js';
-import Player from '../entities/Player.js';
+import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { CONFIG } from '../core/Config.js';
 
@@ -78,7 +78,6 @@ export class WavesMode extends BaseGameTemplate {
                 enemy.angle = Math.atan2(dy, dx);
             }
 
-            console.log(distance, enemy.attackDistance);
             if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
                 this.lastAttackTime = currentTime;
                 this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
