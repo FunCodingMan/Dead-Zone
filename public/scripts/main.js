@@ -23,9 +23,7 @@ async function init() {
             togglePauseUI(false);
         },
         onExitToMenu: () => {
-            game.stop();
             window.location.href = '/mode-selection/singleplayer';
-            togglePauseUI(false);
         }
     });
 
