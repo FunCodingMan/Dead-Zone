@@ -1,6 +1,5 @@
 import { Input } from '../utils/Input.js';
 import { CONFIG } from './Config.js';
-import { Map } from './Map.js';
 
 const AVAILABLE_CELL = 1;
 const UNAVAILABLE_CELL = 0;

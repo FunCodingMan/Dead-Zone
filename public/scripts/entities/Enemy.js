@@ -12,7 +12,6 @@ export class Enemy extends Character{
     constructor(map) {
         super(map.findFreeSpawn(CONFIG.ENEMY_SYMBOL), ENEMY_WIDTH, ENEMY_HEIGHT);
         this.speed = SPEED;
-        this.isPlayerAttacked;
         this.attackDistance = ATTACK_DISTANCE;
         this.damage = DAMAGE;
         this.damageCooldown = DAMAGE_COOLDOWN;

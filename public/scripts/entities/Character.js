@@ -80,7 +80,7 @@ export class Character {
         ctx.restore();
     }
 
-    animateShots(ctx, shot1Img, shot2Img, player) {
+    animateShots(ctx, shot1Img, shot2Img) {
         if (!this.isShooting) return;
 
         const now = performance.now();

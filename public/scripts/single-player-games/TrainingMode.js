@@ -1,6 +1,6 @@
 import { BaseGameTemplate } from './BaseGameTemplate.js';
 import { Map } from '../core/Map.js';
-import { Player } from '../entities/Player.js';
+import Player from '../entities/Player.js';
 import { Target } from '../entities/Target.js';
 
 const TARGETS_AMOUNT = 4;

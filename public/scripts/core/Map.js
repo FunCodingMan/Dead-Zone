@@ -32,20 +32,19 @@ export class Map {
     findFreeSpawn(symbol) {
         let spawns;
 
-        if (symbol == CONFIG.PLAYER_SYMBOL) {
+        if (symbol === CONFIG.PLAYER_SYMBOL) {
             spawns = this.playerSpawns;
-        } else if (symbol == CONFIG.TARGET_SYMBOL) {
+        } else if (symbol === CONFIG.TARGET_SYMBOL) {
             const now = performance.now();
-            const oldLength = this.diedTargets.length;
             this.diedTargets = this.diedTargets.filter(d => now - d.time < RESPAWN_INTERVAL);
             spawns = this.targetSpawns;
-        } else if (symbol == CONFIG.ENEMY_SYMBOL) {
+        } else if (symbol === CONFIG.ENEMY_SYMBOL) {
             spawns = this.enemySpawns;
         }
 
         let freePlaces;
 
-        if (symbol == CONFIG.TARGET_SYMBOL) {
+        if (symbol === CONFIG.TARGET_SYMBOL) {
             freePlaces = spawns.filter((place, index) => 
                 place.isFree && !this.diedTargets.some(d => d.index === index)
             );
@@ -53,7 +52,7 @@ export class Map {
             freePlaces = spawns.filter((place) => place.isFree);
         }
 
-        if (freePlaces.length == 0 && this.diedTargets.length > 0) {
+        if (freePlaces.length === 0 && this.diedTargets.length > 0) {
             this.diedTargets = [];
             freePlaces = spawns.filter(place => place.isFree);
         }
