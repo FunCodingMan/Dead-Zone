@@ -11,6 +11,28 @@ export class Network {
 
         this.reconnectTimer = null;
 
+        this.listeners = new Map();
+    }
+
+    on(type, callback) {
+        if(!this.listeners.has(type)) {
+            this.listeners.set(type, []);
+        }
+        this.listeners.get(type).push(callback);
+    }
+
+    off(type, callback) {
+        if(!this.listeners.has(type)) return;
+
+        const callbacks = this.listeners.get(type).filter(cb => cb !== callback);
+
+        this.listeners.set(type, callbacks);
+    }
+
+    emit(type, payload) {
+        if (this.listeners.has(type)) {
+            this.listeners.get(type).forEach(callback => callback(payload));
+        }
     }
 
     connect() {
@@ -49,6 +71,10 @@ export class Network {
             const message = JSON.parse(msg.data) ;
 
             console.log('Пришло сообщение от сервера: ', message);
+
+            if (message.type) {
+                this.emit(message.type, message.payload);
+            }
         } catch (error) {
             console.log('Ошибка парсинга ответа от сервера.');
         }
