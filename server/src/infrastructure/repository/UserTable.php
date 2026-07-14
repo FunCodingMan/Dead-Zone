@@ -1,11 +1,11 @@
 <?php
 
-namespace App\infrastructure\controller;
+namespace App\infrastructure\repository;
 
 use App\app\model\Stats;
 use App\app\model\User;
-use App\infrastructure\repository\IConnectionProvider;
-use App\infrastructure\repository\IUserRepository;
+use App\app\repository\IConnectionProvider;
+use App\app\repository\IUserRepository;
 use PDO;
 use RuntimeException;
 

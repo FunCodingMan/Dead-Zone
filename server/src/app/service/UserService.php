@@ -3,8 +3,8 @@
 namespace App\app\service;
 
 use App\app\model\User;
-use App\infrastructure\repository\IRequestDataParser;
-use App\infrastructure\repository\IUserRepository;
+use App\app\repository\IRequestDataParser;
+use App\app\repository\IUserRepository;
 
 class UserService
 {
@@ -47,27 +47,7 @@ class UserService
 
     }
 
-    public function setTokenCookie(string $token): void
-    {
-        setcookie('token', $token, [
-            'expires' => time() + 60 * 60 * 24,
-            'path' => '/',
-            'httponly' => true,
-            'samesite' => 'Lax',
-            'secure' => true,
-        ]);
-    }
 
-    public function deleteTokenCookie(): void
-    {
-        setcookie('token', '', [
-            'expires' => time() - 3600,
-            'path' => '/',
-            'httponly' => true,
-            'samesite' => 'Lax',
-            'secure' => true,
-        ]);
-    }
 
 
 }

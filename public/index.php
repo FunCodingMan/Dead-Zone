@@ -3,12 +3,12 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\app\service\UserService;
-use App\infrastructure\controller\ActionExtractor;
-use App\infrastructure\controller\ConnectionProvider;
-use App\infrastructure\controller\PagesController;
-use App\infrastructure\controller\RequestDataParser;
 use App\infrastructure\controller\UserController;
-use App\infrastructure\controller\UserTable;
+use App\infrastructure\repository\ActionExtractor;
+use App\infrastructure\repository\ConnectionProvider;
+use App\infrastructure\repository\PagesRender;
+use App\infrastructure\repository\RequestDataParser;
+use App\infrastructure\repository\UserTable;
 
 try {
     $connectionProvider = new ConnectionProvider();
@@ -18,7 +18,7 @@ try {
     $userService = new UserService($userTable, $requestDataParser);
 
     $actionExtractor = new ActionExtractor();
-    $pagesController = new PagesController();
+    $pagesController = new PagesRender();
 
     $userController = new UserController($pagesController, $actionExtractor, $userService);
     $userController->executeAction();

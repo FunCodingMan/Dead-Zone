@@ -1,10 +1,10 @@
 <?php
 
-namespace App\infrastructure\controller;
+namespace App\infrastructure\repository;
 
-use App\infrastructure\repository\IPagesRender;
+use App\app\repository\IPagesRender;
 
-class PagesController implements IPagesRender
+class PagesRender implements IPagesRender
 {
 
     public function showForm(): void

@@ -1,8 +1,8 @@
 <?php
 
-namespace App\infrastructure\controller;
+namespace App\infrastructure\repository;
 
-use App\infrastructure\repository\IActionExtractor;
+use App\app\repository\IActionExtractor;
 
 class ActionExtractor implements IActionExtractor
 {
@@ -14,6 +14,27 @@ class ActionExtractor implements IActionExtractor
     private const USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
     private const USER_TRAINING_URL = '/mode-selection/singleplayer/training';
 
+    public function setTokenCookie(string $token): void
+    {
+        setcookie('token', $token, [
+            'expires' => time() + 60 * 60 * 24,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure' => true,
+        ]);
+    }
+
+    public function deleteTokenCookie(): void
+    {
+        setcookie('token', '', [
+            'expires' => time() - 3600,
+            'path' => '/',
+            'httponly' => true,
+            'samesite' => 'Lax',
+            'secure' => true,
+        ]);
+    }
 
     public function getAction(): string
     {

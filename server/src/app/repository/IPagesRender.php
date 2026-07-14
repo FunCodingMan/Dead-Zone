@@ -1,6 +1,6 @@
 <?php
 
-namespace App\infrastructure\repository;
+namespace App\app\repository;
 
 interface IPagesRender
 {

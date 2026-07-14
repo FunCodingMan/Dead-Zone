@@ -1,8 +1,8 @@
 <?php
 
-namespace App\infrastructure\controller;
+namespace App\infrastructure\repository;
 
-use App\infrastructure\repository\IConnectionProvider;
+use App\app\repository\IConnectionProvider;
 use PDO;
 use RuntimeException;
 
