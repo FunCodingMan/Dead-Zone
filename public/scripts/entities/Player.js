@@ -1,7 +1,7 @@
 import { CONFIG } from '../core/Config.js';
 import { Character } from './Character.js';
 
-const PLAYER_WIDTH = 36;
+const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 

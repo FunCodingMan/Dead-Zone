@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/mode-selection/singleplayer/waves';
     });
 
-    if (gameResult.result == 'win') {
+    if (gameResult.result === 'win') {
         result.textContent = 'ПОБЕДА';
         result.classList.add('green');
         image.src = winImageSrc;
