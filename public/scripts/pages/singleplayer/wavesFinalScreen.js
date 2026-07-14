@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
 
     const deathImageSrc = '/assets/death.png';
-    const winImageSrc = 'w/assets/win.png';
+    const winImageSrc = '/assets/win.png';
 
     const gameResult = {
         result: urlParams.get('result'),
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/mode-selection/singleplayer/waves';
     });
 
-    if (gameResult.result == 'win') {
+    if (gameResult.result === 'win') {
         result.textContent = 'ПОБЕДА';
         image.src = winImageSrc;
     } else {

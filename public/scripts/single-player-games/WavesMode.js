@@ -17,7 +17,7 @@ const wavesLevelData = `
 ################
 `;
 
-const MAX_WAVES = 3;
+const MAX_WAVES = 10;
 
 export class WavesMode extends BaseGameTemplate {
     init() {
