@@ -102,6 +102,14 @@ export class Network {
 
         console.log('Данные успешно отправлены на сервер: ', message);
     }
+    disconnect() {
+        if (this.reconnectTimer) clearInterval(this.reconnectTimer);
+        if (this.socket) {
+            this.socket.onclose = null;
+            this.socket.close();
+        }
+        this.isConnected = false;
+    }
 
 }
 
