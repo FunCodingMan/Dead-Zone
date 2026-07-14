@@ -2,7 +2,7 @@
 
 namespace App;
 
-use App\Player;
+use App\app\repository\IUserRepository;
 
 class PlayersController
 {
@@ -10,15 +10,22 @@ class PlayersController
      * @var Player[]
      */
     private array $players;
+    private IUserRepository $repository;
 
-    public function __construct()
+    public function __construct(IUserRepository $repository)
     {
+        $this->repository = $repository;
         $this->players = [];
     }
 
-    public function addPlayer(int $fd): void
+    public function addPlayer(int $fd, array $cookie): void
     {
-        $player = new Player($fd);
+        if (isset($cookie['token']) ) {
+            $user = $this->repository->getUserByToken($cookie['token']);
+            $player = new Player($fd, $user);
+        } else {
+            $player = new Player($fd);
+        }
         $this->players[] = $player;
     }
 

@@ -2,22 +2,37 @@
 
 namespace App;
 
+use App\app\model\User;
+
 class Player
 {
     private int $fd;
+    private User $user;
     private int $posX;
     private int $posY;
+    private int $angle;
+    private int $health;
+    private int $countBullets;
 
-    public function __construct(int $fd)
+    public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
     {
         $this->fd = $fd;
+        $this->user = $user;
         $this->posX = 0;
         $this->posY = 0;
+        $this->angle = 90;
+        $this->countBullets = 50;
+        $this->health = 100;
     }
 
     public function getFd(): int
     {
         return $this->fd;
+    }
+
+    public function getUser(): User
+    {
+        return $this->user;
     }
 
     public function updateStatePlayer(array $data): void
@@ -27,6 +42,28 @@ class Player
             default => null,
         };
     }
+
+    public function getFullData(): array
+    {
+        return [
+            "user_id" => $this->user->getUserId(),
+            "x" => $this->posX,
+            "y" => $this->posY,
+            "angle" => $this->angle,
+            "health" => $this->health,
+            "count_bullets" => $this->countBullets,
+        ];
+    }
+
+    public function getPublicState(): array
+    {
+        return [
+            "x" => $this->posX,
+            "y" => $this->posY,
+            "angle" => $this->angle,
+        ];
+    }
+
 
     public function getArrayPlayer(): array
     {

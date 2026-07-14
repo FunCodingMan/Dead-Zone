@@ -38,8 +38,19 @@ class WebSocketParser
 
     public function updateDataPlayers(array $players): void
     {
-        foreach ($players as $player) {
-            $this->server->push($player->getFd(), json_encode($player->getArrayPlayer()));
+        foreach ($players as $recipient) {
+            $me = [$recipient->getFullData()];
+            $others = [];
+            foreach ($players as $player) {
+                if ($recipient !== $player) {
+                    $others["{$player->getUser()->getUserId()}"] = $player->getPublicState();
+                }
+            }
+            $data = [
+                "type" => "state",
+                "payload" => ["me" => $me, "others" => $others],
+            ];
+            $this->server->push($recipient->getFd(), json_encode($data));
         }
     }
 
