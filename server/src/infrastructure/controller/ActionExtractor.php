@@ -14,6 +14,9 @@ class ActionExtractor implements IActionExtractor
     private const string USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
     private const string USER_TRAINING_URL = '/mode-selection/singleplayer/training';
 
+    private const string USER_WAVES_URL = '/mode-selection/singleplayer/waves';
+    private const string USER_WAVES_FINAL_URL = '/mode-selection/singleplayer/waves-final';
+
 
     public function getAction(): string
     {
@@ -30,14 +33,18 @@ class ActionExtractor implements IActionExtractor
         $method = $_SERVER["REQUEST_METHOD"];
         $hasToken = isset($_COOKIE["token"]);
 
+        $urlPath = strtok($url, '?');
+
         return match (true) {
             $method === "POST" && $url === self::USER_REGISTRATION_URL => 'registration',
             $method === "POST" && $url === self::USER_LOGIN_URL => 'login',
             $method === "POST" && $url === self::USER_LOGOUT_URL && $hasToken => 'logout',
-            $method === "GET" && $url === self::USER_MODE_SELECTION_URL && $hasToken => 'mode-selection',
-            $method === "GET" && $url === self::USER_PROFILE_URL && $hasToken => 'profile',
-            $method === "GET" && $url === self::USER_SINGLEPLAYER_URL && $hasToken => 'singleplayer',
-            $method === "GET" && $url === self::USER_TRAINING_URL && $hasToken => 'training',
+            $method === "GET" && $urlPath === self::USER_MODE_SELECTION_URL && $hasToken => 'mode-selection',
+            $method === "GET" && $urlPath === self::USER_PROFILE_URL && $hasToken => 'profile',
+            $method === "GET" && $urlPath === self::USER_SINGLEPLAYER_URL && $hasToken => 'singleplayer',
+            $method === "GET" && $urlPath === self::USER_TRAINING_URL && $hasToken => 'training',
+            $method === "GET" && $urlPath === self::USER_WAVES_URL && $hasToken => 'waves',
+            $method === "GET" && $urlPath === self::USER_WAVES_FINAL_URL && $hasToken => 'waves-final',
             $method === "GET" && isset($_COOKIE["token"]) => 'menu',
             default => null
         };

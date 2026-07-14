@@ -36,4 +36,14 @@ class PagesController implements IPagesRender
     {
         include_once __DIR__ . "/../../View/training.html";
     }
+
+    public function showSecondGame(): void
+    {
+        include_once __DIR__ . "/../../View/waves.html";
+    }
+
+    public function showSecondGameFinal(): void
+    {
+        include_once __DIR__ . "/../../View/finalScreen.html";
+    }
 }

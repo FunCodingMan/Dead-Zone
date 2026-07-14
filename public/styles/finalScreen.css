@@ -1,0 +1,56 @@
+body {
+    background-color: #141414;
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Spielarcade Regular', sans-serif;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.red {
+    color: #9d0202;
+}
+
+.green {
+    color: #049f04;
+}
+
+.title {
+    font-size: 150px;
+    letter-spacing: 1.1svb;
+    margin: 0;
+    margin-top: 50px;
+}
+
+.image {
+    width: 400px;
+    height: 400px;
+}
+
+.text {
+    font-size: 24px;
+}
+
+.buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 60px;
+    margin-top: 10px;
+}
+
+.button {
+    background-color: #333;
+    border: 2px solid #555;
+    color: #ffffff;
+    font-family: 'Spielarcade Regular', sans-serif;
+    font-size: 24px;
+    padding: 10px 50px;
+}
+
+.button:hover {
+    cursor: pointer;
+}
