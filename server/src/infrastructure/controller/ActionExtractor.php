@@ -6,13 +6,13 @@ use App\infrastructure\repository\IActionExtractor;
 
 class ActionExtractor implements IActionExtractor
 {
-    private const string USER_LOGIN_URL = "/api/users/login";
-    private const string USER_REGISTRATION_URL = "/api/users/registration";
-    private const string USER_LOGOUT_URL = "/api/users/logout";
-    private const string USER_MODE_SELECTION_URL = "/mode-selection";
-    private const string USER_PROFILE_URL = "/profile";
-    private const string USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
-    private const string USER_TRAINING_URL = '/mode-selection/singleplayer/training';
+    private const USER_LOGIN_URL = "/api/users/login";
+    private const USER_REGISTRATION_URL = "/api/users/registration";
+    private const USER_LOGOUT_URL = "/api/users/logout";
+    private const USER_MODE_SELECTION_URL = "/mode-selection";
+    private const USER_PROFILE_URL = "/profile";
+    private const USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
+    private const USER_TRAINING_URL = '/mode-selection/singleplayer/training';
 
 
     public function getAction(): string
