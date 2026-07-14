@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
 
     const deathImageSrc = '/assets/death.png';
-    const winImageSrc = 'w/assets/win.png';
+    const winImageSrc = '/assets/win.png';
 
     const gameResult = {
         result: urlParams.get('result'),
@@ -30,9 +30,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (gameResult.result == 'win') {
         result.textContent = 'ПОБЕДА';
+        result.classList.add('green');
         image.src = winImageSrc;
+
     } else {
         result.textContent = 'ПОРАЖЕНИЕ';
+        result.classList.add('red');
         image.src = deathImageSrc;
     }
 
