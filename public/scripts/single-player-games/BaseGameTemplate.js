@@ -5,7 +5,7 @@ export class BaseGameTemplate {
 
     // Инициализация, загрузка карты, спавн игрока, боты
     init () {
-
+        this.engine.isGameEnded = false;
     }
     // Логика режима (проверка на победу, спавн врагов и т.д.)
     update () {

@@ -1,7 +1,7 @@
 import { CONFIG } from '../core/Config.js';
 import { Character } from './Character.js';
 
-const PLAYER_WIDTH = 28;
+const PLAYER_WIDTH = 36;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
@@ -175,6 +175,7 @@ export class Player extends Character {
                 if (enemy.isAlive) {
                     const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
                     if (map.isIntersecting(r1, r2)) {
+                        this.appliedDamage += this.damage;
                         enemy.takeDamage(this.damage, map, CONFIG.PLAYER_SYMBOL);
                         toRemove.push(index);
                     }

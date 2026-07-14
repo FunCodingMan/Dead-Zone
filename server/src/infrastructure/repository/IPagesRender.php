@@ -10,4 +10,6 @@ interface IPagesRender
     public function showModeSelection(): void;
     public function showSinglePlayer(): void;
     public function showFirstGame(): void;
+    public function showSecondGame(): void;
+    public function showSecondGameFinal(): void;
 }

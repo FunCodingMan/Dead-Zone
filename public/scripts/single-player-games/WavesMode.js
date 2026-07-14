@@ -17,6 +17,8 @@ const wavesLevelData = `
 ################
 `;
 
+const MAX_WAVES = 3;
+
 export class WavesMode extends BaseGameTemplate {
     init() {
         this.engine.map = new Map();
@@ -34,15 +36,29 @@ export class WavesMode extends BaseGameTemplate {
 
         const enemiesCount = this.currentWave;
         for (let i = 0; i < enemiesCount; i++) {
-            this.engine.enemies.push(new Enemy(this.engine.map));
+            const enemy = new Enemy(this.engine.map);
+            this.engine.enemies.push(enemy);
+            enemy.onDeath(() => {
+                this.engine.player.kills++;
+            });
         }
     }
 
     update() {
         const currentTime = performance.now();
 
+        if (!this.engine.player.isAlive) {
+            this.endGame(false);
+            return;
+        }
+
         const aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
         if (aliveEnemies.length === 0) {
+            if (this.currentWave >= MAX_WAVES) {
+                this.endGame(true);
+                return;
+            }
+            
             this.currentWave++;
             this.spawnWave();
             return;
@@ -90,5 +106,19 @@ export class WavesMode extends BaseGameTemplate {
         ctx.font = 'bold 30px Arial';
         const text = `ВОЛНА: ${this.currentWave}`;
         ctx.fillText(text, canvas.width / 2 - 70, 50);
+    }
+
+    endGame(isVictory) {
+        this.engine.stop();
+        this.engine.isGameEnded = true;
+
+        const params = new URLSearchParams({
+            result: isVictory ? 'win' : 'lose',
+            wave: this.currentWave,
+            damage: this.engine.player.appliedDamage,
+            kills: this.engine.player.kills
+        });
+
+        window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;
     }
 }

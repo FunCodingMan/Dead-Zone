@@ -23,6 +23,8 @@ export class Game {
         this.currentMode = null;
 
         this.loop = this.loop.bind(this);
+
+        this.isGameEnded;
     }
 
     start(ModeClass) {
@@ -63,6 +65,8 @@ export class Game {
     }
 
     loop() {
+        if (this.isGameEnded) return;
+
         this.update();
         this.draw();
         this.animationId = requestAnimationFrame(this.loop);
