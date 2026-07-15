@@ -123,7 +123,7 @@ export class Character {
         ctx.drawImage(currentFrame, -(this.w * 1.2) / 2, -(this.h * 1.2) / 2, this.w * 1.2, this.h * 1.2);
         ctx.restore();
 
-        if (!isPaused) {
+        if (!isPaused && this.resetPauseTime) {
             this.resetPauseTime();
         }
     }
