@@ -108,13 +108,16 @@ export class Player extends Character {
         if (nextX + this.w > map.width) nextX = map.width - this.w;
         if (nextY + this.h > map.height) nextY = map.height - this.h;
 
+        const offsetX = (this.w - HITBOX) / 2;
+        const offsetY = (this.h - HITBOX) / 2;
+
         if (!map.checkCollision({
-            x: nextX + (this.w - HITBOX) / 2, y: this.y + (this.w - HITBOX) / 2, w: this.w, h: this.h
+            x: nextX + offsetX, y: this.y + offsetY, w: HITBOX, h: HITBOX
         }, enemies, targets)) {
             this.x = nextX;
         }
         if (!map.checkCollision({
-            x: this.x + (this.w - HITBOX) / 2, y: nextY + (this.w - HITBOX) / 2, w: this.w, h: this.h
+            x: this.x + offsetX, y: nextY + offsetY, w: HITBOX, h: HITBOX
         }, enemies, targets)) {
             this.y = nextY;
         }

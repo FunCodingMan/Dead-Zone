@@ -17,9 +17,11 @@ $pc = new PlayersController($userTable);
 $ws = new WebSocketParser($server);
 $gameEngine = new GameEngine($pc, $ws);
 
-$server->on('open', function ($server, $request) use ($pc) {
+$server->on('open', function ($server, $request) use ($pc, $gameEngine) {
     echo "Клиент #{$request->fd} подключился\n";
     $pc->addPlayer($request->fd, $request->cookie ?? []);
+
+    $gameEngine->spawnPlayer($request->fd);
 });
 
 $server->on('message', function ($server, $frame) use ($ws) {

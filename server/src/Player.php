@@ -4,6 +4,10 @@ namespace App;
 
 use App\app\model\User;
 
+use App\GameConfig;
+use App\Vector2D;
+use App\Rect;
+
 class Player
 {
     private int $fd;
@@ -13,17 +17,24 @@ class Player
     private float $angle;
     private int $health;
     private int $countBullets;
-    private float $speed = 8.0;
+    private float $speed = GameConfig::PLAYER_SPEED;
 
     public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
     {
         $this->fd = $fd;
         $this->user = $user;
-        $this->posX = 0;
-        $this->posY = 0;
+        $this->posX = 0.0;
+        $this->posY = 0.0;
         $this->angle = 90;
         $this->countBullets = 50;
         $this->health = 100;
+    }
+
+    public function getRect(): Rect
+    {
+        $offsetX = (GameConfig::PLAYER_WIDTH - GameConfig::HITBOX_SIZE) / 2;
+        $offsetY = (GameConfig::PLAYER_HEIGHT - GameConfig::HITBOX_SIZE) / 2;
+        return new Rect($this->posX + $offsetX, $this->posY + $offsetY, GameConfig::HITBOX_SIZE, GameConfig::HITBOX_SIZE);
     }
 
     public function getFd(): int
@@ -36,10 +47,13 @@ class Player
         return $this->user;
     }
 
-    public function updateStatePlayer(array $data): void
+    public function updateStatePlayer(array $data, GameMap $map): void
     {
+        if (isset($data['angle'])) {
+            $this->angle = (float)$data['angle'];
+        }
         match ($data['type']) {
-            "move" => $this->move($data['keys']),
+            "move" => $this->move($data['keys'], $map),
             default => null,
         };
     }
@@ -71,24 +85,45 @@ class Player
         return ["x" => $this->posX, "y" => $this->posY];
     }
 
-    private function move(array $keys): void
+    private function calculateVelocity(array $keys): Vector2D
     {
-        $dx = 0;
-        $dy = 0;
+        $x = 0.0;
+        $y = 0.0;
 
         foreach ($keys as $key) {
-            if ($key === "w") $dy -= 1;
-            if ($key === "s") $dy += 1;
-            if ($key === "d") $dx += 1;
-            if ($key === "a") $dx -= 1;
+            if ($key === 'w') $y -= 1.0;
+            if ($key === 's') $y += 1.0;
+            if ($key === 'd') $x += 1.0;
+            if ($key === 'a') $x -= 1.0;
         }
 
-        if ($dx === 0 && $dy === 0) return;
+        return (new Vector2D($x, $y))->normalize()->scale($this->speed);
+    }
 
-        $length = hypot($dx, $dy);
+    private function tryMove(float $dx, float $dy, GameMap $map): void
+    {
+        if ($dx === 0.0 && $dy === 0.0) return;
 
-        $this->posX += ($dx / $length) * $this->speed;
-        $this->posY += ($dy / $length) * $this->speed;
+        $targetRect = $this->getRect()->shift($dx, $dy);
+
+        if (!$map->checkCollision($targetRect)) {
+            $this->posX += $dx;
+            $this->posY += $dy;
+        }
+    }
+
+    private function move(array $keys, GameMap $map): void
+    {
+        $velocity = $this->calculateVelocity($keys);
+
+        $this->tryMove($velocity->getX(), 0.0, $map);
+        $this->tryMove(0.0, $velocity->getY(), $map);
+    }
+
+    public function setPos(float $x, float $y): void
+    {
+        $this->posX = $x;
+        $this->posY = $y;
     }
 
 }
