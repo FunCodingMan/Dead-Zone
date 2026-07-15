@@ -7,14 +7,16 @@ use App\app\model\User;
 class Player
 {
     private int $fd;
-    private ?User $user;
+    private User $user;
     private int $posX;
     private int $posY;
     private int $angle;
     private int $health;
     private int $countBullets;
 
-    public function __construct(int $fd, ?User $user = null)
+    private int $speed = 5;
+
+    public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
     {
         $this->fd = $fd;
         $this->user = $user;
@@ -30,7 +32,7 @@ class Player
         return $this->fd;
     }
 
-    public function getUser(): ?User
+    public function getUser(): User
     {
         return $this->user;
     }
@@ -74,16 +76,16 @@ class Player
     {
         foreach ($keys as $key) {
             if ($key === "w") {
-                $this->posY++;
+                $this->posY -= $this->speed;
             }
             if ($key === "s") {
-                $this->posY--;
+                $this->posY += $this->speed;
             }
             if ($key === "d") {
-                $this->posX++;
+                $this->posX += $this->speed;
             }
             if ($key === "a") {
-                $this->posX--;
+                $this->posX -= $this->speed;
             }
         }
     }
