@@ -1,7 +1,8 @@
 <?php
 
-namespace App;
+namespace App\infrastructure\websocket;
 
+use App\app\model\Player;
 use App\app\repository\IUserRepository;
 
 class PlayersController
@@ -22,9 +23,13 @@ class PlayersController
     {
         if (isset($cookie['token'])) {
             $user = $this->repository->getUserByToken($cookie['token']);
+            if ($user !== null) {
+                $userId = $user->getUserId();
+                $player = new Player($fd, $userId);
+                $this->players[] = $player;
+            }
         }
-        $player = new Player($fd, $user ?? null);
-        $this->players[] = $player;
+
     }
 
     public function deletePlayer(int $fd): void

@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\app\game;
 
 class Vector2D {
     private float $x = 0.0;

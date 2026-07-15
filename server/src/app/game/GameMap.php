@@ -1,10 +1,6 @@
 <?php
 
-namespace App;
-
-use App\GameConfig;
-use App\Rect;
-use App\Box;
+namespace App\app\game;
 
 class GameMap
 {

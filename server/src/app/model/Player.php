@@ -1,17 +1,16 @@
 <?php
 
-namespace App;
+namespace App\app\model;
 
-use App\app\model\User;
-
-use App\GameConfig;
-use App\Vector2D;
-use App\Rect;
+use App\app\game\GameConfig;
+use App\app\game\GameMap;
+use App\app\game\Rect;
+use App\app\game\Vector2D;
 
 class Player
 {
     private int $fd;
-    private User $user;
+    private string $userId;
     private float $posX;
     private float $posY;
     private float $angle;
@@ -19,10 +18,10 @@ class Player
     private int $countBullets;
     private float $speed = GameConfig::PLAYER_SPEED;
 
-    public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
+    public function __construct(int $fd, string $userId)
     {
         $this->fd = $fd;
-        $this->user = $user;
+        $this->userId = $userId;
         $this->posX = 0.0;
         $this->posY = 0.0;
         $this->angle = 90;
@@ -42,9 +41,9 @@ class Player
         return $this->fd;
     }
 
-    public function getUser(): User
+    public function getUserId(): string
     {
-        return $this->user;
+        return $this->userId;
     }
 
     public function updateStatePlayer(array $data, GameMap $map): void
@@ -61,7 +60,7 @@ class Player
     public function getFullData(): array
     {
         return [
-            "user_id" => $this->user->getUserId(),
+            "user_id" => $this->userId,
             "x" => $this->posX,
             "y" => $this->posY,
             "angle" => $this->angle,

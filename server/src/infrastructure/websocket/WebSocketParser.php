@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\infrastructure\websocket;
 
 
 class WebSocketParser

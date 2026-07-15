@@ -1,8 +1,8 @@
 <?php
 
-namespace App;
+namespace App\app\game;
 
-use App\Rect;
+use App\app;
 
 class Box {
     private int $health = 100;
@@ -27,7 +27,7 @@ class Box {
         return $this->isDestroyed;
     }
 
-    public function getRect(): \App\Rect
+    public function getRect(): app\game\Rect
     {
         return $this->rect;
     }

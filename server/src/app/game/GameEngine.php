@@ -1,8 +1,9 @@
 <?php
 
-namespace App;
+namespace App\app\game;
 
-use App\GameMap;
+use App\infrastructure\websocket\PlayersController;
+use App\infrastructure\websocket\WebSocketParser;
 
 class GameEngine
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\app\game;
 
 class Rect {
     private float $x;

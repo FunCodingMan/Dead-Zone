@@ -2,11 +2,11 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use App\GameEngine;
+use App\app\game\GameEngine;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
-use App\PlayersController;
-use App\WebSocketParser;
+use App\infrastructure\websocket\PlayersController;
+use App\infrastructure\websocket\WebSocketParser;
 
 $server = new \Swoole\WebSocket\Server("0.0.0.0", 9502);
 
