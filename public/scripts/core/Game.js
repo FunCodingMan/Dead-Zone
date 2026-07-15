@@ -68,7 +68,7 @@ export class Game {
         if (this.isGameEnded) return;
 
         this.update();
-        this.draw();
+        this.drawdraw();
         this.animationId = requestAnimationFrame(this.loop);
     }
 

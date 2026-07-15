@@ -33,7 +33,7 @@ $server->on('close', function ($server, $fd) use ($pc){
     $pc->deletePlayer($fd);
 });
 
-\Swoole\Timer::tick(50, function () use ($gameEngine) {
+\Swoole\Timer::tick(1, function () use ($gameEngine) {
     try {
         $gameEngine->pushData();
     } catch (RuntimeException $error) {

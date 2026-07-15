@@ -46,7 +46,7 @@ class WebSocketParser
             $me = $recipient->getFullData();
             $others = [];
             foreach ($players as $player) {
-                if ($recipient->getFd() !== $player->getFd()) {
+                if ($recipient !== $player) {
                     $others["{$player->getUser()->getUserId()}"] = $player->getPublicState();
                 }
             }

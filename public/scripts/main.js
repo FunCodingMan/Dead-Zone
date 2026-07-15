@@ -24,9 +24,11 @@ async function init() {
             togglePauseUI(false);
         },
         onExitToMenu: () => {
+
+            if (game) game.stop();
+
             if (canvas.getAttribute('data-target') === 'multiplayer') {
                 window.location.href = '/mode-selection';
-                game.currentMode.network.disconnect();
             } else {
                 window.location.href = '/mode-selection/singleplayer';
             }

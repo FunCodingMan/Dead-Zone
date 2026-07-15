@@ -13,7 +13,6 @@ class Player
     private int $angle;
     private int $health;
     private int $countBullets;
-
     private int $speed = 5;
 
     public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
