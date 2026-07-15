@@ -26,10 +26,10 @@ const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
 
 export class Player extends Character {
-    constructor(map, input) {
+    constructor(map, input, resetPauseTimeCallback) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
-        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex);
+        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
 
         this.speed = SPEED;
         this.input = input;
@@ -71,9 +71,7 @@ export class Player extends Character {
             this.reloadStartTime = performance.now();
         }
 
-        if (this.isReloading) {
-            this.updateReload();
-        }
+        //вызов перезарядки вынесен в Game update для обработки во время паузы
 
         this.handleBullets(map, enemies, targets);
     }
@@ -270,12 +268,15 @@ export class Player extends Character {
         ctx.drawImage(this.hpCanvas, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING);
     }
 
-    updateReload() {
+    updateReload(isPaused, totalPauseTime) {
         if (!this.isReloading) return;
+        if (isPaused) return;
+
         const now = performance.now();
-        if (now - this.reloadStartTime >= RELOAD_TIME) {
+        if (now - this.reloadStartTime - totalPauseTime >= RELOAD_TIME) {
             this.shotsAmount = MAX_SHOTS_AMOUNT;
             this.isReloading = false;
+            this.resetPauseTime();
         }
     }
 }

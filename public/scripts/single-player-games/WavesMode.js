@@ -23,7 +23,7 @@ export class WavesMode extends BaseGameTemplate {
     init() {
         this.engine.map = new Map();
         this.engine.map.loadLevel(wavesLevelData);
-        this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player = new Player(this.engine.map, this.engine.input, this.engine.resetPauseTime);
         this.engine.player.bloodManager = this.engine.bloodManager;
 
         this.currentWave = 1;
@@ -37,7 +37,7 @@ export class WavesMode extends BaseGameTemplate {
 
         const enemiesCount = this.currentWave;
         for (let i = 0; i < enemiesCount; i++) {
-            const enemy = new Enemy(this.engine.map);
+            const enemy = new Enemy(this.engine.map, this.engine.resetPauseTime);
             enemy.bloodManager = this.engine.bloodManager;
             this.engine.enemies.push(enemy);
             enemy.onDeath(() => {
