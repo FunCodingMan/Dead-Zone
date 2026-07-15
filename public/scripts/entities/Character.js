@@ -99,33 +99,41 @@ export class Character {
     drawDeath(ctx, explosions, isPaused, totalPauseTime) {
         if (!this.isDying) return;
 
-        let elapsed;
+        const gameNow = performance.now() - totalPauseTime;
 
+        if (this.deathGameStartTime === undefined) {
+            this.deathGameStartTime = gameNow;
+        }
+
+        let elapsed;
         if (isPaused) {
-            elapsed = this.deathElapsed;
+            elapsed = this.deathElapsed || 0;
         } else {
-            const now = performance.now();
-            elapsed = now - this.deathStartTime - totalPauseTime;
+            elapsed = gameNow - this.deathGameStartTime;
             this.deathElapsed = elapsed;
         }
 
         if (elapsed >= EXPLOSION_DURATION_MS) {
             this.isDying = false;
+            this.deathGameStartTime = undefined;
             return;
         }
 
-        const progress = elapsed / EXPLOSION_DURATION_MS;
-        const frameIndex = Math.floor(progress * explosions.length);
+        const safeElapsed = Math.max(0, elapsed);
+        const progress = safeElapsed / EXPLOSION_DURATION_MS;
+
+        const frameIndex = Math.min(
+            Math.max(0, Math.floor(progress * explosions.length)),
+            explosions.length - 1
+        );
         const currentFrame = explosions[frameIndex];
+
+        if (!currentFrame) return;
 
         ctx.save();
         ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
         ctx.drawImage(currentFrame, -(this.w * 1.2) / 2, -(this.h * 1.2) / 2, this.w * 1.2, this.h * 1.2);
         ctx.restore();
-
-        if (!isPaused && this.resetPauseTime) {
-            this.resetPauseTime();
-        }
     }
 
     animateShots(ctx, shot1Img, shot2Img, player) {

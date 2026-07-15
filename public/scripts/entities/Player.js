@@ -269,14 +269,22 @@ export class Player extends Character {
     }
 
     updateReload(isPaused, totalPauseTime) {
-        if (!this.isReloading) return;
+        if (!this.isReloading) {
+            this.reloadStartTime = undefined;
+            return;
+        }
         if (isPaused) return;
 
-        const now = performance.now();
-        if (now - this.reloadStartTime - totalPauseTime >= RELOAD_TIME) {
+        const now = performance.now() - totalPauseTime;
+
+        if (this.reloadStartTime === undefined) {
+            this.reloadStartTime = now;
+        }
+
+        if (now - this.reloadStartTime >= RELOAD_TIME) {
             this.shotsAmount = MAX_SHOTS_AMOUNT;
             this.isReloading = false;
-            this.resetPauseTime();
+            this.reloadStartTime = undefined;
         }
     }
 }

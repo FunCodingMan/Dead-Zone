@@ -90,7 +90,10 @@ export class Game {
     }
 
     update() {
-        this.player.updateReload(this.isPaused, this.totalPauseTime);
+
+        if (this.player) {
+            this.player.updateReload(this.isPaused, this.totalPauseTime);
+        }
 
         if (this.isPaused) return;
         if (this.player) this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
