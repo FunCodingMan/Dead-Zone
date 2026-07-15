@@ -40,7 +40,7 @@ export class Player extends Character {
         this.damage = DAMAGE;
         this.shotsAmount = MAX_SHOTS_AMOUNT;
         this.isReloading = false;
-        this.reloadStartTime = 0;
+        this.reloadStartTime = undefined;
 
         this.hpCanvas = document.createElement('canvas');
         this.hpCanvas.width = HP_SIZE;
@@ -68,7 +68,6 @@ export class Player extends Character {
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
             this.isReloading = true;
-            this.reloadStartTime = performance.now();
         }
 
         //вызов перезарядки вынесен в Game update для обработки во время паузы
