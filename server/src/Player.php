@@ -8,12 +8,12 @@ class Player
 {
     private int $fd;
     private User $user;
-    private int $posX;
-    private int $posY;
-    private int $angle;
+    private float $posX;
+    private float $posY;
+    private float $angle;
     private int $health;
     private int $countBullets;
-    private int $speed = 5;
+    private float $speed = 8.0;
 
     public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
     {
@@ -73,20 +73,22 @@ class Player
 
     private function move(array $keys): void
     {
+        $dx = 0;
+        $dy = 0;
+
         foreach ($keys as $key) {
-            if ($key === "w") {
-                $this->posY -= $this->speed;
-            }
-            if ($key === "s") {
-                $this->posY += $this->speed;
-            }
-            if ($key === "d") {
-                $this->posX += $this->speed;
-            }
-            if ($key === "a") {
-                $this->posX -= $this->speed;
-            }
+            if ($key === "w") $dy -= 1;
+            if ($key === "s") $dy += 1;
+            if ($key === "d") $dx += 1;
+            if ($key === "a") $dx -= 1;
         }
+
+        if ($dx === 0 && $dy === 0) return;
+
+        $length = hypot($dx, $dy);
+
+        $this->posX += ($dx / $length) * $this->speed;
+        $this->posY += ($dy / $length) * $this->speed;
     }
 
 }

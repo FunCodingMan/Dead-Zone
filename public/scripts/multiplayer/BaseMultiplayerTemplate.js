@@ -186,7 +186,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         });
     }
 
-    drawUI(ctx, canvas) {
+    draw(ctx) {
         this.otherPlayers.forEach((enemy) => {
             if (enemy.isAlive && enemy.hitpoints > 0) {
                 enemy.draw(ctx, this.engine.assets.soldier);

@@ -68,7 +68,7 @@ export class Game {
         if (this.isGameEnded) return;
 
         this.update();
-        this.drawdraw();
+        this.draw();
         this.animationId = requestAnimationFrame(this.loop);
     }
 
@@ -128,6 +128,10 @@ export class Game {
                 target.drawDeath(this.ctx, this.assets.explosions);
             }
         })
+
+        if (this.currentMode && typeof this.currentMode.draw === 'function') {
+            this.currentMode.draw(this.ctx);
+        }
 
         if (this.player) {
             if (this.player.isAlive) {
