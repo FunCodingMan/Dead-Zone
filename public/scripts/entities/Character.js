@@ -1,6 +1,6 @@
 import { CONFIG } from "../core/Config.js";
 
-const MAX_HITPOINTS = 100;
+export const MAX_HITPOINTS = 100;
 const EXPLOSION_DURATION_MS = 400;
 const SHOT_FRAME_SIZE = 100;
 const SHOT_FRAME_X_OFFSET = -2;
@@ -10,7 +10,7 @@ const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
 export class Character {
-    constructor(spawn, width, height, spawnIndex) {
+    constructor(spawn, width, height, spawnIndex, bloodManager) {
         this.spawnPoint = spawn;
         this.spawnIndex = spawnIndex;
         this.x = spawn.x;
@@ -36,6 +36,8 @@ export class Character {
         this.currentScale = 1;
 
         this.onDeathCallBack;
+
+        this.bloodManager = bloodManager;
     }
 
     onDeath(callback) {
@@ -50,7 +52,7 @@ export class Character {
         if (symbol === CONFIG.TARGET_SYMBOL) {
             this.startPulse();
         } else {
-            this.addBloodSpot(map);
+            this.bloodManager.addBloodSpot(this);
         }
 
         if (this.hitpoints <= 0) {
@@ -69,14 +71,6 @@ export class Character {
                 }
             }
         }
-    }
-
-    addBloodSpot(map) {
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
-        const spotSize = MAX_HITPOINTS - this.hitpoints;
-        const randomAngle = Math.random() * Math.PI * 2;
-        map.bloodSpots.push({ x: centerX, y: centerY, size: spotSize, angle: randomAngle });
     }
 
     draw(ctx, image) {

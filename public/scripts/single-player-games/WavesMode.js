@@ -24,6 +24,7 @@ export class WavesMode extends BaseGameTemplate {
         this.engine.map = new Map();
         this.engine.map.loadLevel(wavesLevelData);
         this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player.bloodManager = this.engine.bloodManager;
 
         this.currentWave = 1;
         this.spawnWave();
@@ -37,6 +38,7 @@ export class WavesMode extends BaseGameTemplate {
         const enemiesCount = this.currentWave;
         for (let i = 0; i < enemiesCount; i++) {
             const enemy = new Enemy(this.engine.map);
+            enemy.bloodManager = this.engine.bloodManager;
             this.engine.enemies.push(enemy);
             enemy.onDeath(() => {
                 this.engine.player.kills++;
@@ -65,40 +67,44 @@ export class WavesMode extends BaseGameTemplate {
         }
 
         aliveEnemies.forEach(enemy => {
+            this.enemyPathFind(enemy);
+
             const distance = Math.sqrt(
                 (this.engine.player.x - enemy.x) * (this.engine.player.x - enemy.x) +
                 (this.engine.player.y - enemy.y) * (this.engine.player.y - enemy.y)
             );
-
-            if (!enemy.isDying) {
-                const pathGraph = this.engine.buildPathGraph();
-                const playerPosition = this.engine.map.getCharacterPositionOnGrid(
-                    this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
-                );
-
-                const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
-
-                const nextCell = this.engine.findNextCell(
-                    pathGraph,
-                    currentCell.row,
-                    currentCell.col,
-                    playerPosition.row,
-                    playerPosition.col
-                );
-
-                enemy.x += (nextCell.col - currentCell.col) * enemy.speed;
-                enemy.y += (nextCell.row - currentCell.row) * enemy.speed;
-
-                const dx = this.engine.player.x - enemy.x;
-                const dy = this.engine.player.y - enemy.y;
-                enemy.angle = Math.atan2(dy, dx);
-            }
 
             if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
                 this.lastAttackTime = currentTime;
                 this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
             }
         });
+    }
+
+    enemyPathFind(enemy) {
+        if (!enemy.isDying) {
+            const pathGraph = this.engine.map.buildPathGraph(this.engine.player, this.engine.enemies);
+            const playerPosition = this.engine.map.getCharacterPositionOnGrid(
+                this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
+            );
+
+            const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
+
+            const nextCell = this.engine.map.findNextCell(
+                pathGraph,
+                currentCell.row,
+                currentCell.col,
+                playerPosition.row,
+                playerPosition.col
+            );
+
+            enemy.x += (nextCell.col - currentCell.col) * enemy.speed;
+            enemy.y += (nextCell.row - currentCell.row) * enemy.speed;
+
+            const dx = this.engine.player.x - enemy.x;
+            const dy = this.engine.player.y - enemy.y;
+            enemy.angle = Math.atan2(dy, dx);
+        }
     }
 
     drawUI(ctx, canvas) {

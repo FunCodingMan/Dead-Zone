@@ -1,8 +1,6 @@
 import { Input } from '../utils/Input.js';
 import { CONFIG } from './Config.js';
-
-const AVAILABLE_CELL = 1;
-const UNAVAILABLE_CELL = 0;
+import { BloodManager } from './BloodManager.js';
 
 export class Game {
     constructor(canvas, assets, onPauseToggle) {
@@ -25,6 +23,8 @@ export class Game {
         this.loop = this.loop.bind(this);
 
         this.isGameEnded;
+
+        this.bloodManager = new BloodManager();
     }
 
     start(ModeClass) {
@@ -72,87 +72,6 @@ export class Game {
         this.animationId = requestAnimationFrame(this.loop);
     }
 
-    buildPathGraph() {
-        const mapData = this.map.grid;
-        const rows = mapData.length;
-        const cols = mapData[0].length;
-
-        const graph = [];
-        for (let row = 0; row < rows; row++) {
-            graph[row] = [];
-            for (let col = 0; col < cols; col++) {
-                const cell = mapData[row][col];
-                graph[row][col] = (cell === CONFIG.SPACE_SYMBOL) ? 1 : 0;
-            }
-        }
-
-        const aliveEnemies = this.enemies.filter(e => e.isAlive || e.isDying);
-        aliveEnemies.forEach(enemy => {
-            const pos = this.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
-            graph[pos.row][pos.col] = 0;
-        });
-
-        const pos = this.map.getCharacterPositionOnGrid(
-            this.player.x, this.player.y, this.player.w, this.player.h
-        );
-        graph[pos.row][pos.col] = 1;
-
-        return graph;
-    }
-
-    findNextCell(graph, startRow, startCol, targetRow, targetCol) {
-        const rows = graph.length;
-        const cols = graph[0].length;
-
-        const queue = [{row: startRow, col: startCol}];
-        const visited = Array(rows).fill(null).map(() => Array(cols).fill(false));
-        const parent = Array(rows).fill(null).map(() => Array(cols).fill(null));
-
-        visited[startRow][startCol] = true;
-        const directions = [[-1, -1], [0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0]];
-        const path = [];
-
-        while (queue.length > 0) {
-            const current = queue.shift();
-            const {row, col} = current;
-
-            if (row === targetRow && col === targetCol) {
-                let curr = {row, col};
-                while (curr.row !== startRow || curr.col !== startCol) {
-                    path.push({row: curr.row, col: curr.col});
-                    curr = parent[curr.row][curr.col];
-                }
-                path.push({ row: startRow, col: startCol });
-
-                if (path.length >= 2) {
-                    return path[path.length - 2];
-                }
-                return path[0];
-            }
-
-            for (const [dr, dc] of directions) {
-                const newRow = row + dr;
-                const newCol = col + dc;
-
-                if (dr !== 0 && dc !== 0) {
-                    if (graph[row][newCol] === 0 || graph[newRow][col] === 0) {
-                        continue;
-                    }
-                }
-
-                if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                    if (graph[newRow][newCol] === AVAILABLE_CELL && !visited[newRow][newCol]) {
-                        visited[newRow][newCol] = true;
-                        parent[newRow][newCol] = { row, col };
-                        queue.push({ row: newRow, col: newCol });
-                    }
-                }
-            }
-        }
-
-        return { row: startRow, col: startCol };
-    }
-
     update() {
         if (this.isPaused) return;
         if (this.player) this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
@@ -173,9 +92,27 @@ export class Game {
 
         if (this.map) {
             this.map.draw(this.ctx, this.assets);
-            this.map.drawBlood(this.ctx, this.assets.blood);
         }
 
+        if (this.bloodManager) {
+             this.bloodManager.drawBlood(this.ctx, this.assets.blood);
+        }
+
+        this.drawEntities();
+
+        this.ctx.restore();
+
+        if (this.player && this.player.isAlive) {
+            this.player.drawReloadInterface(this.ctx, this.assets.reloadIcon, this.canvas);
+            this.player.drawHPInterface(this.ctx, this.assets.heartIcon, this.canvas);
+        }
+
+        if (this.currentMode) {
+            this.currentMode.drawUI(this.ctx, this.canvas);
+        }
+    }
+
+    drawEntities() {
         this.enemies.forEach(enemy => {
             if (enemy.isAlive) {
                 enemy.draw(this.ctx, this.assets.zombie);
@@ -204,17 +141,6 @@ export class Game {
             } else if (this.player.isDying) {
                 this.player.drawDeath(this.ctx, this.assets.explosions);
             }
-        }
-
-        this.ctx.restore();
-
-        if (this.player && this.player.isAlive) {
-            this.player.drawReloadInterface(this.ctx, this.assets.reloadIcon, this.canvas);
-            this.player.drawHPInterface(this.ctx, this.assets.heartIcon, this.canvas);
-        }
-
-        if (this.currentMode) {
-            this.currentMode.drawUI(this.ctx, this.canvas);
         }
     }
 }
