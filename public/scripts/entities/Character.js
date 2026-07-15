@@ -10,7 +10,7 @@ const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
 export class Character {
-    constructor(spawn, width, height, spawnIndex, bloodManager) {
+    constructor(spawn, width, height, spawnIndex, bloodManager, resetPauseTimeCallback) {
         this.spawnPoint = spawn;
         this.spawnIndex = spawnIndex;
         this.x = spawn.x;
@@ -35,9 +35,14 @@ export class Character {
         this.pulseStartTime = 0;
         this.currentScale = 1;
 
-        this.onDeathCallBack;
+        this.onDeathCallBack = null;
 
         this.bloodManager = bloodManager;
+
+        this.resetPauseTime = resetPauseTimeCallback;
+
+        this.currentDeathFrame;
+        this.deathElapsed;
     }
 
     onDeath(callback) {
@@ -91,11 +96,18 @@ export class Character {
         ctx.restore();
     }
 
-    drawDeath(ctx, explosions) {
+    drawDeath(ctx, explosions, isPaused, totalPauseTime) {
         if (!this.isDying) return;
 
-        const now = performance.now();
-        const elapsed = now - this.deathStartTime;
+        let elapsed;
+
+        if (isPaused) {
+            elapsed = this.deathElapsed;
+        } else {
+            const now = performance.now();
+            elapsed = now - this.deathStartTime - totalPauseTime;
+            this.deathElapsed = elapsed;
+        }
 
         if (elapsed >= EXPLOSION_DURATION_MS) {
             this.isDying = false;
@@ -110,6 +122,10 @@ export class Character {
         ctx.translate(this.x + this.w / 2, this.y + this.h / 2);
         ctx.drawImage(currentFrame, -(this.w * 1.2) / 2, -(this.h * 1.2) / 2, this.w * 1.2, this.h * 1.2);
         ctx.restore();
+
+        if (!isPaused) {
+            this.resetPauseTime();
+        }
     }
 
     animateShots(ctx, shot1Img, shot2Img, player) {

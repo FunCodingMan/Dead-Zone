@@ -25,6 +25,10 @@ export class Game {
         this.isGameEnded;
 
         this.bloodManager = new BloodManager();
+
+        this.pauseStartTime = 0;
+        this.totalPauseTime = 0;
+        
     }
 
     start(ModeClass) {
@@ -32,7 +36,9 @@ export class Game {
 
         this.input = new Input(this.canvas, {
             onEscape: () => {
-                if (this.player && this.player.isAlive) this.togglePause();
+                if (this.player && this.player.isAlive) {
+                    this.togglePause();
+                }
             }
         });
 
@@ -56,10 +62,21 @@ export class Game {
         this.targets = [];
     }
 
+    resetPauseTime = () => {
+        this.totalPauseTime = 0;
+    }
+
     togglePause() {
         this.isPaused = !this.isPaused;
-        if (this.isPaused && this.input) {
-            this.input.reset();
+        if (this.isPaused) {
+            this.pauseStartTime = performance.now();
+            if (this.input) {
+                this.input.reset();
+            }
+        } else {
+            this.totalPauseTime += performance.now() - this.pauseStartTime;
+            this.pauseStartTime = 0;
+            console.log('!!!');
         }
         this.onPauseToggle(this.isPaused);
     }
@@ -73,6 +90,8 @@ export class Game {
     }
 
     update() {
+        this.player.updateReload(this.isPaused, this.totalPauseTime);
+
         if (this.isPaused) return;
         if (this.player) this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
 
@@ -117,7 +136,7 @@ export class Game {
             if (enemy.isAlive) {
                 enemy.draw(this.ctx, this.assets.zombie);
             } else if (enemy.isDying) {
-                enemy.drawDeath(this.ctx, this.assets.explosions);
+                enemy.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }
         });
 
@@ -125,7 +144,7 @@ export class Game {
             if (target.isAlive) {
                 target.draw(this.ctx, this.assets.target);
             } else if (target.isDying) {
-                target.drawDeath(this.ctx, this.assets.explosions);
+                target.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }
         })
 
@@ -143,7 +162,7 @@ export class Game {
                 }
                 this.player.drawBullets(this.ctx, this.assets.bullet);
             } else if (this.player.isDying) {
-                this.player.drawDeath(this.ctx, this.assets.explosions);
+                this.player.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }
         }
     }
