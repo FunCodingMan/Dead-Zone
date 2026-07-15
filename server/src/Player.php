@@ -7,14 +7,14 @@ use App\app\model\User;
 class Player
 {
     private int $fd;
-    private User $user;
+    private ?User $user;
     private int $posX;
     private int $posY;
     private int $angle;
     private int $health;
     private int $countBullets;
 
-    public function __construct(int $fd, User $user = new User("error", "error", "error", "error", "error"))
+    public function __construct(int $fd, ?User $user = null)
     {
         $this->fd = $fd;
         $this->user = $user;
@@ -30,7 +30,7 @@ class Player
         return $this->fd;
     }
 
-    public function getUser(): User
+    public function getUser(): ?User
     {
         return $this->user;
     }

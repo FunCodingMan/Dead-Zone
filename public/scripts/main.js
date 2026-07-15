@@ -25,7 +25,8 @@ async function init() {
         },
         onExitToMenu: () => {
             if (canvas.getAttribute('data-target') === 'multiplayer') {
-                window.location.href = '/mode-selection/multiplayer';
+                window.location.href = '/mode-selection';
+                game.currentMode.network.disconnect();
             } else {
                 window.location.href = '/mode-selection/singleplayer';
             }

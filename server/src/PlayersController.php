@@ -20,12 +20,10 @@ class PlayersController
 
     public function addPlayer(int $fd, array $cookie): void
     {
-        if (isset($cookie['token']) ) {
+        if (isset($cookie['token'])) {
             $user = $this->repository->getUserByToken($cookie['token']);
-            $player = new Player($fd, $user);
-        } else {
-            $player = new Player($fd);
         }
+        $player = new Player($fd, $user ?? null);
         $this->players[] = $player;
     }
 
