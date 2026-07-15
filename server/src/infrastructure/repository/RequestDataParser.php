@@ -1,9 +1,9 @@
 <?php
 
-namespace App\infrastructure\controller;
+namespace App\infrastructure\repository;
 
 use App\app\model\User;
-use App\infrastructure\repository\IRequestDataParser;
+use App\app\repository\IRequestDataParser;
 use RuntimeException;
 
 class RequestDataParser implements IRequestDataParser

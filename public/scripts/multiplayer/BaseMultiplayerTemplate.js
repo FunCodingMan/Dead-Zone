@@ -1,8 +1,8 @@
-import { BaseGameTemplate } from "../single-player-games/BaseGameTemplate";
-import { Network } from "../utils/Network";
-import { Player } from "../entities/Player";
-import { RemotePlayer } from "../entities/RemotePlayer";
-import { Character } from "../entities/Character";
+import { BaseGameTemplate } from "../single-player-games/BaseGameTemplate.js";
+import { Network } from "../utils/Network.js";
+import { Player } from "../entities/Player.js";
+import { RemotePlayer } from "../entities/RemotePlayer.js";
+
 
 const DATA_SENDING_MOVE_INTERVAL_MS = 33;
 const SHOOT_COOLDOWN_MS = 150;
@@ -38,7 +38,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             this.onPlayerSpawned(data);
         });
 
-        this.network.on('stats', (data) => {
+        this.network.on('state', (data) => {
             this.syncWithServer(data);
         });
     }
@@ -57,9 +57,9 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     syncPlayer(data) {
         const me = data.me;
 
-        if (!this.localUserId) this.localUserId = me.userId;
+        if (!this.localUserId) this.localUserId = me.user_id;
 
-        this.engine.player.shotsAmount = me.countBullets;
+        this.engine.player.shotsAmount = me.count_bullets;
         this.engine.player.hitpoints = me.health;
 
         const dist = Math.hypot(this.engine.player.x - me.x, this.engine.player.y - me.y);
@@ -103,8 +103,22 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
     }
 
+    // Заглушка, пока нет json 'spawn'
+    spawnByFirstState(data) {
+        this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player.x = data.me.x || 100;
+        this.engine.player.y = data.me.y || 100;
+        this.engine.player.isAlive = true;
+        this.localUserId = data.me.user_id;
+        this.onPlayerSpawned(data.me);
+    }
+
     syncWithServer(data) {
         if (!data) return;
+
+        if (data.me && (!this.engine.player || !this.engine.player.isAlive)) {
+            this.spawnByFirstState(data);
+        }
 
         if (data.me && this.engine.player && this.engine.player.isAlive) {
             this.syncPlayer(data);
@@ -126,7 +140,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     checkSendShotData(now, input) {
         if (now - this.lastShotSendTime < SHOOT_COOLDOWN_MS) return;
 
-        if (input.isMouseDown && !this.engine.player.isReloading && this.engine.shotsAmount > 0) {
+        if (input.isMouseDown && !this.engine.player.isReloading && this.engine.player.shotsAmount > 0) {
             this.network.send('shot', {angle: this.engine.player.angle});
             this.lastShotSendTime = now;
         }
@@ -159,14 +173,15 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
     sendMoveData() {
         const input = this.engine.input;
+        const activeKeys = [];
+
+        if (input.isPressed('KeyW') || input.isPressed('ArrowUp')) activeKeys.push('w');
+        if (input.isPressed('KeyS') || input.isPressed('ArrowDown')) activeKeys.push('s');
+        if (input.isPressed('KeyA') || input.isPressed('ArrowLeft')) activeKeys.push('a');
+        if (input.isPressed('KeyD') || input.isPressed('ArrowRight')) activeKeys.push('d');
 
         this.network.send('move', {
-            keyboard: {
-                w: input.isPressed('KeyW') || input.isPressed('ArrowUp'),
-                s: input.isPressed('KeyS') || input.isPressed('ArrowDown'),
-                a: input.isPressed('KeyA') || input.isPressed('ArrowLeft'),
-                d: input.isPressed('KeyD') || input.isPressed('ArrowRight')
-            },
+            keys: activeKeys,
             angle: this.engine.player.angle
         });
     }

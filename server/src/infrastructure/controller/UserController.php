@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 namespace App\infrastructure\controller;
 
+use App\app\repository\IActionExtractor;
+use App\app\repository\IExecuteAction;
+use App\app\repository\IPagesRender;
 use App\app\service\UserService;
-use App\infrastructure\repository\IActionExtractor;
-use App\infrastructure\repository\IExecuteAction;
-use App\infrastructure\repository\IPagesRender;
 
 class UserController implements IExecuteAction
 {
@@ -36,6 +36,7 @@ class UserController implements IExecuteAction
             'training' => $this->pagesRender->showFirstGame(),
             'waves' => $this->pagesRender->showSecondGame(),
             'waves-final' => $this->pagesRender->showSecondGameFinal(),
+            'multiplayer' => $this->pagesRender->showMultiplayer(),
             default => $this->pagesRender->showForm(),
         };
     }
@@ -50,7 +51,7 @@ class UserController implements IExecuteAction
             die();
         }
         $redirectUrl = "/";
-        $this->userService->setTokenCookie($token);
+        $this->requestParser->setTokenCookie($token);
         header('Content-Type: application/json');
         echo json_encode(['redirect' => $redirectUrl]);
         die();
@@ -61,7 +62,7 @@ class UserController implements IExecuteAction
         $user = $this->userService->login();
         if ($user) {
             $redirectUrl = "/";
-            $this->userService->setTokenCookie($user->getToken());
+            $this->requestParser->setTokenCookie($user->getToken());
             header('Content-Type: application/json');
             echo json_encode(['redirect' => $redirectUrl]);
         } else {
@@ -73,7 +74,7 @@ class UserController implements IExecuteAction
 
     private function logoutUser(): void
     {
-        $this->userService->deleteTokenCookie();
+        $this->requestParser->deleteTokenCookie();
         $redirectUrl = "/";
         header('Content-Type: application/json');
         echo json_encode(['redirect' => $redirectUrl]);

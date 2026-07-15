@@ -1,5 +1,5 @@
 const RECONNECT_INTERVAL_MS = 3000;
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export class Network {
     constructor(url) {
@@ -67,16 +67,16 @@ export class Network {
     }
 
     getMessage(msg) {
+        let message;
         try {
-            const message = JSON.parse(msg.data) ;
-
-            console.log('Пришло сообщение от сервера: ', message);
-
-            if (message.type) {
-                this.emit(message.type, message.payload);
-            }
+            message = JSON.parse(msg.data);
         } catch (error) {
-            console.log('Ошибка парсинга ответа от сервера.');
+            console.error('Ошибка парсинга JSON от сервера:', error);
+            return;
+        }
+        console.log('Пришло сообщение от сервера: ', message);
+        if (message && message.type) {
+            this.emit(message.type, message.payload);
         }
     }
 
