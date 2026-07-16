@@ -4,6 +4,7 @@ use App\app\model\Player;
 use App\ConnectionUser;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
+use App\MessageValidator;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -15,7 +16,8 @@ $connectionDatabase = new ConnectionProvider();
 $repository = new UserTable($connectionDatabase);
 $connectionUser= new ConnectionUser($repository);
 
-$ws = new \App\WebSocketParser($server);
+$validator = new MessageValidator();
+$ws = new \App\WebSocketParser($server, $validator);
 
 
 $server->on('open', function ($server, $request) use ($connectionUser) {

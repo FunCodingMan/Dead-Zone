@@ -7,10 +7,10 @@ class WebSocketParser
     private \Swoole\WebSocket\Server $server;
     private MessageValidator $validator;
 
-    public function __construct(\Swoole\WebSocket\Server $server)
+    public function __construct(\Swoole\WebSocket\Server $server, MessageValidator $validator)
     {
         $this->server = $server;
-        $this->validator = new MessageValidator();
+        $this->validator = $validator;
     }
 
     public function parse(int $fd, string $json): ?array
