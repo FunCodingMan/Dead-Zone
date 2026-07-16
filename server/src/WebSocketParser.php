@@ -28,11 +28,11 @@ class WebSocketParser
             return null;
         }
 
+        $type = $arrData['type'];
         $payload = $arrData['payload'];
-        $payload['type'] = $arrData['type'];
 
-        if ($this->validator->isValidData($payload)) {
-            return ["fd" => $fd, "data" => $payload];
+        if ($this->validator->isValidData($type, $payload)) {
+            return ["fd" => $fd, "type" => $type, "data" => $payload];
         }
 
         return null;

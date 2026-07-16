@@ -4,13 +4,9 @@ namespace App;
 
 class MessageValidator
 {
-    public function isValidData(array $data): bool
+    public function isValidData(string $type, array $data): bool
     {
-        if (!isset($data["type"]) || !is_string($data["type"])) {
-            return false;
-        }
-
-        return match ($data["type"]) {
+        return match ($type) {
             'move' => $this->isValidMove($data),
             default => false,
         };
