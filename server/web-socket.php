@@ -35,7 +35,7 @@ $server->on('close', function ($server, $fd) use ($connectionUser) {
 });
 
 \Swoole\Timer::tick(1000, function () use ($connectionUser) {
-    echo json_encode($connectionUser->getConnections()) . "\n";
+//    echo json_encode($connectionUser->getConnections()) . "\n";
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";

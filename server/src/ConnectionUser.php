@@ -38,8 +38,8 @@ class ConnectionUser
         }
     }
 
-    public function getConnections(): array
-    {
-        //return [$this->lobbyUsers];
-    }
+//    public function getConnections(): array
+//    {
+//        return [$this->lobbyUsers];
+//    }
 }
