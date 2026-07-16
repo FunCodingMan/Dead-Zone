@@ -43,17 +43,6 @@ export class Map {
             }
         }
 
-        const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
-        aliveEnemies.forEach(enemy => {
-            const pos = this.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
-            graph[pos.row][pos.col] = 0;
-        });
-
-        const pos = this.getCharacterPositionOnGrid(
-            player.x, player.y, player.w, player.h
-        );
-        graph[pos.row][pos.col] = 1;
-
         return graph;
     }
 

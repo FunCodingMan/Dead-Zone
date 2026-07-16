@@ -30,6 +30,8 @@ export class WavesMode extends BaseGameTemplate {
         this.spawnWave();
 
         this.lastAttackTime = 0;
+
+        this.staticPathGraph = this.engine.map.buildPathGraph();
     }
 
     spawnWave() {
@@ -67,7 +69,7 @@ export class WavesMode extends BaseGameTemplate {
         }
 
         aliveEnemies.forEach(enemy => {
-            this.enemyPathFind(enemy);
+            this.enemyPathFind(enemy, this.staticPathGraph);
 
             const distance = Math.sqrt(
                 (this.engine.player.x - enemy.x) * (this.engine.player.x - enemy.x) +
@@ -79,31 +81,97 @@ export class WavesMode extends BaseGameTemplate {
                 this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
             }
         });
+
+        this.separateEnemies(aliveEnemies);
     }
 
-    enemyPathFind(enemy) {
-        if (!enemy.isDying) {
-            const pathGraph = this.engine.map.buildPathGraph(this.engine.player, this.engine.enemies);
-            const playerPosition = this.engine.map.getCharacterPositionOnGrid(
-                this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
-            );
+    enemyPathFind(enemy, pathGraph) {
+        if (enemy.isDying) return;
 
-            const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
+        const playerPosition = this.engine.map.getCharacterPositionOnGrid(
+            this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
+        );
 
-            const nextCell = this.engine.map.findNextCell(
-                pathGraph,
-                currentCell.row,
-                currentCell.col,
-                playerPosition.row,
-                playerPosition.col
-            );
+        const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
 
-            enemy.x += (nextCell.col - currentCell.col) * enemy.speed;
-            enemy.y += (nextCell.row - currentCell.row) * enemy.speed;
+        if (currentCell.row === playerPosition.row && currentCell.col === playerPosition.col) {
+            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y);
+            return;
+        }
 
-            const dx = this.engine.player.x - enemy.x;
-            const dy = this.engine.player.y - enemy.y;
-            enemy.angle = Math.atan2(dy, dx);
+        const nextCell = this.engine.map.findNextCell(
+            pathGraph,
+            currentCell.row,
+            currentCell.col,
+            playerPosition.row,
+            playerPosition.col
+        );
+
+        if (nextCell.row === currentCell.row && nextCell.col === currentCell.col) {
+            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y);
+            return;
+        }
+
+        const cellSize = this.engine.map.cellSize;
+        const targetX = nextCell.col * cellSize + (cellSize - enemy.w) / 2;
+        const targetY = nextCell.row * cellSize + (cellSize - enemy.h) / 2;
+
+        this.moveEnemyTowardsPixel(enemy, targetX, targetY);
+    }
+
+    moveEnemyTowardsPixel(enemy, targetX, targetY) {
+        const dx = targetX - enemy.x;
+        const dy = targetY - enemy.y;
+
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > 0) {
+            const moveX = (dx / distance) * enemy.speed;
+            const moveY = (dy / distance) * enemy.speed;
+
+            enemy.x += Math.abs(moveX) > Math.abs(dx) ? dx : moveX;
+            enemy.y += Math.abs(moveY) > Math.abs(dy) ? dy : moveY;
+        }
+
+        const faceDx = this.engine.player.x - enemy.x;
+        const faceDy = this.engine.player.y - enemy.y;
+
+        enemy.angle = Math.atan2(faceDy, faceDx);
+    }
+
+    separateEnemies(enemies) {
+        for (let i = 0; i < enemies.length; i++) {
+            for (let j = i + 1; j < enemies.length; j++) {
+                const e1 = enemies[i];
+                const e2 = enemies[j];
+
+                if (e1.isDying || e2.isDying) continue;
+
+                let dx = e1.x - e2.x;
+                let dy = e1.y - e2.y;
+                let distance = Math.hypot(dx, dy);
+
+                if (distance === 0) {
+                    dx = Math.random() - 0.5;
+                    dy = Math.random() - 0.5;
+                    distance = Math.hypot(dx, dy);
+                }
+                const minDistance = e1.w;
+
+                if (distance < minDistance) {
+                    const overlap = minDistance - distance;
+
+                    const pushFactor = 0.5;
+
+                    const pushX = (dx / distance) * overlap * pushFactor;
+                    const pushY = (dy / distance) * overlap * pushFactor;
+
+                    e1.x += pushX;
+                    e1.y += pushY;
+                    e2.x -= pushX;
+                    e2.y -= pushY;
+                }
+            }
         }
     }
 

@@ -2,12 +2,19 @@ import { Input } from '../utils/Input.js';
 import { CONFIG } from './Config.js';
 import { BloodManager } from './BloodManager.js';
 
+const FPS = 60;
+
 export class Game {
     constructor(canvas, assets, onPauseToggle) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.assets = assets;
         this.onPauseToggle = onPauseToggle;
+
+        this.fps = FPS;
+        this.fpsInterval = 1000 / this.fps;
+        this.then = 0;
+
 
         this.isPaused = false;
         this.animationId = null;
@@ -46,7 +53,9 @@ export class Game {
         this.currentMode.init();
 
         this.isPaused = false;
-        this.loop();
+
+        this.then = performance.now();
+        this.loop(this.then);
     }
 
     stop() {
@@ -81,12 +90,18 @@ export class Game {
         this.onPauseToggle(this.isPaused);
     }
 
-    loop() {
+    loop(currentTime) {
         if (this.isGameEnded) return;
 
-        this.update();
-        this.draw();
         this.animationId = requestAnimationFrame(this.loop);
+
+        const elapsed = currentTime - this.then;
+
+        if (elapsed >= this.fpsInterval) {
+            this.then = currentTime - (elapsed % this.fpsInterval);
+            this.update();
+            this.draw();
+        }
     }
 
     update() {
