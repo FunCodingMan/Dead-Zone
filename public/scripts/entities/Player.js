@@ -27,7 +27,7 @@ const HITBOX = 28;
 
 export class Player extends Character {
     constructor(map, input, resetPauseTimeCallback) {
-        const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
+        const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
         super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
 
@@ -111,14 +111,17 @@ export class Player extends Character {
         const offsetX = (this.w - HITBOX) / 2;
         const offsetY = (this.h - HITBOX) / 2;
 
+        const aliveEnemies = enemies.filter(e => e.isAlive);
+        const aliveTargets = targets.filter(t => t.isAlive);
+
         if (!map.checkCollision({
             x: nextX + offsetX, y: this.y + offsetY, w: HITBOX, h: HITBOX
-        }, enemies, targets)) {
+        }, aliveEnemies, aliveTargets)) {
             this.x = nextX;
         }
         if (!map.checkCollision({
             x: this.x + offsetX, y: nextY + offsetY, w: HITBOX, h: HITBOX
-        }, enemies, targets)) {
+        }, aliveEnemies, aliveTargets)) {
             this.y = nextY;
         }
     }
