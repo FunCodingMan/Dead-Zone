@@ -1,5 +1,6 @@
 <?php
 
+use App\app\model\Player;
 use App\ConnectionUser;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
@@ -14,6 +15,8 @@ $connectionDatabase = new ConnectionProvider();
 $repository = new UserTable($connectionDatabase);
 $connectionUser= new ConnectionUser($repository);
 
+$ws = new \App\WebSocketParser($server);
+
 
 $server->on('open', function ($server, $request) use ($connectionUser) {
     if (!$connectionUser->connection($request->fd, $request->cookie)) {
@@ -25,17 +28,21 @@ $server->on('open', function ($server, $request) use ($connectionUser) {
 
 });
 
-$server->on('message', function ($server, $frame) {
+$server->on('message', function ($server, $frame) use ($ws) {
     echo "Получено от #{$frame->fd}: {$frame->data}\n";
+    $data = $ws->parse($frame->fd, $frame->data);
+
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
 });
 
 $server->on('close', function ($server, $fd) use ($connectionUser) {
     echo "Клиент #{$fd} отключился\n";
-    $connectionUser->unconnection($fd);
+    $connectionUser->disconnection($fd);
 });
 
-\Swoole\Timer::tick(1000, function () use ($connectionUser) {
-//    echo json_encode($connectionUser->getConnections()) . "\n";
+
+\Swoole\Timer::tick(10000, function () use ($connectionUser, $ws) {
+    echo json_encode($connectionUser->getConnections()) . "\n";
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";
