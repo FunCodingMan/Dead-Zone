@@ -25,11 +25,11 @@ export class Map {
     getCharacterPositionOnGrid(coordX, coordY, width, height) {
         const col = Math.floor((coordX + width / 2) / this.cellSize);
         const row = Math.floor((coordY + height / 2) / this.cellSize);
-        
+
         return {row, col};
     }
 
-    buildPathGraph(player, enemies) {
+    buildPathGraph(player, enemies = []) {
         const mapData = this.grid;
         const rows = mapData.length;
         const cols = mapData[0].length;
@@ -41,6 +41,21 @@ export class Map {
                 const cell = mapData[row][col];
                 graph[row][col] = (cell === CONFIG.SPACE_SYMBOL) ? 1 : 0;
             }
+        }
+
+        if (enemies) {
+            const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
+            aliveEnemies.forEach(enemy => {
+                const pos = this.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
+                graph[pos.row][pos.col] = 0;
+            });
+        }
+
+        if (player) {
+            const pos = this.getCharacterPositionOnGrid(
+                player.x, player.y, player.w, player.h
+            );
+            graph[pos.row][pos.col] = 1;
         }
 
         return graph;
@@ -99,7 +114,7 @@ export class Map {
         return { row: startRow, col: startCol };
     }
 
-    findFreeSpawn(symbol) {
+    getSpawns(symbol, playerPosition, characterWidth, characterHeight) {
         let spawns;
 
         if (symbol === CONFIG.PLAYER_SYMBOL) {
@@ -112,10 +127,32 @@ export class Map {
             spawns = this.enemySpawns;
         }
 
+        if (symbol !== CONFIG.PLAYER_SYMBOL) {
+            const playerPosIndex = this.getCharacterPositionOnGrid(
+                playerPosition.x, playerPosition.y, playerPosition.w, playerPosition.h
+            );
+
+            spawns = spawns.filter(spawn => {
+                const spawnPosIndex = this.getCharacterPositionOnGrid(
+                    spawn.x,
+                    spawn.y,
+                    characterWidth,
+                    characterHeight
+                );
+                return !(spawnPosIndex.row === playerPosIndex.row && spawnPosIndex.col === playerPosIndex.col);
+            });
+        }
+
+        return spawns;
+    }
+
+    findFreeSpawn(symbol, playerPosition, characterWidth, characterHeight) {
+        const spawns = this.getSpawns(symbol, playerPosition, characterWidth, characterHeight);
+
         let freePlaces;
 
         if (symbol === CONFIG.TARGET_SYMBOL) {
-            freePlaces = spawns.filter((place, index) => 
+            freePlaces = spawns.filter((place, index) =>
                 place.isFree && !this.diedTargets.some(d => d.index === index)
             );
         } else {
@@ -126,7 +163,7 @@ export class Map {
             this.diedTargets = [];
             freePlaces = spawns.filter(place => place.isFree);
         }
-        
+
 
         if (freePlaces.length > 0) {
             const randomIndex = Math.floor(Math.random() * freePlaces.length);
@@ -136,7 +173,7 @@ export class Map {
 
         spawns.forEach((place) => {
             place.isFree = true;
-        }); 
+        });
 
         spawns[0].isFree = false;
         return spawns[0];
@@ -191,14 +228,14 @@ export class Map {
                             x: x + (this.cellSize - this.playerSize) / 2,
                             y: y + (this.cellSize - this.playerSize) / 2,
                             isFree: true
-                        }); 
+                        });
                         break;
                     case CONFIG.ENEMY_SYMBOL:
                         this.enemySpawns.push({
                             x: x + (this.cellSize - this.playerSize) / 2,
                             y: y + (this.cellSize - this.playerSize) / 2,
                             isFree: true
-                        }); 
+                        });
                 }
             }
         }
@@ -249,8 +286,8 @@ export class Map {
 
     isIntersecting(r1, r2) {
         return r1.x < r2.x + r2.w &&
-               r1.x + r1.w > r2.x &&
-               r1.y < r2.y + r2.h &&
-               r1.y + r1.h > r2.y;
+            r1.x + r1.w > r2.x &&
+            r1.y < r2.y + r2.h &&
+            r1.y + r1.h > r2.y;
     }
 }
