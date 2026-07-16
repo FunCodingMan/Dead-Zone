@@ -4,17 +4,16 @@ namespace App;
 
 use App\app\model\User;
 use App\app\repository\IUserRepository;
-use LobbyUser;
 
 class ConnectionUser
 {
-    /** @var LobbyUser[] $lobbyUsers */
-    private array $lobbyUsers;
+    /** @var User[] $connections */
+    private array $connections;
     private IUserRepository $repository;
 
     public function __construct(IUserRepository $repository)
     {
-        $this->lobbyUsers = [];
+        $this->connections = [];
         $this->repository = $repository;
     }
 
@@ -23,23 +22,26 @@ class ConnectionUser
         if (isset($cookie['token'])) {
             $user = $this->repository->getUserByToken($cookie['token']);
             if ($user) {
-                $lobbyUser = new LobbyUser($fd, $user->getUserId());
-                $this->lobbyUsers[] = $lobbyUser;
+                $this->connections[$fd] = $user;
                 return true;
             }
         }
         return false;
     }
 
-    public function unconnection(int $fd): void
+    public function disconnection(int $fd): void
     {
         if (isset($this->connections[$fd])) {
             unset($this->connections[$fd]);
         }
     }
 
-//    public function getConnections(): array
-//    {
-//        return [$this->lobbyUsers];
-//    }
+    public function getConnections(): array
+    {
+        $arr = [];
+        foreach ($this->connections as $fd => $user) {
+            $arr[$fd] = $user->getUserId();
+        }
+        return $arr;
+    }
 }
