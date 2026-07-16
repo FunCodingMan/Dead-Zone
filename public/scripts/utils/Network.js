@@ -83,7 +83,7 @@ export class Network {
             console.error('Ошибка парсинга JSON от сервера:', error);
             return;
         }
-        // console.log('Пришло сообщение от сервера: ', message);
+        console.log('Пришло сообщение от сервера: ', message);
         if (message && message.type) {
             this.emit(message.type, message.payload);
         }
@@ -94,12 +94,11 @@ export class Network {
     }
 
     reconnect() {
-        if (!this.reconnectTimer) {
-            this.reconnectTimer = setInterval(() => {
-                console.log('Попытка переподключения...');
-                this.connect();
-            }, RECONNECT_INTERVAL_MS);
-        }
+        if (this.reconnectTimer) clearInterval(this.reconnectTimer);
+        this.reconnectTimer = setInterval(() => {
+            console.log('Попытка переподключения...');
+            this.connect();
+        }, RECONNECT_INTERVAL_MS);
     }
 
     send(type, payload) {
@@ -117,7 +116,7 @@ export class Network {
             this.socket.onclose = null;
             this.socket.close();
         }
-        this.connectionStatus = false;
+        this.connectionStatus = 'disconnected';
     }
 
 }
