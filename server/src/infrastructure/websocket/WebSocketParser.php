@@ -2,6 +2,7 @@
 
 namespace App\infrastructure\websocket;
 
+use App\app\model\Player;
 
 class WebSocketParser
 {
@@ -47,7 +48,7 @@ class WebSocketParser
             $others = [];
             foreach ($players as $player) {
                 if ($recipient !== $player) {
-                    $others["{$player->getUser()->getUserId()}"] = $player->getPublicState();
+                    $others["{$player->getUserId()}"] = $player->getPublicState();
                 }
             }
             $data = [

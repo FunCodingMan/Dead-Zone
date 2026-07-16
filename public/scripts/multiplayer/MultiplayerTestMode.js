@@ -25,6 +25,10 @@ export class MultiplayerTestMode extends BaseMultiplayerTemplate {
     }
     drawUI(ctx, canvas) {
 
+        super.drawUI(ctx, canvas);
+
+        if  (this.network.connectionStatus !== 'connected') return;
+
         ctx.fillStyle = '#00FF00';
         ctx.font = '20px Arial';
         ctx.fillText("ОНЛАЙН-ТЕСТ", 20, 30);

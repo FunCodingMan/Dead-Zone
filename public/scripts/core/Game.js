@@ -43,9 +43,7 @@ export class Game {
 
         this.input = new Input(this.canvas, {
             onEscape: () => {
-                if (this.player && this.player.isAlive) {
-                    this.togglePause();
-                }
+                this.togglePause();
             }
         });
 

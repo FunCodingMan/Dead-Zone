@@ -7,11 +7,13 @@ export class Network {
 
         this.socket = null;
 
-        this.isConnected = false;
+        this.connectionStatus = 'connecting';
 
         this.reconnectTimer = null;
 
         this.listeners = new Map();
+
+        this.lastDisconnectTime = null;
     }
 
     on(type, callback) {
@@ -36,6 +38,8 @@ export class Network {
     }
 
     connect() {
+        this.connectionStatus = 'connecting';
+
         this.socket = USE_MOCK ? new MockWebSocket(this.url) : new WebSocket(this.url);
 
         this.socket.onopen = () => this.openConnection();
@@ -49,7 +53,8 @@ export class Network {
     }
 
     openConnection() {
-        this.isConnected = true;
+        this.connectionStatus = 'connected';
+        this.lastDisconnectTime = null;
         console.log('Подключение к WebSocket успешно!');
 
         if (this.reconnectTimer) {
@@ -59,7 +64,11 @@ export class Network {
     }
 
     connectionIsClosed() {
-        this.isConnected = false;
+        if (!this.lastDisconnectTime) {
+            this.lastDisconnectTime = performance.now();
+        }
+
+        this.connectionStatus = 'disconnected';
 
         console.log('Соединение с сервером потеряно!');
 
@@ -74,7 +83,7 @@ export class Network {
             console.error('Ошибка парсинга JSON от сервера:', error);
             return;
         }
-        console.log('Пришло сообщение от сервера: ', message);
+        // console.log('Пришло сообщение от сервера: ', message);
         if (message && message.type) {
             this.emit(message.type, message.payload);
         }
@@ -108,7 +117,7 @@ export class Network {
             this.socket.onclose = null;
             this.socket.close();
         }
-        this.isConnected = false;
+        this.connectionStatus = false;
     }
 
 }

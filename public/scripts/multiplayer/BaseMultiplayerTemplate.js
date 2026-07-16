@@ -22,6 +22,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.lastShotSendTime = 0;
 
         this.localUserId = null;
+
     }
 
     init() {
@@ -103,7 +104,6 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
     }
 
-    // Заглушка, пока нет json 'spawn'
     spawnByFirstState(data) {
         this.engine.player = new Player(this.engine.map, this.engine.input);
         this.engine.player.x = data.me.x || 100;
@@ -192,6 +192,39 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                 enemy.draw(ctx, this.engine.assets.soldier);
             }
         });
+    }
+
+    drawUI(ctx, canvas) {
+        if (this.network.connectionStatus === 'connected') return;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 32px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        let text = 'ПОДКЛЮЧЕНИЕ К СЕРВЕРУ...';
+        if (this.network.lastDisconnectTime) {
+            const elapsedSeconds = Math.floor((performance.now() - this.network.lastDisconnectTime) / 1000);
+            if (this.network.connectionStatus === 'connecting') {
+                text = `ПОПЫТКА ПЕРЕПОДКЛЮЧЕНИЯ... (${elapsedSeconds} сек)`;
+            } else {
+                text = `ПОТЕРЯНО СОЕДИНЕНИЕ. ОЖИДАНИЕ... (${elapsedSeconds} сек)`;
+            }
+
+            ctx.font = '20px Arial';
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText('Нажмите ESC, чтобы выйти в меню', canvas.width / 2, canvas.height / 2 + 50);
+
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = '#ff4444';
+        }
+
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.restore();
     }
 
     destroy() {
