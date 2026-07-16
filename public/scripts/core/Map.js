@@ -7,9 +7,7 @@ const UNAVAILABLE_CELL = 0;
 export class Map {
     constructor() {
         this.cellSize = 64;
-
         this.playerSize = 48;
-
 
         this.walls = [];
         this.boxes = [];
@@ -18,18 +16,16 @@ export class Map {
         this.targetSpawns = [];
 
         this.grid = [];
-
         this.diedTargets = [];
     }
 
     getCharacterPositionOnGrid(coordX, coordY, width, height) {
         const col = Math.floor((coordX + width / 2) / this.cellSize);
         const row = Math.floor((coordY + height / 2) / this.cellSize);
-
         return {row, col};
     }
 
-    buildPathGraph(player, enemies = []) {
+    buildPathGraph(player = null, enemies = []) {
         const mapData = this.grid;
         const rows = mapData.length;
         const cols = mapData[0].length;
@@ -43,19 +39,21 @@ export class Map {
             }
         }
 
-        if (enemies) {
+        if (enemies && enemies.length > 0) {
             const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
             aliveEnemies.forEach(enemy => {
                 const pos = this.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
-                graph[pos.row][pos.col] = 0;
+                if (pos.row >= 0 && pos.row < rows && pos.col >= 0 && pos.col < cols) {
+                    graph[pos.row][pos.col] = 0;
+                }
             });
         }
 
         if (player) {
-            const pos = this.getCharacterPositionOnGrid(
-                player.x, player.y, player.w, player.h
-            );
-            graph[pos.row][pos.col] = 1;
+            const pos = this.getCharacterPositionOnGrid(player.x, player.y, player.w, player.h);
+            if (pos.row >= 0 && pos.row < rows && pos.col >= 0 && pos.col < cols) {
+                graph[pos.row][pos.col] = 1;
+            }
         }
 
         return graph;
@@ -127,17 +125,15 @@ export class Map {
             spawns = this.enemySpawns;
         }
 
-        if (symbol !== CONFIG.PLAYER_SYMBOL) {
+        // Защита от спавна в клетке игрока
+        if (symbol !== CONFIG.PLAYER_SYMBOL && playerPosition) {
             const playerPosIndex = this.getCharacterPositionOnGrid(
                 playerPosition.x, playerPosition.y, playerPosition.w, playerPosition.h
             );
 
             spawns = spawns.filter(spawn => {
                 const spawnPosIndex = this.getCharacterPositionOnGrid(
-                    spawn.x,
-                    spawn.y,
-                    characterWidth,
-                    characterHeight
+                    spawn.x, spawn.y, characterWidth, characterHeight
                 );
                 return !(spawnPosIndex.row === playerPosIndex.row && spawnPosIndex.col === playerPosIndex.col);
             });
@@ -164,7 +160,6 @@ export class Map {
             freePlaces = spawns.filter(place => place.isFree);
         }
 
-
         if (freePlaces.length > 0) {
             const randomIndex = Math.floor(Math.random() * freePlaces.length);
             freePlaces[randomIndex].isFree = false;
@@ -185,13 +180,10 @@ export class Map {
         this.playerSpawns = [];
         this.targetSpawns = [];
         this.enemySpawns = [];
-
         this.grid = [];
 
         const lines = levelString.trim().split('\n');
-        //Рассчитываем высоту и ширину умножая на размер клетки
         this.height = lines.length * this.cellSize;
-
         this.width = lines[0].trim().length * this.cellSize;
 
         for (let row = 0; row < lines.length; row++) {
@@ -200,22 +192,18 @@ export class Map {
 
             for (let col = 0; col < line.length; col++) {
                 const char = line[col];
-
                 const x = col * this.cellSize;
                 const y = row * this.cellSize;
 
                 this.grid[row][col] = char;
 
                 switch (char) {
-                    //Стена
                     case CONFIG.WALL_SYMBOL:
                         this.walls.push({x, y, w: this.cellSize, h: this.cellSize});
                         break;
-                    //Коробка
                     case CONFIG.BOX_SYMBOL:
                         this.boxes.push({x, y, w: this.cellSize, h: this.cellSize});
                         break;
-                    //Спавн игрока
                     case CONFIG.PLAYER_SYMBOL:
                         this.playerSpawns.push({
                             x: x + (this.cellSize - this.playerSize) / 2,
@@ -236,23 +224,21 @@ export class Map {
                             y: y + (this.cellSize - this.playerSize) / 2,
                             isFree: true
                         });
+                        break;
                 }
             }
         }
     }
 
     draw(ctx, assets) {
-        //Рисуем пол
         for (let x = 0; x < this.width; x += this.cellSize) {
             for (let y = 0; y < this.height; y += this.cellSize) {
                 ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
             }
         }
-        //Рисуем стены
         for (let wall of this.walls) {
             ctx.drawImage(assets.wall, wall.x, wall.y, wall.w, wall.h);
         }
-        //Рисуем коробки
         for (let box of this.boxes) {
             ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }

@@ -4,7 +4,6 @@ import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { CONFIG } from '../core/Config.js';
 
-// Карта может быть другой для этого режима
 const wavesLevelData = `
 ################
 #P            E#
@@ -26,12 +25,12 @@ export class WavesMode extends BaseGameTemplate {
         this.engine.player = new Player(this.engine.map, this.engine.input, this.engine.resetPauseTime);
         this.engine.player.bloodManager = this.engine.bloodManager;
 
-        this.currentWave = 1;
-        this.spawnWave();
+        this.staticPathGraph = this.engine.map.buildPathGraph();
 
+        this.currentWave = 1;
         this.lastAttackTime = 0;
 
-        this.staticPathGraph = this.engine.map.buildPathGraph();
+        this.spawnWave();
     }
 
     spawnWave() {
@@ -39,7 +38,13 @@ export class WavesMode extends BaseGameTemplate {
 
         const enemiesCount = this.currentWave;
         for (let i = 0; i < enemiesCount; i++) {
-            const enemy = new Enemy(this.engine.map, this.engine.player);
+            const playerPosition = {
+                x: this.engine.player.x,
+                y: this.engine.player.y,
+                w: this.engine.player.w,
+                h: this.engine.player.h
+            };
+            const enemy = new Enemy(this.engine.map, playerPosition);
             enemy.bloodManager = this.engine.bloodManager;
             this.engine.enemies.push(enemy);
             enemy.onDeath(() => {
@@ -62,23 +67,26 @@ export class WavesMode extends BaseGameTemplate {
                 this.endGame(true);
                 return;
             }
-            
+
             this.currentWave++;
             this.spawnWave();
             return;
         }
 
         aliveEnemies.forEach(enemy => {
-            this.enemyPathFind(enemy, this.staticPathGraph);
+            if (enemy.isAlive) {
+                // Используем статический граф для поиска пути
+                this.enemyPathFind(enemy, this.staticPathGraph);
 
-            const distance = Math.sqrt(
-                (this.engine.player.x - enemy.x) * (this.engine.player.x - enemy.x) +
-                (this.engine.player.y - enemy.y) * (this.engine.player.y - enemy.y)
-            );
+                const distance = Math.sqrt(
+                    (this.engine.player.x - enemy.x) ** 2 +
+                    (this.engine.player.y - enemy.y) ** 2
+                );
 
-            if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
-                this.lastAttackTime = currentTime;
-                this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
+                if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
+                    this.lastAttackTime = currentTime;
+                    this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
+                }
             }
         });
 
@@ -160,9 +168,7 @@ export class WavesMode extends BaseGameTemplate {
 
                 if (distance < minDistance) {
                     const overlap = minDistance - distance;
-
                     const pushFactor = 0.5;
-
                     const pushX = (dx / distance) * overlap * pushFactor;
                     const pushY = (dy / distance) * overlap * pushFactor;
 
