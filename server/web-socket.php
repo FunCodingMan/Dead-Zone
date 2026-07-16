@@ -1,46 +1,41 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-
-use App\app\game\GameEngine;
+use App\ConnectionUser;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
-use App\infrastructure\websocket\PlayersController;
-use App\infrastructure\websocket\WebSocketParser;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+
 
 $server = new \Swoole\WebSocket\Server("0.0.0.0", 9502);
 
+$connectionDatabase = new ConnectionProvider();
+$repository = new UserTable($connectionDatabase);
+$connectionUser= new ConnectionUser($repository);
 
-$connectionProvider = new ConnectionProvider();
-$userTable = new UserTable($connectionProvider);
-$pc = new PlayersController($userTable);
-$ws = new WebSocketParser($server);
-$gameEngine = new GameEngine($pc, $ws);
 
-$server->on('open', function ($server, $request) use ($pc, $gameEngine) {
-    echo "Клиент #{$request->fd} подключился\n";
-    $pc->addPlayer($request->fd, $request->cookie ?? []);
-
-    $gameEngine->spawnPlayer($request->fd);
-});
-
-$server->on('message', function ($server, $frame) use ($ws) {
-    echo "Получено от #{$frame->fd}: {$frame->data}\n";
-    $ws->acceptNewStatePlayer($frame->fd, $frame->data);
-//    $server->push($frame->fd, "Ништяк браток, принял");
-});
-
-$server->on('close', function ($server, $fd) use ($pc){
-    echo "Клиент #{$fd} отключился\n";
-    $pc->deletePlayer($fd);
-});
-
-\Swoole\Timer::tick(33, function () use ($gameEngine) {
-    try {
-        $gameEngine->pushData();
-    } catch (RuntimeException $error) {
-        echo $error->getMessage();
+$server->on('open', function ($server, $request) use ($connectionUser) {
+    if (!$connectionUser->connection($request->fd, $request->cookie)) {
+        echo "connection failed\n";
+        $server->close($request->fd);
+        return;
     }
+    echo "Клиент #{$request->fd} подключился\n";
+
+});
+
+$server->on('message', function ($server, $frame) {
+    echo "Получено от #{$frame->fd}: {$frame->data}\n";
+});
+
+$server->on('close', function ($server, $fd) use ($connectionUser) {
+    echo "Клиент #{$fd} отключился\n";
+    $connectionUser->unconnection($fd);
+});
+
+\Swoole\Timer::tick(1000, function () use ($connectionUser) {
+    echo json_encode($connectionUser->getConnections()) . "\n";
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";
