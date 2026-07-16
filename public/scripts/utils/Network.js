@@ -1,5 +1,5 @@
 const RECONNECT_INTERVAL_MS = 3000;
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export class Network {
     constructor(url) {
@@ -7,11 +7,13 @@ export class Network {
 
         this.socket = null;
 
-        this.isConnected = false;
+        this.connectionStatus = 'connecting';
 
         this.reconnectTimer = null;
 
         this.listeners = new Map();
+
+        this.lastDisconnectTime = null;
     }
 
     on(type, callback) {
@@ -36,6 +38,8 @@ export class Network {
     }
 
     connect() {
+        this.connectionStatus = 'connecting';
+
         this.socket = USE_MOCK ? new MockWebSocket(this.url) : new WebSocket(this.url);
 
         this.socket.onopen = () => this.openConnection();
@@ -49,7 +53,8 @@ export class Network {
     }
 
     openConnection() {
-        this.isConnected = true;
+        this.connectionStatus = 'connected';
+        this.lastDisconnectTime = null;
         console.log('Подключение к WebSocket успешно!');
 
         if (this.reconnectTimer) {
@@ -59,7 +64,11 @@ export class Network {
     }
 
     connectionIsClosed() {
-        this.isConnected = false;
+        if (!this.lastDisconnectTime) {
+            this.lastDisconnectTime = performance.now();
+        }
+
+        this.connectionStatus = 'disconnected';
 
         console.log('Соединение с сервером потеряно!');
 
@@ -67,16 +76,16 @@ export class Network {
     }
 
     getMessage(msg) {
+        let message;
         try {
-            const message = JSON.parse(msg.data) ;
-
-            console.log('Пришло сообщение от сервера: ', message);
-
-            if (message.type) {
-                this.emit(message.type, message.payload);
-            }
+            message = JSON.parse(msg.data);
         } catch (error) {
-            console.log('Ошибка парсинга ответа от сервера.');
+            console.error('Ошибка парсинга JSON от сервера:', error);
+            return;
+        }
+        // console.log('Пришло сообщение от сервера: ', message);
+        if (message && message.type) {
+            this.emit(message.type, message.payload);
         }
     }
 
@@ -108,7 +117,7 @@ export class Network {
             this.socket.onclose = null;
             this.socket.close();
         }
-        this.isConnected = false;
+        this.connectionStatus = false;
     }
 
 }

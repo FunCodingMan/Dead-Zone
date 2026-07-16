@@ -4,12 +4,13 @@ import { initPause, togglePauseUI } from './ui/Pause.js';
 
 import { TrainingMode } from './single-player-games/TrainingMode.js';
 import { WavesMode } from './single-player-games/WavesMode.js';
+import { MultiplayerTestMode } from "./multiplayer/MultiplayerTestMode.js";
 
 
 const canvas = document.getElementById('gameCanvas');
 const assetManager = new AssetManager();
 let game = null;
-let lastSelectedMode = TrainingMode;
+let lastSelectedMode = MultiplayerTestMode;
 
 async function init() {
     const assets = await assetManager.loadAll();
@@ -23,7 +24,14 @@ async function init() {
             togglePauseUI(false);
         },
         onExitToMenu: () => {
-            window.location.href = '/mode-selection/singleplayer';
+
+            if (game) game.stop();
+
+            if (canvas.getAttribute('data-target') === 'multiplayer') {
+                window.location.href = '/mode-selection';
+            } else {
+                window.location.href = '/mode-selection/singleplayer';
+            }
         }
     });
 
@@ -34,6 +42,8 @@ async function init() {
         case 'waves':
             lastSelectedMode = WavesMode;
             break;
+        case 'multiplayer':
+            lastSelectedMode = MultiplayerTestMode;
     }
 
     game.start(lastSelectedMode);

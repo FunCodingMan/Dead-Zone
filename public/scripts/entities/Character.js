@@ -1,6 +1,6 @@
 import { CONFIG } from "../core/Config.js";
 
-const MAX_HITPOINTS = 100;
+export const MAX_HITPOINTS = 100;
 const EXPLOSION_DURATION_MS = 400;
 const SHOT_FRAME_SIZE = 100;
 const SHOT_FRAME_X_OFFSET = -2;
@@ -10,7 +10,7 @@ const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
 export class Character {
-    constructor(spawn, width, height, spawnIndex) {
+    constructor(spawn, width, height, spawnIndex, bloodManager, resetPauseTimeCallback) {
         this.spawnPoint = spawn;
         this.spawnIndex = spawnIndex;
         this.x = spawn.x;
@@ -35,7 +35,14 @@ export class Character {
         this.pulseStartTime = 0;
         this.currentScale = 1;
 
-        this.onDeathCallBack;
+        this.onDeathCallBack = null;
+
+        this.bloodManager = bloodManager;
+
+        this.resetPauseTime = resetPauseTimeCallback;
+
+        this.currentDeathFrame;
+        this.deathElapsed;
     }
 
     onDeath(callback) {
@@ -50,7 +57,7 @@ export class Character {
         if (symbol === CONFIG.TARGET_SYMBOL) {
             this.startPulse();
         } else {
-            this.addBloodSpot(map);
+            this.bloodManager.addBloodSpot(this);
         }
 
         if (this.hitpoints <= 0) {
@@ -71,14 +78,6 @@ export class Character {
         }
     }
 
-    addBloodSpot(map) {
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
-        const spotSize = MAX_HITPOINTS - this.hitpoints;
-        const randomAngle = Math.random() * Math.PI * 2;
-        map.bloodSpots.push({ x: centerX, y: centerY, size: spotSize, angle: randomAngle });
-    }
-
     draw(ctx, image) {
         this.updatePulse();
 
@@ -97,20 +96,39 @@ export class Character {
         ctx.restore();
     }
 
-    drawDeath(ctx, explosions) {
+    drawDeath(ctx, explosions, isPaused, totalPauseTime) {
         if (!this.isDying) return;
 
-        const now = performance.now();
-        const elapsed = now - this.deathStartTime;
+        const gameNow = performance.now() - totalPauseTime;
+
+        if (this.deathGameStartTime === undefined) {
+            this.deathGameStartTime = gameNow;
+        }
+
+        let elapsed;
+        if (isPaused) {
+            elapsed = this.deathElapsed || 0;
+        } else {
+            elapsed = gameNow - this.deathGameStartTime;
+            this.deathElapsed = elapsed;
+        }
 
         if (elapsed >= EXPLOSION_DURATION_MS) {
             this.isDying = false;
+            this.deathGameStartTime = undefined;
             return;
         }
 
-        const progress = elapsed / EXPLOSION_DURATION_MS;
-        const frameIndex = Math.floor(progress * explosions.length);
+        const safeElapsed = Math.max(0, elapsed);
+        const progress = safeElapsed / EXPLOSION_DURATION_MS;
+
+        const frameIndex = Math.min(
+            Math.max(0, Math.floor(progress * explosions.length)),
+            explosions.length - 1
+        );
         const currentFrame = explosions[frameIndex];
+
+        if (!currentFrame) return;
 
         ctx.save();
         ctx.translate(this.x + this.w / 2, this.y + this.h / 2);

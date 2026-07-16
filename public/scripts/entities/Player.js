@@ -26,10 +26,10 @@ const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
 
 export class Player extends Character {
-    constructor(map, input) {
+    constructor(map, input, resetPauseTimeCallback) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
-        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex);
+        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
 
         this.speed = SPEED;
         this.input = input;
@@ -40,7 +40,7 @@ export class Player extends Character {
         this.damage = DAMAGE;
         this.shotsAmount = MAX_SHOTS_AMOUNT;
         this.isReloading = false;
-        this.reloadStartTime = 0;
+        this.reloadStartTime = undefined;
 
         this.hpCanvas = document.createElement('canvas');
         this.hpCanvas.width = HP_SIZE;
@@ -49,6 +49,8 @@ export class Player extends Character {
 
         this.appliedDamage = 0;
         this.kills = 0;
+
+        this.map = map;
     }
 
     update(map, canvas, zoom, enemies, targets) {
@@ -61,21 +63,21 @@ export class Player extends Character {
 
         this.angle = Math.atan2(worldMouseY - centerY, worldMouseX - centerX);
 
+        this.move(map, enemies, targets);
+        this.shoot(worldMouseX, worldMouseY);
+
+        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
+            this.isReloading = true;
+        }
+
+        //вызов перезарядки вынесен в Game update для обработки во время паузы
+
+        this.handleBullets(map, enemies, targets);
+    }
+
+    move(map, enemies, targets) {
         let nextX = this.x;
         let nextY = this.y;
-
-        if (this.input.isMouseDown) {
-            const now = performance.now();
-            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
-                this.createBullet(worldMouseX, worldMouseY);
-                this.lastShootTime = now;
-                this.isShooting = true;
-            } else if (this.shotsAmount <= 0 || this.isReloading) {
-                this.isShooting = false;
-            }
-        } else {
-            this.isShooting = false;
-        }
 
         let dx = 0;
         let dy = 0;
@@ -101,32 +103,39 @@ export class Player extends Character {
             nextY += dy * this.speed;
         }
 
-        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
-            this.isReloading = true;
-            this.reloadStartTime = performance.now();
-        }
-
-        if (this.isReloading) {
-            this.updateReload();
-        }
-
         if (nextX < 0) nextX = 0;
         if (nextY < 0) nextY = 0;
         if (nextX + this.w > map.width) nextX = map.width - this.w;
         if (nextY + this.h > map.height) nextY = map.height - this.h;
 
+        const offsetX = (this.w - HITBOX) / 2;
+        const offsetY = (this.h - HITBOX) / 2;
+
         if (!map.checkCollision({
-            x: nextX + (this.w - HITBOX) / 2, y: this.y + (this.w - HITBOX) / 2, w: this.w, h: this.h
+            x: nextX + offsetX, y: this.y + offsetY, w: HITBOX, h: HITBOX
         }, enemies, targets)) {
             this.x = nextX;
         }
         if (!map.checkCollision({
-            x: this.x + (this.w - HITBOX) / 2, y: nextY + (this.w - HITBOX) / 2, w: this.w, h: this.h
+            x: this.x + offsetX, y: nextY + offsetY, w: HITBOX, h: HITBOX
         }, enemies, targets)) {
             this.y = nextY;
         }
+    }
 
-        this.handleBullets(map, enemies, targets);
+    shoot(x, y) {
+        if (this.input.isMouseDown) {
+            const now = performance.now();
+            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
+                this.createBullet(x, y);
+                this.lastShootTime = now;
+                this.isShooting = true;
+            } else if (this.shotsAmount <= 0 || this.isReloading) {
+                this.isShooting = false;
+            }
+        } else {
+            this.isShooting = false;
+        }
     }
 
     createBullet(targetX, targetY) {
@@ -167,33 +176,13 @@ export class Player extends Character {
             bullet.x += bullet.xDirection * bullet.bulletSpeed;
             bullet.y += bullet.yDirection * bullet.bulletSpeed;
 
-            const r1 = { 
+            const bulletRect = { 
                 x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT 
             };
 
-            enemies.forEach((enemy) => {
-                if (enemy.isAlive) {
-                    const r2 = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
-                    if (map.isIntersecting(r1, r2)) {
-                        this.appliedDamage += this.damage;
-                        enemy.takeDamage(this.damage, map, CONFIG.PLAYER_SYMBOL);
-                        toRemove.push(index);
-                    }
-                }
-            });
+            this.handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, index);
 
-            targets.forEach((target) => {
-                if (target.isAlive) {
-                    const r2 = {x: target.x, y: target.y, w: target.w, h: target.h};
-                    if (map.isIntersecting(r1, r2)) {
-                        this.appliedDamage += this.damage;
-                        target.takeDamage(this.damage, map, CONFIG.TARGET_SYMBOL);
-                        toRemove.push(index);
-                    }
-                }
-            });
-
-            if (map.checkCollision(r1)) {
+            if (map.checkCollision(bulletRect)) {
                 toRemove.push(index);
             }
         });
@@ -201,6 +190,34 @@ export class Player extends Character {
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
         }
+    }
+
+   handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, bulletIndex) {
+        enemies.forEach((enemy) => {
+            if (enemy.isAlive) {
+                const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.appliedDamage += this.damage;
+                    enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                    if (!toRemove.includes(bulletIndex)) {
+                        toRemove.push(bulletIndex);
+                    }
+                }
+            }
+        });
+
+        targets.forEach((target) => {
+            if (target.isAlive) {
+                const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.appliedDamage += this.damage;
+                    target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
+                    if (!toRemove.includes(bulletIndex)) {
+                        toRemove.push(bulletIndex);
+                    }
+                }
+            }
+        });
     }
 
     drawBullets(ctx, bulletImg) {
@@ -253,12 +270,23 @@ export class Player extends Character {
         ctx.drawImage(this.hpCanvas, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING);
     }
 
-    updateReload() {
-        if (!this.isReloading) return;
-        const now = performance.now();
+    updateReload(isPaused, totalPauseTime) {
+        if (!this.isReloading) {
+            this.reloadStartTime = undefined;
+            return;
+        }
+        if (isPaused) return;
+
+        const now = performance.now() - totalPauseTime;
+
+        if (this.reloadStartTime === undefined) {
+            this.reloadStartTime = now;
+        }
+
         if (now - this.reloadStartTime >= RELOAD_TIME) {
             this.shotsAmount = MAX_SHOTS_AMOUNT;
             this.isReloading = false;
+            this.reloadStartTime = undefined;
         }
     }
 }

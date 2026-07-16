@@ -9,8 +9,8 @@ const DAMAGE = 10;
 const DAMAGE_COOLDOWN = 100;
 
 export class Enemy extends Character{
-    constructor(map) {
-        super(map.findFreeSpawn(CONFIG.ENEMY_SYMBOL), ENEMY_WIDTH, ENEMY_HEIGHT);
+    constructor(map, resetPauseTimeCallback) {
+        super(map.findFreeSpawn(CONFIG.ENEMY_SYMBOL), ENEMY_WIDTH, ENEMY_HEIGHT, null, resetPauseTimeCallback);
         this.speed = SPEED;
         this.attackDistance = ATTACK_DISTANCE;
         this.damage = DAMAGE;

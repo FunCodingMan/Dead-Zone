@@ -1,4 +1,4 @@
-import { Character } from "./Character";
+import { Character } from "./Character.js";
 
 const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
