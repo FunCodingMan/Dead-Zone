@@ -110,7 +110,7 @@ export class Map {
         return { row: startRow, col: startCol };
     }
 
-    findFreeSpawn(symbol) {
+    getSpawns(symbol, playerPosition, characterWidth, characterHeight) {
         let spawns;
 
         if (symbol === CONFIG.PLAYER_SYMBOL) {
@@ -122,6 +122,28 @@ export class Map {
         } else if (symbol === CONFIG.ENEMY_SYMBOL) {
             spawns = this.enemySpawns;
         }
+
+        if (symbol != CONFIG.PLAYER_SYMBOL) {
+            const playerPosIndex = this.getCharacterPositionOnGrid(
+                playerPosition.x, playerPosition.y, playerPosition.w, playerPosition.h
+            );
+
+            spawns = spawns.filter(spawn => {
+                const spawnPosIndex = this.getCharacterPositionOnGrid(
+                    spawn.x, 
+                    spawn.y, 
+                    characterWidth, 
+                    characterHeight
+                );
+                return !(spawnPosIndex.row == playerPosIndex.row && spawnPosIndex.col == playerPosIndex.col);
+            });
+        }
+
+        return spawns;
+    }
+
+    findFreeSpawn(symbol, playerPosition, characterWidth, characterHeight) {
+        const spawns = this.getSpawns(symbol, playerPosition, characterWidth, characterHeight);
 
         let freePlaces;
 

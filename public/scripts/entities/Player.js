@@ -27,7 +27,7 @@ const HITBOX = 28;
 
 export class Player extends Character {
     constructor(map, input, resetPauseTimeCallback) {
-        const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL);
+        const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
         super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
 
@@ -108,14 +108,17 @@ export class Player extends Character {
         if (nextX + this.w > map.width) nextX = map.width - this.w;
         if (nextY + this.h > map.height) nextY = map.height - this.h;
 
+        const aliveEnemies = enemies.filter(e => e.isAlive);
+        const aliveTargets = targets.filter(t => t.isAlive);
+
         if (!map.checkCollision({
             x: nextX + (this.w - HITBOX) / 2, y: this.y + (this.w - HITBOX) / 2, w: this.w, h: this.h
-        }, enemies, targets)) {
+        }, aliveEnemies, aliveTargets)) {
             this.x = nextX;
         }
         if (!map.checkCollision({
             x: this.x + (this.w - HITBOX) / 2, y: nextY + (this.w - HITBOX) / 2, w: this.w, h: this.h
-        }, enemies, targets)) {
+        }, aliveEnemies, aliveTargets)) {
             this.y = nextY;
         }
     }
@@ -276,7 +279,7 @@ export class Player extends Character {
 
         const now = performance.now() - totalPauseTime;
 
-        if (this.reloadStartTime === undefined) {
+        if (this.reloadStartTime == undefined) {
             this.reloadStartTime = now;
         }
 

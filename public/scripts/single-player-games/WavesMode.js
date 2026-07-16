@@ -23,7 +23,7 @@ export class WavesMode extends BaseGameTemplate {
     init() {
         this.engine.map = new Map();
         this.engine.map.loadLevel(wavesLevelData);
-        this.engine.player = new Player(this.engine.map, this.engine.input, this.engine.resetPauseTime);
+        this.engine.player = new Player(this.engine.map, this.engine.input);
         this.engine.player.bloodManager = this.engine.bloodManager;
 
         this.currentWave = 1;
@@ -37,7 +37,13 @@ export class WavesMode extends BaseGameTemplate {
 
         const enemiesCount = this.currentWave;
         for (let i = 0; i < enemiesCount; i++) {
-            const enemy = new Enemy(this.engine.map, this.engine.resetPauseTime);
+            const playerPosition = {
+                x: this.engine.player.x, 
+                y: this.engine.player.y, 
+                w: this.engine.player.w, 
+                h: this.engine.player.h
+            };
+            const enemy = new Enemy(this.engine.map, playerPosition);
             enemy.bloodManager = this.engine.bloodManager;
             this.engine.enemies.push(enemy);
             enemy.onDeath(() => {
@@ -54,8 +60,8 @@ export class WavesMode extends BaseGameTemplate {
             return;
         }
 
-        const aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
-        if (aliveEnemies.length === 0) {
+        let aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
+        if (aliveEnemies.length == 0) {
             if (this.currentWave >= MAX_WAVES) {
                 this.endGame(true);
                 return;
@@ -66,6 +72,7 @@ export class WavesMode extends BaseGameTemplate {
             return;
         }
 
+        aliveEnemies = aliveEnemies.filter(e => e.isAlive);
         aliveEnemies.forEach(enemy => {
             this.enemyPathFind(enemy);
 
@@ -82,29 +89,27 @@ export class WavesMode extends BaseGameTemplate {
     }
 
     enemyPathFind(enemy) {
-        if (!enemy.isDying) {
-            const pathGraph = this.engine.map.buildPathGraph(this.engine.player, this.engine.enemies);
-            const playerPosition = this.engine.map.getCharacterPositionOnGrid(
-                this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
-            );
+        const pathGraph = this.engine.map.buildPathGraph(this.engine.player, this.engine.enemies);
+        const playerPosition = this.engine.map.getCharacterPositionOnGrid(
+            this.engine.player.x, this.engine.player.y, this.engine.player.w, this.engine.player.h
+        );
 
-            const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
+        const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
 
-            const nextCell = this.engine.map.findNextCell(
-                pathGraph,
-                currentCell.row,
-                currentCell.col,
-                playerPosition.row,
-                playerPosition.col
-            );
+        const nextCell = this.engine.map.findNextCell(
+            pathGraph,
+            currentCell.row,
+            currentCell.col,
+            playerPosition.row,
+            playerPosition.col
+        );
 
-            enemy.x += (nextCell.col - currentCell.col) * enemy.speed;
-            enemy.y += (nextCell.row - currentCell.row) * enemy.speed;
+        enemy.x += (nextCell.col - currentCell.col) * enemy.speed;
+        enemy.y += (nextCell.row - currentCell.row) * enemy.speed;
 
-            const dx = this.engine.player.x - enemy.x;
-            const dy = this.engine.player.y - enemy.y;
-            enemy.angle = Math.atan2(dy, dx);
-        }
+        const dx = this.engine.player.x - enemy.x;
+        const dy = this.engine.player.y - enemy.y;
+        enemy.angle = Math.atan2(dy, dx);
     }
 
     drawUI(ctx, canvas) {

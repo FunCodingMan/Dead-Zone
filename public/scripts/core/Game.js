@@ -62,10 +62,6 @@ export class Game {
         this.targets = [];
     }
 
-    resetPauseTime = () => {
-        this.totalPauseTime = 0;
-    }
-
     togglePause() {
         this.isPaused = !this.isPaused;
         if (this.isPaused) {
@@ -76,7 +72,6 @@ export class Game {
         } else {
             this.totalPauseTime += performance.now() - this.pauseStartTime;
             this.pauseStartTime = 0;
-            console.log('!!!');
         }
         this.onPauseToggle(this.isPaused);
     }

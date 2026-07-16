@@ -24,12 +24,18 @@ export class TrainingMode extends BaseGameTemplate {
         this.engine.map = new Map();
         this.engine.map.loadLevel(levelData);
 
-        this.engine.player = new Player(this.engine.map, this.engine.input, this.engine.resetPauseTime);
+        this.engine.player = new Player(this.engine.map, this.engine.input);
 
         // 3. Создаем мишени
         this.engine.targets = [];
         for (let i = 0; i < TARGETS_AMOUNT; i++) {
-            const target = new Target(this.engine.map, this.engine.resetPauseTime);
+            const playerPosition = {
+                x: this.engine.player.x, 
+                y: this.engine.player.y, 
+                w: this.engine.player.w, 
+                h: this.engine.player.h
+            };
+            const target = new Target(this.engine.map, playerPosition);
             
             target.onDeath(() => {
                 this.engine.player.kills++;
@@ -43,7 +49,13 @@ export class TrainingMode extends BaseGameTemplate {
 
         const aliveTargets = this.engine.targets.filter(t => t.isAlive);
         if (aliveTargets.length < TARGETS_AMOUNT) {
-            const target = new Target(this.engine.map, this.engine.resetPauseTime);
+            const playerPosition = {
+                x: this.engine.player.x, 
+                y: this.engine.player.y, 
+                w: this.engine.player.w, 
+                h: this.engine.player.h
+            };
+            const target = new Target(this.engine.map, playerPosition);
             this.engine.targets.push(target);
             target.onDeath(() => {
                 this.engine.player.kills++;
