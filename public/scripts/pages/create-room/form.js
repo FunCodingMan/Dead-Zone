@@ -9,7 +9,8 @@ const wsUrl = `${protocol}//${host}/ws/`;
 const network = new Network(wsUrl);
 
 network.on('yourRoomId', (payload) => {
-    const roomId = payload.roomId;
+
+    const roomId = payload['room-id'];
 
     network.disconnect();
 

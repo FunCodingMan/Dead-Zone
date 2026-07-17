@@ -21,7 +21,7 @@ let isReady = false;
 
 if (!roomId) {
     window.location.href = '/mode-selection/multiplayer';
-    return;
+    throw new Error("Редирект: отсутствует ID комнаты.");
 }
 
 roomIdSpan.textContent = roomId;
@@ -78,7 +78,7 @@ readyBtn.addEventListener('click', () => {
 });
 
 btnExit.addEventListener('click', () => {
-    network.send('exitRoom', {});
+    network.send('exit-room', {});
 
     network.disconnect();
 

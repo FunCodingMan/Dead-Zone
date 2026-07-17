@@ -47,13 +47,9 @@ class Lobby
 
         $room = new Room();
         $roomId = $room->getRoomId();
-        $user = $this->connection->getConnectionUserByFd($fd);
-        if ($user === null) {
-            return;
-        }
-        $room->addUser($fd, $user);
+
         $this->rooms[$roomId] = $room;
-        $this->fdToRoomId[$fd] = $roomId;
+
         $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
     }
 
@@ -71,7 +67,9 @@ class Lobby
 
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
+
         $this->updateStateRoom($room);
+
     }
 
     public function exitUser(int $fd): void

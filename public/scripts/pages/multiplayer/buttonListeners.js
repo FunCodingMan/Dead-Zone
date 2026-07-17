@@ -1,7 +1,7 @@
 {
     let btnCreateRoom = document.querySelector('.btn-createRoom');
     btnCreateRoom.addEventListener('click', () => {
-        window.location.href = '/mode-selection/multiplayer/create-join-room';
+        window.location.href = '/mode-selection/multiplayer/create-room';
     });
 
     let btnJoinRoom = document.querySelector('.btn-joinRoom');

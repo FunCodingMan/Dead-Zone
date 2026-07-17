@@ -18,10 +18,10 @@ class ActionExtractor implements IActionExtractor
     private const string USER_WAVES_FINAL_URL = '/mode-selection/singleplayer/waves-final';
 
     private const string USER_MULTIPLAYER_URL = '/mode-selection/multiplayer';
-    private const string USER_CREATE_ROOM_URL = '/mode-selection/multiplayer/create-join-room';
+    private const string USER_CREATE_ROOM_URL = '/mode-selection/multiplayer/create-room';
     private const string USER_JOIN_ROOM_URL = '/mode-selection/multiplayer/join-room';
 
-    private const string USER_ROOM_URL = '/mode-selection/multiplayer/room';
+    private const string USER_ROOM_URL = '/mode-selection/multiplayer/room/';
 
     public function setTokenCookie(string $token): void
     {
