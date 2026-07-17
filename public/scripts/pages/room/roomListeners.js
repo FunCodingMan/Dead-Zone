@@ -49,14 +49,14 @@ function renderPlayersList() {
     });
 }
 
-network.on('roomState', (payload) => {
+network.on('stateRoom', (payload) => {
     players = payload.users;
     curCountPlayers.textContent = payload.countUsers;
     maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList();
 });
 
-network.on('game-start', () => {
+network.on('start-game', () => {
     console.log('ИГРА НАЧАЛАСЬ!');
 });
 
@@ -78,7 +78,7 @@ readyBtn.addEventListener('click', () => {
 });
 
 btnExit.addEventListener('click', () => {
-    network.send('exit-room', {});
+    network.send('exitRoom', {});
 
     network.disconnect();
 
