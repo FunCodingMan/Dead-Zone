@@ -55,7 +55,7 @@ $server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
 });
 
 
-\Swoole\Timer::tick(3000, function () use ($connectionUser, $lobby) {
+\Swoole\Timer::tick(10000, function () use ($connectionUser, $lobby) {
     echo "Connection: " . json_encode($connectionUser->getConnections()) . "\n";
     echo "Lobby: " . json_encode($lobby->debugState()) . "\n\n";
 });

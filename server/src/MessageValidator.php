@@ -9,6 +9,7 @@ class MessageValidator
         return match ($type) {
             'move' => $this->isValidMove($data),
             'create-room' => $this->isValidCreateRoom($data),
+            'join-room' => $this->isValidJoinRoom($data),
             default => false,
         };
     }
@@ -34,6 +35,14 @@ class MessageValidator
             }
         }
 
+        return true;
+    }
+
+    private function isValidJoinRoom(array $data): bool
+    {
+        if (!isset($data['roomId']) || !is_string($data['roomId'])) {
+            return false;
+        }
         return true;
     }
 

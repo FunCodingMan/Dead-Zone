@@ -23,6 +23,7 @@ class Lobby
     {
         match ($data['type']) {
             'create-room' => $this->createRoom($data["fd"]),
+            'join-room' => $this->joinRoom($data["fd"], $data["data"]["roomId"]),
             default => null,
         };
     }
@@ -35,14 +36,31 @@ class Lobby
 
         $room = new Room();
         $roomId = $room->getRoomId();
-        $user = $this->connection->getConnectionByFd($fd);
-        if (!$user === null) {
+        $user = $this->connection->getConnectionUserByFd($fd);
+        if ($user === null) {
             return;
         }
         $room->addUser($fd, $user);
         $this->rooms[$roomId] = $room;
         $this->fdToRoomId[$fd] = $roomId;
         $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
+    }
+
+    private function joinRoom(int $fd, string $roomId): void
+    {
+        if (!isset($this->rooms[$roomId]) || $this->rooms[$roomId]->getCountUsers() >= 4) {
+            return;
+        }
+
+        $room = $this->rooms[$roomId];
+        $user = $this->connection->getConnectionUserByFd($fd);
+        if ($user === null) {
+            return;
+        }
+
+        $room->addUser($fd, $user);
+        $this->fdToRoomId[$fd] = $roomId;
+        // потом он должен возваращать состояние комнаты
     }
 
     public function exitUser(int $fd): void

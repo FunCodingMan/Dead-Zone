@@ -36,7 +36,7 @@ class ConnectionUser
         }
     }
 
-    public function getConnectionByFd(int $fd): ?User
+    public function getConnectionUserByFd(int $fd): ?User
     {
         if (isset($this->connections[$fd])) {
             return $this->connections[$fd];
