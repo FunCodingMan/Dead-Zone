@@ -1,46 +1,62 @@
 <?php
 
-require __DIR__ . '/../vendor/autoload.php';
-
-use App\app\game\GameEngine;
+use App\app\model\Player;
+use App\ConnectionUser;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
-use App\infrastructure\websocket\PlayersController;
-use App\infrastructure\websocket\WebSocketParser;
+use App\Lobby;
+use App\LobbyUser;
+use App\MessageValidator;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+
 
 $server = new \Swoole\WebSocket\Server("0.0.0.0", 9502);
 
+$connectionDatabase = new ConnectionProvider();
+$repository = new UserTable($connectionDatabase);
+$connectionUser= new ConnectionUser($repository);
 
-$connectionProvider = new ConnectionProvider();
-$userTable = new UserTable($connectionProvider);
-$pc = new PlayersController($userTable);
-$ws = new WebSocketParser($server);
-$gameEngine = new GameEngine($pc, $ws);
+$validator = new MessageValidator();
+$ws = new \App\WebSocketParser($server, $validator);
 
-$server->on('open', function ($server, $request) use ($pc, $gameEngine) {
-    echo "Клиент #{$request->fd} подключился\n";
-    $pc->addPlayer($request->fd, $request->cookie ?? []);
+$lobby = new Lobby($ws, $connectionUser);
 
-    $gameEngine->spawnPlayer($request->fd);
-});
 
-$server->on('message', function ($server, $frame) use ($ws) {
-    echo "Получено от #{$frame->fd}: {$frame->data}\n";
-    $ws->acceptNewStatePlayer($frame->fd, $frame->data);
-//    $server->push($frame->fd, "Ништяк браток, принял");
-});
-
-$server->on('close', function ($server, $fd) use ($pc){
-    echo "Клиент #{$fd} отключился\n";
-    $pc->deletePlayer($fd);
-});
-
-\Swoole\Timer::tick(33, function () use ($gameEngine) {
-    try {
-        $gameEngine->pushData();
-    } catch (RuntimeException $error) {
-        echo $error->getMessage();
+$server->on('open', function ($server, $request) use ($connectionUser) {
+    if (!$connectionUser->connection($request->fd, $request->cookie)) {
+        echo "connection failed\n";
+        $server->close($request->fd);
+        return;
     }
+    echo "Клиент #{$request->fd} подключился\n";
+
+});
+
+$server->on('message', function ($server, $frame) use ($ws, $lobby) {
+    echo "Получено от #{$frame->fd}: {$frame->data}\n";
+    $data = $ws->parse($frame->fd, $frame->data);
+
+    if (empty($data)) {
+        return;
+    }
+
+    $lobby->handler($data);
+
+    echo json_encode($data, JSON_UNESCAPED_UNICODE) . "---------------------------\n\n";
+});
+
+$server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
+    echo "Клиент #{$fd} отключился\n";
+    $lobby->exitUser($fd);
+    $connectionUser->disconnection($fd);
+
+});
+
+
+\Swoole\Timer::tick(10000, function () use ($connectionUser, $lobby) {
+//    $lobby->updateStateRooms();
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";
