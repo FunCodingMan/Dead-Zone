@@ -1,9 +1,11 @@
-import { Network } from "../../utils/Network";
+import { Network } from "../../utils/Network.js";
 
 const roomIdSpan = document.getElementById('roomId-span');
 const playerList = document.getElementById('players-list');
 const readyBtn = document.getElementById('ready-btn');
 const btnExit = document.getElementById('btn-exit');
+const curCountPlayers = document.getElementById('cur-players-count');
+const maxCountPlayers = document.getElementById('max-players-count');
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const host = window.location.host;
@@ -48,7 +50,9 @@ function renderPlayersList() {
 }
 
 network.on('roomState', (payload) => {
-    players = payload.players;
+    players = payload.users;
+    curCountPlayers.textContent = payload.countUsers;
+    maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList();
 });
 
@@ -68,13 +72,13 @@ const checkConnection = setInterval(() => {
 
 readyBtn.addEventListener('click', () => {
     isReady = !isReady;
-    readyBtn.textContent = isReady ? 'НЕ ГОТОВ' : 'ГОТОВ';
+    readyBtn.textContent = isReady ? 'ГОТОВ': 'НЕ ГОТОВ';
 
     network.send('ready', { isReady: isReady });
 });
 
 btnExit.addEventListener('click', () => {
-    network.send()
+    network.send('exit-room', {});
 
     network.disconnect();
 

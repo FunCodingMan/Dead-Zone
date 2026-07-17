@@ -21,6 +21,8 @@ class ActionExtractor implements IActionExtractor
     private const string USER_CREATE_ROOM_URL = '/mode-selection/multiplayer/create-join-room';
     private const string USER_JOIN_ROOM_URL = '/mode-selection/multiplayer/join-room';
 
+    private const string USER_ROOM_URL = '/mode-selection/multiplayer/room';
+
     public function setTokenCookie(string $token): void
     {
         setcookie('token', $token, [
@@ -71,8 +73,9 @@ class ActionExtractor implements IActionExtractor
             $method === "GET" && $urlPath === self::USER_WAVES_URL && $hasToken => 'waves',
             $method === "GET" && $urlPath === self::USER_WAVES_FINAL_URL && $hasToken => 'waves-final',
             $method === "GET" && $urlPath === self::USER_MULTIPLAYER_URL && $hasToken => 'multiplayer',
-            $method === "GET" && $urlPath === self::USER_CREATE_ROOM_URL && $hasToken => 'create-join-room',
+            $method === "GET" && $urlPath === self::USER_CREATE_ROOM_URL && $hasToken => 'create-room',
             $method === "GET" && $urlPath === self::USER_JOIN_ROOM_URL && $hasToken => 'join-room',
+            $method === "GET" && $urlPath === self::USER_ROOM_URL && $hasToken => 'room',
             $method === "GET" && isset($_COOKIE["token"]) => 'menu',
             default => null
         };

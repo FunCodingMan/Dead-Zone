@@ -1,4 +1,4 @@
-import {Network} from "../../utils/Network";
+import {Network} from "../../utils/Network.js";
 
 const createBtn = document.querySelector('.room-submit');
 
