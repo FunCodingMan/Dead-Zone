@@ -60,7 +60,6 @@ class Lobby
 
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
-        // потом он должен возваращать состояние комнаты
     }
 
     public function exitUser(int $fd): void
@@ -81,7 +80,7 @@ class Lobby
         $result = [];
         foreach ($this->rooms as $roomId => $room) {
             $result[$roomId] = [
-                'playersCount' => $room->getCountUsers(),
+                'state' => $room->getStateRoom(),
             ];
         }
         return [

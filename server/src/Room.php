@@ -23,8 +23,20 @@ class Room
 
     public function addUser(int $fd, User $user): void
     {
-        $lobbyUser = new LobbyUser($fd, $user->getUserId());
+        $lobbyUser = new LobbyUser($fd, $user->getUserId(), $user->getNickname());
         $this->lobbyUsers[$fd] = $lobbyUser;
+    }
+
+    public function getStateRoom(): array
+    {
+        $state = [];
+        $users = [];
+        foreach ($this->lobbyUsers as $fd => $lobbyUser) {
+            $users[] = $lobbyUser->getNickname();
+        }
+        $state['users'] = $users;
+        $state['countUsers'] = $this->getCountUsers();
+        return $state;
     }
 
     public function getRoomId(): string
