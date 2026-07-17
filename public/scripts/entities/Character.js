@@ -1,4 +1,5 @@
 import { CONFIG } from "../core/Config.js";
+import { Sound } from "../core/Sound.js";
 
 export const MAX_HITPOINTS = 100;
 const EXPLOSION_DURATION_MS = 400;
@@ -43,10 +44,56 @@ export class Character {
 
         this.currentDeathFrame;
         this.deathElapsed;
+
+        this.currentFrequentSoundIndex = 0;
+        this.initSounds();
+    }
+
+    initSounds() {
+        this.shootSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/shot.mp3');
+            newSound.setVolume(0.3);
+            this.shootSounds.push(newSound);
+        }
+
+        this.hitHardSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/hit-hard.mp3');
+            newSound.setVolume(1);
+            this.hitHardSounds.push(newSound);
+        }
+
+        this.hitTargetSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/hit-target.mp3');
+            newSound.setVolume(1);
+            this.hitTargetSounds.push(newSound);
+        }
+
+        
+        this.hitEnemySound = new Sound('../../assets/sounds/hit.mp3');
+        this.hitEnemySound.setVolume(0.5);
+
+        this.reloadSound = new Sound('../../assets/sounds/reload.mp3');
+
+        this.explosionSound = new Sound('../../assets/sounds/explosion.mp3');
+
+        this.stepsSound = new Sound('../../assets/sounds/steps.mp3');
     }
 
     onDeath(callback) {
         this.onDeathCallback = callback;
+    }
+
+    playFrequentSound(array) {
+        const sounds = array;
+
+        const sound = sounds[this.currentFrequentSoundIndex];
+        this.currentFrequentSoundIndex = (this.currentFrequentSoundIndex + 1) % sounds.length;
+
+        sound.stop();
+        sound.play();
     }
 
     takeDamage(damage, map, symbol) {
@@ -56,14 +103,18 @@ export class Character {
 
         if (symbol === CONFIG.TARGET_SYMBOL) {
             this.startPulse();
+            this.playFrequentSound(this.hitTargetSounds);
         } else {
             this.bloodManager.addBloodSpot(this);
+            this.hitEnemySound.play();
         }
 
         if (this.hitpoints <= 0) {
             this.isAlive = false;
             this.isDying = true;
             this.deathStartTime = performance.now();
+
+            this.explosionSound.play();
 
             if (this.onDeathCallback) {
                 this.onDeathCallback();

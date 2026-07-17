@@ -68,6 +68,7 @@ export class Player extends Character {
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
             this.isReloading = true;
+            this.reloadSound.play();
         }
 
         //вызов перезарядки вынесен в Game update для обработки во время паузы
@@ -95,12 +96,16 @@ export class Player extends Character {
             dx += 1;
         }
         if (dx !== 0 || dy !== 0) {
+            this.stepsSound.play();
+
             const length = Math.sqrt(dx * dx + dy * dy);
             dx /= length;
             dy /= length;
 
             nextX += dx * this.speed;
             nextY += dy * this.speed;
+        } else {
+            this.stepsSound.stop();
         }
 
         if (nextX < 0) nextX = 0;
@@ -140,6 +145,8 @@ export class Player extends Character {
 
     createBullet(targetX, targetY) {
         this.shotsAmount--;
+
+        this.playFrequentSound(this.shootSounds);
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
@@ -185,6 +192,18 @@ export class Player extends Character {
             if (map.checkCollision(bulletRect)) {
                 toRemove.push(index);
             }
+
+            map.walls.forEach(wall => {
+                if (map.isIntersecting(bulletRect, wall)) {
+                    this.playFrequentSound(this.hitHardSounds);
+                }
+            });
+
+            map.boxes.forEach(box => {
+                if (map.isIntersecting(bulletRect, box)) {
+                    this.playFrequentSound(this.hitHardSounds);
+                }
+            });
         });
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
