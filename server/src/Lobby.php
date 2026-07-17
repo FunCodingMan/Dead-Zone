@@ -42,7 +42,7 @@ class Lobby
         $room->addUser($fd, $user);
         $this->rooms[$roomId] = $room;
         $this->fdToRoomId[$fd] = $roomId;
-        $this->ws->send($fd, ["type" => "getRoomId", "payload" => ["room-id" => $roomId]]);
+        $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
     }
 
     public function exitUser(int $fd): void
