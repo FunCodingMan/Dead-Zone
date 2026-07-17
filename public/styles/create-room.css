@@ -1,0 +1,48 @@
+.input-container {
+    display: flex;
+    width: 50vw;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.input-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    color: #ccc;
+    text-transform: uppercase;
+    justify-self: center;
+    align-self: center;
+}
+
+.input {
+    width: 100%;
+    padding: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: #111;
+    border: 2px solid #555;
+    color: white;
+    font: 22px 'Spielarcade Regular', sans-serif;
+    outline: none;
+    transition: 0.2s;
+}
+
+.input-name {
+    width: 50%;
+}
+
+.room-submit {
+    width: 60%;
+    padding: 15px;
+    border: 2px solid #555;
+    color: white;
+    font: 22px 'Spielarcade Regular', sans-serif;
+    outline: none;
+    transition: 0.2s;
+
+}

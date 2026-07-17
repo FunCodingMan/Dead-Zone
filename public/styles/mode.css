@@ -1,3 +1,8 @@
+* {
+    box-sizing: border-box;
+    font-family: 'Spielarcade Regular', sans-serif;
+}
+
 body {
     margin: 0;
     background: rgb(20, 20, 20);
@@ -6,6 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    font-family: 'Spielarcade Regular', sans-serif;
 }
 
 .menu-screen {

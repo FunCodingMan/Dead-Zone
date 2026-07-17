@@ -1,35 +1,43 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Triumvirate</title>
-        <meta charset="UTF-8">
-        <link rel="stylesheet" href="/styles/form.css">
-        <script src="/scripts/pages/form/buttonRepeateSwitch.js" defer></script>
-        <script src="/scripts/pages/form/formRegistration.js" defer></script>
-        <script src="/scripts/pages/form/formLogin.js" defer></script>
-    </head>
-    <body>
+<head>
+    <title>Triumvirate</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/styles/form.css">
+    <link href="/styles/fonts-styles.css" rel="stylesheet">
+    <script src="/scripts/pages/form/buttonRepeateSwitch.js" defer></script>
+    <script src="/scripts/pages/form/formRegistration.js" defer></script>
+    <script src="/scripts/pages/form/formLogin.js" defer></script>
+</head>
+<body>
 
+<div class="form-container">
     <span class="error__message hidden"></span>
-
     <button class="button__repeat-switch">Перейти к логину</button>
 
     <form class="form-registration">
-        <p>Имя пользователя</p>
-        <input type="text" name="nickname">
-        <p>Логин пользователя</p>
-        <input type="text" name="username">
-        <p>Пароль</p>
-        <input type="text" name="password">
-        <input type="submit" value="Отправить">
+        <p class="form__label">Имя пользователя</p>
+        <input class="form__input" type="text" name="nickname">
+
+        <p class="form__label">Логин пользователя</p>
+        <input class="form__input" type="text" name="username">
+
+        <p class="form__label">Пароль</p>
+        <input class="form__input" type="password" name="password">
+
+        <input class="form__submit" type="submit" value="Отправить">
     </form>
 
     <form class="form-login hidden">
-        <p>Логин пользователя</p>
-        <input type="text" name="username">
-        <p>Пароль</p>
-        <input type="text" name="password">
-        <input type="submit" value="Отправить">
+        <p class="form__label">Логин пользователя</p>
+        <input class="form__input" type="text" name="username">
+
+        <p class="form__label">Пароль</p>
+        <input class="form__input" type="password" name="password">
+
+        <input class="form__submit" type="submit" value="Отправить">
     </form>
-    </body>
+</div>
+
+</body>
 </html>

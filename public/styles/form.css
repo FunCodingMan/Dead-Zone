@@ -1,15 +1,107 @@
-.form-login {
-    display: block;
+* {
+    box-sizing: border-box;
 }
 
-.form-registration {
-    display: block;
+body {
+    margin: 0;
+    background: rgb(20, 20, 20);
+    color: white;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Spielarcade Regular', sans-serif;
 }
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    width: 450px;
+    padding: 40px;
+    background-color: #222;
+    border: 2px solid #555;
+}
+
+.button__repeat-switch {
+    background-color: #333;
+    color: white;
+    border: 2px solid #555;
+    padding: 10px 20px;
+    font: 20px/18px 'Spielarcade Regular', sans-serif;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.button__repeat-switch:hover {
+    background-color: #444;
+}
+
 
 .error__message {
-    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #551111;
+    border: 2px solid #aa3333;
+    color: #ff6666;
+    text-align: center;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+
+
+.form-login,
+.form-registration {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+
+.form__label {
+    margin: 0 0 10px 0;
+    font-size: 20px;
+    color: #ccc;
+    text-transform: uppercase;
+}
+
+.form__input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #111;
+    border: 2px solid #555;
+    color: white;
+    font: 22px 'Spielarcade Regular', sans-serif;
+    outline: none;
+    transition: 0.2s;
+}
+
+.form__input:focus {
+    border-color: #888;
+    background-color: #1a1a1a;
+}
+
+
+.form__submit {
+    width: 100%;
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #333;
+    color: white;
+    border: 2px solid #555;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+    font: 30px/18px 'Spielarcade Regular', sans-serif;
+}
+
+.form__submit:hover {
+    background-color: #444;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }

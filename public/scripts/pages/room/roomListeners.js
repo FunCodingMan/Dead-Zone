@@ -1,0 +1,83 @@
+import { Network } from "../../utils/Network";
+
+const roomIdSpan = document.getElementById('roomId-span');
+const playerList = document.getElementById('players-list');
+const readyBtn = document.getElementById('ready-btn');
+const btnExit = document.getElementById('btn-exit');
+
+const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const host = window.location.host;
+const wsUrl = `${protocol}//${host}/ws/`;
+
+const network = new Network(wsUrl);
+
+const urlParams = new URLSearchParams(window.location.search);
+const roomId = urlParams.get('id');
+
+let players = [];
+let isReady = false;
+
+if (!roomId) {
+    window.location.href = '/mode-selection/multiplayer';
+    return;
+}
+
+roomIdSpan.textContent = roomId;
+
+function renderPlayersList() {
+    playerList.innerHTML = '';
+
+    if (players.length === 0) {
+        playerList.innerHTML = '<p>Ождиание сервера...</p>';
+    }
+
+    players.forEach((player) => {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'player-item';
+
+        const status = player.isReady ? 'ready' : 'waiting';
+        const statusText = player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
+
+        playerDiv.innerHTML = `
+            <span class="player-name">${player.nickname}</span>
+            <span class="player-status ${status}">${statusText}</span>
+        `;
+
+        playerList.appendChild(playerDiv);
+    });
+}
+
+network.on('roomState', (payload) => {
+    players = payload.players;
+    renderPlayersList();
+});
+
+network.on('game-start', () => {
+    console.log('ИГРА НАЧАЛАСЬ!');
+});
+
+network.connect();
+
+const checkConnection = setInterval(() => {
+    if (network.connectionStatus === 'connected') {
+        clearInterval(checkConnection);
+
+        network.send('join-room', {roomId: roomId});
+    }
+}, 50);
+
+readyBtn.addEventListener('click', () => {
+    isReady = !isReady;
+    readyBtn.textContent = isReady ? 'НЕ ГОТОВ' : 'ГОТОВ';
+
+    network.send('ready', { isReady: isReady });
+});
+
+btnExit.addEventListener('click', () => {
+    network.send()
+
+    network.disconnect();
+
+    window.location.href = `/mode-selection/multiplayer`;
+});
+

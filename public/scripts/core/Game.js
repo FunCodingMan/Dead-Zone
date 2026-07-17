@@ -176,5 +176,6 @@ export class Game {
                 this.player.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }
         }
+
     }
 }

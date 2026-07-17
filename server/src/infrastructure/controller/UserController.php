@@ -37,6 +37,8 @@ class UserController implements IExecuteAction
             'waves' => $this->pagesRender->showSecondGame(),
             'waves-final' => $this->pagesRender->showSecondGameFinal(),
             'multiplayer' => $this->pagesRender->showMultiplayer(),
+            'create-join-room' => $this->pagesRender->showCreateRoom(),
+            'join-room' => $this->pagesRender->showJoinRoom(),
             default => $this->pagesRender->showForm(),
         };
     }
