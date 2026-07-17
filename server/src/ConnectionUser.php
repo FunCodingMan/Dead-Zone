@@ -36,6 +36,14 @@ class ConnectionUser
         }
     }
 
+    public function getConnectionByFd(int $fd): ?User
+    {
+        if (isset($this->connections[$fd])) {
+            return $this->connections[$fd];
+        }
+        return null;
+    }
+
     public function getConnections(): array
     {
         $arr = [];

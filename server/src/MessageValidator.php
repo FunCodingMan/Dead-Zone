@@ -8,6 +8,7 @@ class MessageValidator
     {
         return match ($type) {
             'move' => $this->isValidMove($data),
+            'create-room' => $this->isValidCreateRoom($data),
             default => false,
         };
     }
@@ -34,5 +35,10 @@ class MessageValidator
         }
 
         return true;
+    }
+
+    private function isValidCreateRoom(array $data): bool
+    {
+        return empty($data["payload"]);
     }
 }

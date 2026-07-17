@@ -4,6 +4,8 @@ use App\app\model\Player;
 use App\ConnectionUser;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
+use App\Lobby;
+use App\LobbyUser;
 use App\MessageValidator;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -19,6 +21,8 @@ $connectionUser= new ConnectionUser($repository);
 $validator = new MessageValidator();
 $ws = new \App\WebSocketParser($server, $validator);
 
+$lobby = new Lobby($connectionUser);
+
 
 $server->on('open', function ($server, $request) use ($connectionUser) {
     if (!$connectionUser->connection($request->fd, $request->cookie)) {
@@ -30,9 +34,15 @@ $server->on('open', function ($server, $request) use ($connectionUser) {
 
 });
 
-$server->on('message', function ($server, $frame) use ($ws) {
+$server->on('message', function ($server, $frame) use ($ws, $lobby) {
     echo "Получено от #{$frame->fd}: {$frame->data}\n";
     $data = $ws->parse($frame->fd, $frame->data);
+
+    if (empty($data)) {
+        return;
+    }
+
+    $lobby->handler($data);
 
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
 });
@@ -43,7 +53,7 @@ $server->on('close', function ($server, $fd) use ($connectionUser) {
 });
 
 
-\Swoole\Timer::tick(10000, function () use ($connectionUser, $ws) {
+\Swoole\Timer::tick(3000, function () use ($connectionUser, $ws) {
     echo json_encode($connectionUser->getConnections()) . "\n";
 });
 
