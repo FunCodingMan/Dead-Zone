@@ -18,7 +18,7 @@ class Room
     public function __construct()
     {
         $this->lobbyUsers = [];
-        $this->roomId = bin2hex(random_bytes(32));
+        $this->roomId = bin2hex(random_bytes(8));
     }
 
     public function addUser(int $fd, User $user): void
@@ -30,5 +30,15 @@ class Room
     public function getRoomId(): string
     {
         return $this->roomId;
+    }
+
+    public function deleteUser(int $fd): void
+    {
+        unset($this->lobbyUsers[$fd]);
+    }
+
+    public function getCountUsers(): int
+    {
+        return count($this->lobbyUsers);
     }
 }

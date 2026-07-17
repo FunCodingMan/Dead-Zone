@@ -15,6 +15,21 @@ class LobbyUser
         $this->isReady = false;
     }
 
+    public function getFd(): int
+    {
+        return $this->fd;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function isReady(): bool
+    {
+        return $this->isReady;
+    }
+
     public function ready(): void
     {
         $this->isReady = true;

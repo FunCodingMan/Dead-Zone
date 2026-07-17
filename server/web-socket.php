@@ -21,7 +21,7 @@ $connectionUser= new ConnectionUser($repository);
 $validator = new MessageValidator();
 $ws = new \App\WebSocketParser($server, $validator);
 
-$lobby = new Lobby($connectionUser);
+$lobby = new Lobby($ws, $connectionUser);
 
 
 $server->on('open', function ($server, $request) use ($connectionUser) {
@@ -44,17 +44,20 @@ $server->on('message', function ($server, $frame) use ($ws, $lobby) {
 
     $lobby->handler($data);
 
-    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE) . "---------------------------\n\n";
 });
 
-$server->on('close', function ($server, $fd) use ($connectionUser) {
+$server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
     echo "Клиент #{$fd} отключился\n";
+    $lobby->exitUser($fd);
     $connectionUser->disconnection($fd);
+
 });
 
 
-\Swoole\Timer::tick(3000, function () use ($connectionUser, $ws) {
-    echo json_encode($connectionUser->getConnections()) . "\n";
+\Swoole\Timer::tick(3000, function () use ($connectionUser, $lobby) {
+    echo "Connection: " . json_encode($connectionUser->getConnections()) . "\n";
+    echo "Lobby: " . json_encode($lobby->debugState()) . "\n\n";
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";

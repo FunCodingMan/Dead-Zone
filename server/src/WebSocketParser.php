@@ -52,8 +52,13 @@ class WebSocketParser
                 "type" => "state",
                 "payload" => ["me" => $me, "others" => $others],
             ];
-            $this->server->push($recipient->getFd(), json_encode($data));
+            $this->send($recipient->getFd(), $data);
         }
+    }
+
+    public function send(int $fd, array $data): void
+    {
+        $this->server->push($fd, json_encode($data));
     }
 
 }

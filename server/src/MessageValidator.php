@@ -39,6 +39,6 @@ class MessageValidator
 
     private function isValidCreateRoom(array $data): bool
     {
-        return empty($data["payload"]);
+        return empty($data);
     }
 }
