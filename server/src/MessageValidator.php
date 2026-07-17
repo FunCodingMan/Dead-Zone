@@ -10,6 +10,8 @@ class MessageValidator
             'move' => $this->isValidMove($data),
             'create-room' => $this->isValidCreateRoom($data),
             'join-room' => $this->isValidJoinRoom($data),
+            'exit-room' => $this->isValidExitRoom($data),
+            'ready' => $this->isValidReady($data),
             default => false,
         };
     }
@@ -38,6 +40,14 @@ class MessageValidator
         return true;
     }
 
+    private function isValidReady(array $data): bool
+    {
+        if (!isset($data['isReady']) || !is_bool($data['isReady'])) {
+            return false;
+        }
+        return true;
+    }
+
     private function isValidJoinRoom(array $data): bool
     {
         if (!isset($data['roomId']) || !is_string($data['roomId'])) {
@@ -46,7 +56,12 @@ class MessageValidator
         return true;
     }
 
-    private function isValidCreateRoom(array $data): bool
+    private function isValidExitRoom(array $data): bool
+    {
+        return empty($data);
+    }
+
+        private function isValidCreateRoom(array $data): bool
     {
         return empty($data);
     }

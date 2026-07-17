@@ -24,8 +24,19 @@ class Lobby
         match ($data['type']) {
             'create-room' => $this->createRoom($data["fd"]),
             'join-room' => $this->joinRoom($data["fd"], $data["data"]["roomId"]),
+            'exit-room' => $this->exitUser($data["fd"]),
+            'ready' => $this->readyUser($data["fd"], $data["data"]["isReady"]),
             default => null,
         };
+    }
+
+    private function readyUser(int $fd, bool $isReady): void
+    {
+        if (!isset($this->fdToRoomId[$fd])) return;
+        $roomId = $this->fdToRoomId[$fd];
+        $room = $this->rooms[$roomId];
+        $room->setReadyUser($fd, $isReady);
+        $this->updateStateRoom($room);
     }
 
     private function createRoom(int $fd): void
@@ -48,7 +59,7 @@ class Lobby
 
     private function joinRoom(int $fd, string $roomId): void
     {
-        if (!isset($this->rooms[$roomId]) || $this->rooms[$roomId]->getCountUsers() >= 4) {
+        if (!isset($this->rooms[$roomId]) || isset($this->fdToRoomId[$fd]) || $this->rooms[$roomId]->getCountUsers() >= 4) {
             return;
         }
 
@@ -60,6 +71,7 @@ class Lobby
 
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
+        $this->updateStateRoom($room);
     }
 
     public function exitUser(int $fd): void
@@ -69,9 +81,20 @@ class Lobby
             $room = $this->rooms[$roomId];
             $room->deleteUser($fd);
             unset($this->fdToRoomId[$fd]);
-            if ($room->getCountUsers() < 1) {
+            if ($room->getCountUsers() >= 1) {
+                $this->updateStateRoom($room);
+            } else {
                 unset($this->rooms[$roomId]);
             }
+        }
+    }
+
+    public function updateStateRoom(Room $room): void
+    {
+        $state = $room->getStateRoom();
+        $fds = $room->getFdUsers();
+        foreach ($fds as $fd) {
+            $this->ws->send($fd, ["type" => "stateRoom", "payload" => $state]);
         }
     }
 

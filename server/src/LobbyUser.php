@@ -37,13 +37,8 @@ class LobbyUser
         return $this->isReady;
     }
 
-    public function ready(): void
+    public function setReady(bool $isReady): void
     {
-        $this->isReady = true;
-    }
-
-    public function unready(): void
-    {
-        $this->isReady = false;
+        $this->isReady = $isReady;
     }
 }
