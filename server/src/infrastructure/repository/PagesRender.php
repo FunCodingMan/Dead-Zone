@@ -51,19 +51,4 @@ class PagesRender implements IPagesRender
     {
         include_once __DIR__ . "/../../View/multiplayer.html";
     }
-
-    public function showCreateRoom(): void
-    {
-        include_once __DIR__ . "/../../View/create-room.html";
-    }
-
-    public function showJoinRoom(): void
-    {
-        include_once __DIR__ . "/../../View/join-room.html";
-    }
-
-    public function showRoom(): void
-    {
-        include_once __DIR__ . "/../../View/room.html";
-    }
 }

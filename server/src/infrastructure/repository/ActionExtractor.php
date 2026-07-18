@@ -6,22 +6,18 @@ use App\app\repository\IActionExtractor;
 
 class ActionExtractor implements IActionExtractor
 {
-    private const USER_LOGIN_URL = "/api/users/login";
-    private const USER_REGISTRATION_URL = "/api/users/registration";
-    private const USER_LOGOUT_URL = "/api/users/logout";
-    private const USER_MODE_SELECTION_URL = "/mode-selection";
-    private const USER_PROFILE_URL = "/profile";
-    private const USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
-    private const USER_TRAINING_URL = '/mode-selection/singleplayer/training';
+    private const string USER_LOGIN_URL = "/api/users/login";
+    private const string USER_REGISTRATION_URL = "/api/users/registration";
+    private const string USER_LOGOUT_URL = "/api/users/logout";
+    private const string USER_MODE_SELECTION_URL = "/mode-selection";
+    private const string USER_PROFILE_URL = "/profile";
+    private const string USER_SINGLEPLAYER_URL = '/mode-selection/singleplayer';
+    private const string USER_TRAINING_URL = '/mode-selection/singleplayer/training';
 
     private const string USER_WAVES_URL = '/mode-selection/singleplayer/waves';
     private const string USER_WAVES_FINAL_URL = '/mode-selection/singleplayer/waves-final';
 
     private const string USER_MULTIPLAYER_URL = '/mode-selection/multiplayer';
-    private const string USER_CREATE_ROOM_URL = '/mode-selection/multiplayer/create-room';
-    private const string USER_JOIN_ROOM_URL = '/mode-selection/multiplayer/join-room';
-
-    private const string USER_ROOM_URL = '/mode-selection/multiplayer/room/';
 
     public function setTokenCookie(string $token): void
     {
@@ -73,9 +69,6 @@ class ActionExtractor implements IActionExtractor
             $method === "GET" && $urlPath === self::USER_WAVES_URL && $hasToken => 'waves',
             $method === "GET" && $urlPath === self::USER_WAVES_FINAL_URL && $hasToken => 'waves-final',
             $method === "GET" && $urlPath === self::USER_MULTIPLAYER_URL && $hasToken => 'multiplayer',
-            $method === "GET" && $urlPath === self::USER_CREATE_ROOM_URL && $hasToken => 'create-room',
-            $method === "GET" && $urlPath === self::USER_JOIN_ROOM_URL && $hasToken => 'join-room',
-            $method === "GET" && $urlPath === self::USER_ROOM_URL && $hasToken => 'room',
             $method === "GET" && isset($_COOKIE["token"]) => 'menu',
             default => null
         };
