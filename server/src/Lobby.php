@@ -44,32 +44,38 @@ class Lobby
         if (isset($this->fdToRoomId[$fd])) {
             return;
         }
-
         $room = new Room();
         $roomId = $room->getRoomId();
-
-        $this->rooms[$roomId] = $room;
-
-        $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
-    }
-
-    private function joinRoom(int $fd, string $roomId): void
-    {
-        if (!isset($this->rooms[$roomId]) || isset($this->fdToRoomId[$fd]) || $this->rooms[$roomId]->getCountUsers() >= 4) {
-            return;
-        }
-
-        $room = $this->rooms[$roomId];
         $user = $this->connection->getConnectionUserByFd($fd);
         if ($user === null) {
             return;
         }
+        $room->addUser($fd, $user);
+        $this->rooms[$roomId] = $room;
+        $this->fdToRoomId[$fd] = $roomId;
+        $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
+        $this->updateStateRoom($room);
+    }
 
+    private function joinRoom(int $fd, string $roomId): void
+    {
+        if (isset($this->fdToRoomId[$fd])) return;
+        $room = $this->rooms[$roomId] ?? null;
+        if ($room === null) {
+            $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Комната не найдена"]]);
+            return;
+        }
+        if ($room->getCountUsers() >= Room::MAX_COUNT_USERS) {
+            $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Комната заполнена"]]);
+            return;
+        }
+        $user = $this->connection->getConnectionUserByFd($fd);
+        if ($user === null) {
+            return;
+        }
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
-
         $this->updateStateRoom($room);
-
     }
 
     public function exitUser(int $fd): void

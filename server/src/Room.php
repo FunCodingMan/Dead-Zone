@@ -36,6 +36,7 @@ class Room
             $users[] = ["nickname" => $lobbyUser->getNickname(), "isReady" => $lobbyUser->isReady()];
         }
 
+        $state['roomId'] = $this->roomId;
         $state['users'] = $users;
         $state['countUsers'] = $this->getCountUsers();
         $state["maxCountUsers"] = self::MAX_COUNT_USERS;
