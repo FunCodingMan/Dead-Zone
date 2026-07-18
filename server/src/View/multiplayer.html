@@ -1,21 +1,62 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>DeadZone</title>
-    <link rel="stylesheet" href="/styles/mode.css">
-    <link href="/styles/fonts-styles.css" rel="stylesheet">
-    <script src="/scripts/pages/multiplayer/buttonListeners.js" defer></script>
-</head>
-<body>
-<div class="menu-screen menu-choose">
-    <h2 class="menu-title">ЛОББИ</h2>
-    <div class="menu-buttons">
-        <button class="btn btn-createRoom">СОЗДАТЬ КОМНАТУ</button>
-        <button class="btn btn-joinRoom">ПРИСОЕДИНИТЬСЯ К КОМНАТЕ</button>
-        <button class="btn btn-serversList disabled" title="В РАЗРАБОТКЕ ...">СПИСОК СЕРВЕРОВ</button>
-        <button class="btn btn-exit">НАЗАД</button>
-    </div>
-</div>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <title>DeadZone</title>
+        <link rel="stylesheet" href="/styles/mode.css">
+        <link rel="stylesheet" href="/styles/create-room.css">
+        <link rel="stylesheet" href="/styles/join-room.css">
+        <link href="/styles/fonts-styles.css" rel="stylesheet">
+        <script type="module" src="/scripts/pages/multiplayer/multiplayerSession.js" defer></script>
+    </head>
+    <body>
+        <div class="menu-screen menu-choose screen" id="screen-lobby-menu">
+            <h2 class="menu-title">ЛОББИ</h2>
+            <div class="menu-buttons">
+                <button class="btn btn-createRoom">СОЗДАТЬ КОМНАТУ</button>
+                <button class="btn btn-joinRoom">ПРИСОЕДИНИТЬСЯ К КОМНАТЕ</button>
+                <button class="btn btn-serversList disabled" title="В РАЗРАБОТКЕ ...">СПИСОК СЕРВЕРОВ</button>
+                <button class="btn btn-exit-to-mode-selection">НАЗАД</button>
+            </div>
+        </div>
+
+        <div class="menu-screen menu-choose screen hidden" id="screen-create-room">
+            <h2 class="menu-title">СОЗДАНИЕ КОМНАТЫ</h2>
+            <input type="submit" class="room-submit btn" id="btn-submit-create" value="СОЗДАТЬ КОМНАТУ">
+            <div class="menu-buttons">
+                <button class="btn btn-back-to-lobby">НАЗАД</button>
+            </div>
+        </div>
+
+        <div class="menu-screen menu-choose screen hidden" id="screen-join-room">
+            <h2 class="menu-title">ПРИСОЕДИНЕНИЕ К КОМНАТЕ</h2>
+            <div class="input-container-id input-container">
+                <label class="input-id-label input-label">Введите id комнаты:
+                    <input type="text" class="input-name input" id="input-room-id">
+                </label>
+            </div>
+            <p id="join-error-message" style="color: #ff4444; display: none;"></p>
+            <input type="submit" class="room-submit join-room-submit btn" id="btn-submit-join" value="ПРИСОЕДИНИТЬСЯ">
+            <div class="menu-buttons">
+                <button class="btn btn-back-to-lobby">НАЗАД</button>
+            </div>
+        </div>
+
+        <div class="menu-screen menu-choose screen hidden" id="screen-room">
+            <h2 class="menu-title">КОМНАТА</h2>
+            <div class="room-stats">
+                <h3 class="roomId">ID КОМНАТЫ: <span id="roomId-span">—</span></h3>
+                <p class="players-count">
+                    <span class="cur-players-count count" id="cur-players-count">0</span>/
+                    <span class="max-players-count count" id="max-players-count">0</span>
+                </p>
+                <div class="players-list" id="players-list"></div>
+            </div>
+            <button class="room-submit ready-btn btn" id="ready-btn">НЕ ГОТОВ</button>
+            <div class="menu-buttons">
+                <button class="btn" id="btn-exit-room">ВЫЙТИ ИЗ КОМНАТЫ</button>
+            </div>
+        </div>
+
+    </body>
 </html>
