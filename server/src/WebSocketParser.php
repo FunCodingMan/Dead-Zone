@@ -32,7 +32,7 @@ class WebSocketParser
         $payload = $arrData['payload'];
 
         if ($this->validator->isValidData($type, $payload)) {
-            return ["fd" => $fd, "type" => $type, "data" => $payload];
+            return ["fd" => $fd, "type" => $type, "payload" => $payload];
         }
 
         return null;

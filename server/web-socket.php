@@ -55,8 +55,8 @@ $server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
 });
 
 
-\Swoole\Timer::tick(10000, function () use ($connectionUser, $lobby) {
-//    $lobby->updateStateRooms();
+\Swoole\Timer::tick(33, function () use ($connectionUser, $lobby) {
+    $lobby->UpdateGames();
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";

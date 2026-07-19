@@ -23,11 +23,56 @@ class Lobby
     {
         match ($data['type']) {
             'create-room' => $this->createRoom($data["fd"]),
-            'join-room' => $this->joinRoom($data["fd"], $data["data"]["roomId"]),
+            'join-room' => $this->joinRoom($data["fd"], $data["payload"]["roomId"]),
             'exit-room' => $this->exitUser($data["fd"]),
-            'ready' => $this->readyUser($data["fd"], $data["data"]["isReady"]),
+            'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
+            'start-game' => $this->startGameInRoom($data["fd"]),
+            'move' => $this->handDataRoom($data["fd"], $data["payload"]),
             default => null,
         };
+    }
+
+    public function handDataRoom(int $fd, $payload): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId] ?? null;
+        if ($room === null) return;
+        if ($room->getIsStart()) {
+            $room->handData($fd, $payload);
+        }
+
+    }
+
+    public function UpdateGames(): void
+    {
+        foreach ($this->rooms as $room) {
+            if ($room->getIsStart()) {
+                $room->updateStateGame();
+            }
+        }
+    }
+
+    private function startGameInRoom(int $fd): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if (!$room->hasMaxUsers()) {
+            echo "Комната не заполнена!\n";
+            return;
+        }
+
+        if (!$room->isAllReady()) {
+            echo "Не все игроки приготовились!\n";
+            return;
+        }
+
+        $room->startGame();
+        foreach ($room->getFdUsers() as $fdUser) {
+            $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);
+        }
     }
 
     private function readyUser(int $fd, bool $isReady): void
@@ -37,6 +82,12 @@ class Lobby
         $room = $this->rooms[$roomId];
         $room->setReadyUser($fd, $isReady);
         $this->updateStateRoom($room);
+        if ($room->isAllReady() && $room->isAllReady()) {
+            $room->startGame();
+            foreach ($room->getFdUsers() as $fdUser) {
+                $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);
+            }
+        }
     }
 
     private function createRoom(int $fd): void
@@ -44,7 +95,7 @@ class Lobby
         if (isset($this->fdToRoomId[$fd])) {
             return;
         }
-        $room = new Room();
+        $room = new Room($this->ws);
         $roomId = $room->getRoomId();
         $user = $this->connection->getConnectionUserByFd($fd);
         if ($user === null) {
@@ -53,7 +104,6 @@ class Lobby
         $room->addUser($fd, $user);
         $this->rooms[$roomId] = $room;
         $this->fdToRoomId[$fd] = $roomId;
-        $this->ws->send($fd, ["type" => "yourRoomId", "payload" => ["room-id" => $roomId]]);
         $this->updateStateRoom($room);
     }
 
@@ -101,19 +151,4 @@ class Lobby
             $this->ws->send($fd, ["type" => "stateRoom", "payload" => $state]);
         }
     }
-
-    public function debugState(): array
-    {
-        $result = [];
-        foreach ($this->rooms as $roomId => $room) {
-            $result[$roomId] = [
-                'state' => $room->getStateRoom(),
-            ];
-        }
-        return [
-            'rooms' => $result,
-            'fdToRoomId' => $this->fdToRoomId,
-        ];
-    }
-
 }

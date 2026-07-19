@@ -12,6 +12,7 @@ class MessageValidator
             'join-room' => $this->isValidJoinRoom($data),
             'exit-room' => $this->isValidExitRoom($data),
             'ready' => $this->isValidReady($data),
+            'start-game' => $this->isValidStartGame($data),
             default => false,
         };
     }
@@ -62,6 +63,11 @@ class MessageValidator
     }
 
         private function isValidCreateRoom(array $data): bool
+    {
+        return empty($data);
+    }
+
+    private function isValidStartGame(array $data): bool
     {
         return empty($data);
     }

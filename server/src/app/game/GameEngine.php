@@ -2,56 +2,46 @@
 
 namespace App\app\game;
 
-use App\infrastructure\websocket\PlayersController;
-use App\infrastructure\websocket\WebSocketParser;
+use App\PlayerController;
+use App\QueueData;
+use App\WebSocketParser;
 
 class GameEngine
 {
-    private PlayersController $controller;
-    private WebSocketParser $parser;
+    private WebSocketParser $ws;
+    private PlayerController $controller;
     private GameMap $map;
+    private QueueData $queueData;
 
-    public function __construct(PlayersController $controller, WebSocketParser $parser)
+    public function __construct(WebSocketParser $ws, PlayerController $controller, QueueData $queueData, GameMap $map)
     {
+        $this->ws = $ws;
         $this->controller = $controller;
-        $this->parser = $parser;
-        $this->map = new GameMap();
-
-        $levelData = "
-        ################
-        #P            P#
-        #  ####  ####  #
-        #  #        #  #
-        #  ####  ####  #
-        #P            P#
-        ################";
-
-        $this->map->loadLevel($levelData);
+        $this->map = $map;
+        $this->queueData = $queueData;
     }
 
     public function pushData(): void
     {
-        $data = $this->parser->transferData();
-        if (!empty($data)) {
-            foreach ($data as $item) {
-                $player = $this->controller->getPlayerByFd($item["fd"]);
+        $arrData = $this->queueData->transferData();
+        if (!empty($arrData)) {
+            foreach ($arrData as $data) {
+                $player = $this->controller->getPlayerByFd($data["fd"]);
                 if (!empty($player)) {
-                    $player->updateStatePlayer($item["data"], $this->map);
+                    $player->updateStatePlayer($data["payload"], $this->map);
                 }
             }
         }
         $players = $this->controller->getPlayers();
-        $this->parser->updateDataPlayers($players);
-
+        $this->ws->sendStateGame($players);
     }
 
-    public function spawnPlayer(int $fd): void
+
+    public function spawnPlayers(): void
     {
-        $player = $this->controller->getPlayerByFd($fd);
-
-        if ($player !== null) {
+        $players = $this->controller->getPlayers();
+        foreach ($players as $player) {
             $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
-
             $player->setPos($spawn['x'], $spawn['y']);
         }
     }
