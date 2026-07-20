@@ -3,6 +3,7 @@
 namespace App\app\game;
 
 use App\app\model\Player;
+use App\HitscanResolver;
 use App\PlayerRegistry;
 use App\MessageQueue;
 use App\VisibilityService;
@@ -15,7 +16,7 @@ class GameEngine
     private GameMap $map;
     private MessageQueue $queue;
     private HitscanResolver $hitscan;
-    private VisibilityService $visibility;
+//    private VisibilityService $visibility;
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
         $this->ws = $ws;
@@ -24,7 +25,7 @@ class GameEngine
         $this->queue = $queue;
 
         $this->hitscan = new HitscanResolver();
-        $this->visibility = new VisibilityService($map);
+//        $this->visibility = new VisibilityService($map);
     }
 
     public function pushData(): void
@@ -59,6 +60,11 @@ class GameEngine
 
     private function processAttackImpact(Player $player): void
     {
-
+        $now = microtime(true);
+        if (!$player->canShoot($now)) return;
+        $player->registerShot($now);
+        $others = $this->registry->getOthersPlayers($player);
+        $hitPlayer = $this->hitscan->resolve($player, $this->map, $others);
+        $hitPlayer?->takeDamage(20);
     }
 }

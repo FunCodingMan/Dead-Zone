@@ -13,11 +13,11 @@ class HitscanResolver
     {
         $shooterState = $shooter->getPublicState();
         $x = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
-        $y = $shooterState['x'] + (GameConfig::PLAYER_HEIGHT / 2);
+        $y = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
         $angle = $shooterState['angle'];
 
         $dx = cos($angle) * GameConfig::RAY_STEP;
-        $dy = cos($angle) * GameConfig::RAY_STEP;
+        $dy = sin($angle) * GameConfig::RAY_STEP;
 
         $mapWidth = $map->getWidth();
         $mapHeight = $map->getHeight();

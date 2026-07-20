@@ -32,4 +32,15 @@ class PlayerRegistry
     {
         unset($this->players[$fd]);
     }
+
+    public function getOthersPlayers(Player $me): array
+    {
+        $others = [];
+        foreach ($this->players as $player) {
+            if ($player !== $me) {
+                $others[$player->getFd()] = $player;
+            }
+        }
+        return $others;
+    }
 }

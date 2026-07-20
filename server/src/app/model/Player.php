@@ -128,11 +128,11 @@ class Player
 
     public function registerShot(float $now): void
     {
-        $this->countBullets--;
+        $this->countBullets--; // нужна проверка на кол-во патронов
         $this->lastShootTime = $now;
     }
 
-    public function takeDamage($damage): void
+    public function takeDamage(int $damage): void
     {
         $this->health -= $damage;
         if ($this->health < 0) $this->health = 0;
