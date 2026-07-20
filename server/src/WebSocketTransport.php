@@ -2,7 +2,7 @@
 
 namespace App;
 
-class WebSocketParser
+class WebSocketTransport
 {
     private \Swoole\WebSocket\Server $server;
     private MessageValidator $validator;
@@ -38,7 +38,7 @@ class WebSocketParser
         return null;
     }
 
-    public function sendStateGame(array $players): void
+    public function broadcastGameState(array $players): void
     {
         foreach ($players as $recipient) {
             $me = $recipient->getFullData();

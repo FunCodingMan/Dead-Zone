@@ -4,7 +4,7 @@ namespace App;
 
 use App\app\model\Player;
 
-class PlayerController
+class PlayerRegistry
 {
     private array $players;
 
