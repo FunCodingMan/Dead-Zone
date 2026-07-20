@@ -17,6 +17,7 @@ class Player
     private int $health;
     private int $countBullets;
     private float $speed = GameConfig::PLAYER_SPEED;
+    private float $lastShootTime = 0.0;
 
     public function __construct(int $fd, string $userId)
     {
@@ -118,6 +119,28 @@ class Player
     {
         $this->posX = $x;
         $this->posY = $y;
+    }
+
+    public function canShoot($now): bool
+    {
+        return $this->countBullets > 0 && (($now - $this->lastShootTime) >= GameConfig::SHOOT_COOLDOWN_S);
+    }
+
+    public function registerShot(float $now): void
+    {
+        $this->countBullets--;
+        $this->lastShootTime = $now;
+    }
+
+    public function takeDamage($damage): void
+    {
+        $this->health -= $damage;
+        if ($this->health < 0) $this->health = 0;
+    }
+
+    public function getHealth(): int
+    {
+        return $this->health;
     }
 
 }
