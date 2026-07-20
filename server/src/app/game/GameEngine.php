@@ -34,10 +34,10 @@ class GameEngine
                         'shot' => $this->processAttackImpact($player),
                         default => null
                     };
-
                 }
             }
         }
+        // перебираю каждого игрока и обновляю его радиус видимости
         $players = $this->registry->getPlayers();
         $this->ws->broadcastGameState($players);
     }
