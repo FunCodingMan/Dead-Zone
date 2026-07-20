@@ -38,16 +38,19 @@ class WebSocketTransport
         return null;
     }
 
-    public function broadcastGameState(array $players): void
+    public function broadcastGameState(array $visiblePlayersData): void
     {
-        foreach ($players as $player) {
-            $me = $player["me"]->getFullData();
-            $others = $player["other"]->getPublicState();
-            $data = [
-                "type" => "state",
+        foreach ($visiblePlayersData as $fd => $data) {
+            $me = $data["me"]->getFullData();
+            $others = [];
+            foreach ($data["others"] as $otherPlayer) {
+                $others[$otherPlayer->getUserId()] = $otherPlayer->getPublicState();
+            }
+            $packet = [
+                "type" => 'state',
                 "payload" => ["me" => $me, "others" => $others],
             ];
-            $this->send($player->getFd(), $data);
+            $this->send($fd, $packet);
         }
     }
 

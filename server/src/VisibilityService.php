@@ -30,9 +30,8 @@ class VisibilityService
             if ($player->getHealth() <= 0) {
                 continue;
             }
-            $playerState = $player->getPlayerState();
+            $playerState = $player->getPublicState();
 
-            $playerState = $playerState->getPlayerState();
             $targetX = $playerState['x'] + (GameConfig::PLAYER_WIDTH / 2);
             $targetY = $playerState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
 
@@ -76,8 +75,8 @@ class VisibilityService
         $steps = floor($distance / GameConfig::RAY_STEP);
 
         for ($step = 0; $step < $steps; $step++) {
-            $currentX += $dx * $steps + GameConfig::RAY_STEP;
-            $currentY += $dy * $steps + GameConfig::RAY_STEP;
+            $currentX += $dx * GameConfig::RAY_STEP;
+            $currentY += $dy * GameConfig::RAY_STEP;
 
             $checkRect = new Rect($currentX - 2, $currentY - 2, 4, 4);
 

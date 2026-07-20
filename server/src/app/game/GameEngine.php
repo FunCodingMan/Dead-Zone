@@ -37,7 +37,7 @@ class GameEngine
                 if (!empty($player)) {
                     match ($data["type"]) {
                         'move' => $player->updateMovePlayer($data["payload"], $this->map),
-                        'shot' => $this->processAttackImpact($player),
+                        'shot' => $this->processAttackImpact($player, $data["payload"]),
                         default => null
                     };
                 }
@@ -62,13 +62,58 @@ class GameEngine
         }
     }
 
-    private function processAttackImpact(Player $player): void
+    private function processAttackImpact(Player $player, array $payload): void
     {
         $now = microtime(true);
         if (!$player->canShoot($now)) return;
         $player->registerShot($now);
+
+        $shooterState = $player->getPublicState();
+        $angle = (float)($payload['angle'] ?? $shooterState["angle"]);
+
+        $randomSpread = ((mt_rand() / mt_getrandmax()) - 0.5) / GameConfig::SPREAD_FACTOR;
+        $finalAngle = $angle + $randomSpread;
+
         $others = $this->registry->getOthersPlayers($player);
-        $hitPlayer = $this->hitscan->resolve($player, $this->map, $others);
+        $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
         $hitPlayer?->takeDamage(20);
+
+        $this->notifyShot($player, $hitPlayer, $finalAngle);
+    }
+
+    private function notifyShot(Player $shooter, ?Player $target, float $angle): void
+    {
+        $allPlayers = $this->registry->getPlayers();
+        $shooterState = $shooter->getPublicState();
+
+        $centerX = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+        $centerY = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+
+        $startX = $centerX + cos($angle) * GameConfig::DIFF_GUN_FORWARD;
+        $startY = $centerY + sin($angle) * GameConfig::DIFF_GUN_FORWARD;
+        $startX += cos($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
+        $startY += sin($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
+
+        foreach ($allPlayers as $observer) {
+            if ($observer === $shooter) continue;
+
+            $obsState = $observer->getPublicState();
+            $obsX = $obsState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+            $obsY = $obsState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+
+            $distance = hypot($obsX - $centerX, $obsY - $centerY);
+            if ($distance > GameConfig::HEARING_RADIUS) continue;
+
+            $this->ws->send($observer->getFd(), [
+                "type" => "shotFired",
+                "payload" => [
+                    "shooterId" => $shooter->getUserId(),
+                    "angle" => $angle,
+                    "startX" => $startX,
+                    "startY" => $startY,
+                ]
+            ]);
+        }
+
     }
 }

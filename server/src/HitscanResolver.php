@@ -9,12 +9,18 @@ use App\app\model\Player;
 
 class HitscanResolver
 {
-    public static function resolve(Player $shooter, GameMap $map, array $otherPlayers): ?Player
+    public static function resolve(Player $shooter, float $angle, GameMap $map, array $otherPlayers): ?Player
     {
         $shooterState = $shooter->getPublicState();
-        $x = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
-        $y = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
-        $angle = $shooterState['angle'];
+
+        $centerX = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+        $centerY = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+
+        $x = $centerX + cos($angle) * GameConfig::DIFF_GUN_FORWARD;
+        $y = $centerY + sin($angle) * GameConfig::DIFF_GUN_FORWARD;
+
+        $x += cos($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
+        $y += sin($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
 
         $dx = cos($angle) * GameConfig::RAY_STEP;
         $dy = sin($angle) * GameConfig::RAY_STEP;

@@ -75,6 +75,6 @@ class MessageValidator
 
     private function isValidShotPlayer(array $data): bool
     {
-        return empty($data);
+        return isset($data['angle']) && is_numeric($data['angle']);
     }
 }

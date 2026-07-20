@@ -18,7 +18,11 @@ class GameConfig
     public const string SYMBOL_ENEMY = 'E';
     public const string SYMBOL_TARGET = 'T';
     public const int VISIBILITY_RADIUS = 800;
-    public const float FOV_ANGLE = M_PI * 0.75;
+    public const float FOV_ANGLE = M_PI * 0.25;
     public const int RAY_STEP = 10;
     public const float SHOOT_COOLDOWN_S = 0.15;
+    public const int DIFF_GUN_FORWARD = 1;
+    public const int DIFF_GUN_SIDE = 5;
+    public const int HEARING_RADIUS = 1500;
+    public const int SPREAD_FACTOR = 10;
 }

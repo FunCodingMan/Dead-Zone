@@ -8,7 +8,10 @@ const DATA_SENDING_MOVE_INTERVAL_MS = 33;
 const SHOOT_COOLDOWN_MS = 150;
 const BORDER_DIFF_BETWEEN_CLIENT_AND_SERVER = 30;
 const LERP_COOF_BETWEEN_CLIENT_AND_SERVER = 0.1;
-
+const VISIBILITY_RADIUS = 800;
+const FOV_ANGLE = Math.PI * 0.25;
+const RAYS_COUNT = 120;
+const RAY_STEP = 1;
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
         super(engine);
@@ -23,9 +26,11 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.localUserId = null;
 
+        this.isFogOfWarEnabled = true;
 
         this.boundOnSpawn = (data) => this.handleSpawn(data);
         this.boundOnState = (data) => this.syncWithServer(data);
+        this.boundOnShotFired = (data) => this.handleShotFired(data);
     }
 
     init() {
@@ -35,6 +40,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     setupNetworkListeners() {
         this.network.on('spawn', this.boundOnSpawn);
         this.network.on('state', this.boundOnState);
+        this.network.on('shotFired', this.boundOnShotFired);
     }
     handleSpawn(data) {
         this.engine.player = new Player(this.engine.map, this.engine.input);
@@ -42,6 +48,18 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.engine.player.y = data.y;
         this.engine.player.isAlive = true;
         this.onPlayerSpawned(data);
+    }
+
+    handleShotFired(payload) {
+        if (payload.shooterId === this.localUserId) return;
+
+        const remoteShooter = this.otherPlayers.get(payload.shooterId);
+        if (remoteShooter) {
+            remoteShooter.spawnNetworkBullet(payload.startX, payload.startY, payload.angle);
+            remoteShooter.angle = payload.angle;
+            remoteShooter.isShooting = true;
+            setTimeout(() => { remoteShooter.isShooting = false; }, 100);
+        }
     }
 
     onPlayerSpawned() {
@@ -109,6 +127,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.engine.player.x = data.me.x || 100;
         this.engine.player.y = data.me.y || 100;
         this.engine.player.isAlive = true;
+        this.engine.player.isMultiplayer = true;
         this.localUserId = data.me.user_id;
         this.onPlayerSpawned(data.me);
     }
@@ -155,13 +174,20 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     update() {
         if (!this.engine.player || !this.engine.player.isAlive) return;
 
+        if (this.engine.player.hitpoints <= 0 && this.engine.player.isAlive) {
+            this.engine.player.isAlive = false;
+            this.engine.player.isDying = true;
+            //Добавить обработку смерти
+        }
+
         const now = performance.now();
         const input = this.engine.input;
 
         this.checkSendMoveData(now);
 
+
         this.otherPlayers.forEach(remotePlayer => {
-            remotePlayer.updateInterpolation(0.2);
+            remotePlayer.updateInterpolation(0.2, this.engine.map);
         });
 
         this.checkSendShotData(now, input);
@@ -189,9 +215,44 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     draw(ctx) {
         this.otherPlayers.forEach((enemy) => {
             if (enemy.isAlive && enemy.hitpoints > 0) {
-                enemy.draw(ctx, this.engine.assets.soldier);
+                enemy.draw(
+                    ctx,
+                    this.engine.assets.soldier,
+                    this.engine.assets.bullet,
+                    this.engine.assets.shot1,
+                    this.engine.assets.shot2
+                );
             }
         });
+        this.drawFogOfWar(ctx);
+    }
+
+    drawFogOfWar(ctx) {
+        if (!this.isFogOfWarEnabled) return;
+
+        const player = this.engine.player;
+        if (!player || !player.isAlive) return;
+
+        const centerX = player.x + player.w / 2;
+        const centerY = player.y + player.h / 2;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        ctx.beginPath();
+
+        ctx.rect(centerX - 4000, centerY - 4000, 8000, 8000);
+
+        ctx.moveTo(centerX, centerY);
+        const startAngle = player.angle - FOV_ANGLE;
+        for (let i = 0; i <= RAYS_COUNT; i++) {
+            const curAngle = startAngle + (i / RAYS_COUNT) * (FOV_ANGLE * 2);
+            const point = this.createVisionRay(centerX, centerY, curAngle);
+            ctx.lineTo(point.x, point.y);
+        }
+        ctx.lineTo(centerX, centerY);
+
+        ctx.fill('evenodd');
+        ctx.restore();
     }
 
     drawUI(ctx, canvas) {
@@ -225,6 +286,29 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
         ctx.restore();
+    }
+
+    createVisionRay(startX, startY, angle) {
+        let curX = startX;
+        let curY = startY;
+
+        const dx = Math.cos(angle) * RAY_STEP;
+        const dy = Math.sin(angle) * RAY_STEP;
+
+        let distance = 0;
+
+        while (distance < VISIBILITY_RADIUS) {
+            curX += dx;
+            curY += dy;
+            distance += RAY_STEP;
+
+            const check = {x: curX - 1, y: curY -1, w: 2, h: 2};
+
+            if (this.engine.map.checkCollision(check, [], [])) {
+                return {x: curX, y: curY};
+            }
+        }
+        return { x: curX, y: curY };
     }
 
     destroy() {

@@ -51,6 +51,8 @@ export class Player extends Character {
         this.kills = 0;
 
         this.map = map;
+
+        this.isMultiplayer = false;
     }
 
     update(map, canvas, zoom, enemies, targets) {
@@ -200,8 +202,10 @@ export class Player extends Character {
             if (enemy.isAlive) {
                 const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
                 if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    this.appliedDamage += this.damage;
-                    enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                    if (!this.isMultiplayer) {
+                        this.appliedDamage += this.damage;
+                        enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                    }
                     if (!toRemove.includes(bulletIndex)) {
                         toRemove.push(bulletIndex);
                     }
@@ -213,8 +217,10 @@ export class Player extends Character {
             if (target.isAlive) {
                 const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
                 if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    this.appliedDamage += this.damage;
-                    target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
+                    if (!this.isMultiplayer) {
+                        this.appliedDamage += this.damage;
+                        target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
+                    }
                     if (!toRemove.includes(bulletIndex)) {
                         toRemove.push(bulletIndex);
                     }
