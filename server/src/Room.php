@@ -115,8 +115,8 @@ class Room
         $this->gameEngine->pushData();
     }
 
-    public function receiveInput(int $fd, $payload): void
+    public function receiveInput(int $fd, string $type, array $payload): void
     {
-        $this->queue->enqueue($fd, $payload);
+        $this->queue->enqueue($fd, $type, $payload);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\app\game;
 
+use App\app\model\Player;
 use App\PlayerRegistry;
 use App\MessageQueue;
 use App\WebSocketTransport;
@@ -28,7 +29,12 @@ class GameEngine
             foreach ($arrData as $data) {
                 $player = $this->registry->getPlayerByFd($data["fd"]);
                 if (!empty($player)) {
-                    $player->updateMovePlayer($data["payload"], $this->map);
+                    match ($data["type"]) {
+                        'move' => $player->updateMovePlayer($data["payload"], $this->map),
+                        'shot' => $this->processAttackImpact($player),
+                        default => null
+                    };
+
                 }
             }
         }
@@ -44,5 +50,10 @@ class GameEngine
             $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
             $player->setPos($spawn['x'], $spawn['y']);
         }
+    }
+
+    private function processAttackImpact(Player $player): void
+    {
+
     }
 }

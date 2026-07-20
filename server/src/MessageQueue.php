@@ -11,9 +11,9 @@ class MessageQueue
         $this->data = [];
     }
 
-    public function enqueue(int $fd, array $payload): void
+    public function enqueue(int $fd, string $type, array $payload): void
     {
-        $data = ["fd" => $fd, "payload" => $payload];
+        $data = ["fd" => $fd, "type" => $type, "payload" => $payload];
         $this->data[] = $data;
     }
 

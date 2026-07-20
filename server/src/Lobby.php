@@ -27,21 +27,20 @@ class Lobby
             'exit-room' => $this->exitUser($data["fd"]),
             'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
             'start-game' => $this->startGame($data["fd"]),
-            'move' => $this->handleGameData($data["fd"], $data["payload"]),
+            'move', 'shot' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
     }
 
-    public function handleGameData(int $fd, $payload): void
+    public function handleGameData(int $fd, string $type, array $payload): void
     {
         $roomId = $this->fdToRoomId[$fd] ?? null;
         if ($roomId === null) return;
         $room = $this->rooms[$roomId] ?? null;
         if ($room === null) return;
         if ($room->isStarted()) {
-            $room->receiveInput($fd, $payload);
+            $room->receiveInput($fd, $type, $payload);
         }
-
     }
 
     public function updateActiveRooms(): void
