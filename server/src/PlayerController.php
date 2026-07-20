@@ -28,4 +28,8 @@ class PlayerController
     {
         return $this->players;
     }
+    public function removePlayer(int $fd): void
+    {
+        unset($this->players[$fd]);
+    }
 }

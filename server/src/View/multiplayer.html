@@ -4,6 +4,7 @@
         <meta charset="UTF-8">
         <title>DeadZone</title>
         <link rel="stylesheet" href="/styles/mode.css">
+        <link rel="stylesheet" href="/styles/multiplayer.css">
         <link rel="stylesheet" href="/styles/create-room.css">
         <link rel="stylesheet" href="/styles/join-room.css">
         <link href="/styles/fonts-styles.css" rel="stylesheet">
@@ -55,6 +56,21 @@
             <button class="room-submit ready-btn btn" id="ready-btn">НЕ ГОТОВ</button>
             <div class="menu-buttons">
                 <button class="btn" id="btn-exit-room">ВЫЙТИ ИЗ КОМНАТЫ</button>
+            </div>
+        </div>
+
+        <div class="menu-screen menu-choose screen hidden" id="screen-game">
+            <div id="fade-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:black; opacity:0; pointer-events:none; transition: opacity 0.3s;"></div>
+            <canvas id="gameCanvas" width="1280" height="720" data-target="multiplayer"></canvas>
+            <div id="screen-pause" class="pause-overlay">
+                <div class="menu-screen menu-choose">
+                    <h2 class="menu-title">ПАУЗА</h2>
+                    <div class="menu-buttons">
+                        <button id="btn-continue" class="btn">ПРОДОЛЖИТЬ</button>
+                        <button id="btn-new-game" class="btn">ПЕРЕЗАГРУЗКА</button>
+                        <button class="pause-btn-back btn">ВЫЙТИ</button>
+                    </div>
+                </div>
             </div>
         </div>
 

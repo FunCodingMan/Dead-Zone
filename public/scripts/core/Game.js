@@ -38,7 +38,7 @@ export class Game {
         
     }
 
-    start(ModeClass) {
+    start(ModeClass, ...args) {
         this.stop();
 
         this.input = new Input(this.canvas, {
@@ -47,7 +47,7 @@ export class Game {
             }
         });
 
-        this.currentMode = new ModeClass(this);
+        this.currentMode = new ModeClass(this, ...args);
         this.currentMode.init();
 
         this.isPaused = false;
@@ -67,6 +67,9 @@ export class Game {
         }
         this.enemies = [];
         this.targets = [];
+
+        this.player = null;
+        this.map = null;
     }
 
     togglePause() {

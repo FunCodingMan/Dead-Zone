@@ -46,15 +46,10 @@ class Player
         return $this->userId;
     }
 
-    public function updateStatePlayer(array $data, GameMap $map): void
+    public function updateMovePlayer(array $data, GameMap $map): void
     {
-        if (isset($data['angle'])) {
-            $this->angle = (float)$data['angle'];
-        }
-        match ($data['type']) {
-            "move" => $this->move($data['keys'], $map),
-            default => null,
-        };
+        $this->angle = (float)$data['angle'];
+        $this->move($data['keys'], $map);
     }
 
     public function getFullData(): array

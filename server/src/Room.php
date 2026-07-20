@@ -61,6 +61,8 @@ class Room
     public function deleteUser(int $fd): void
     {
         unset($this->lobbyUsers[$fd]);
+
+        $this->playerController->removePlayer($fd);
     }
 
     public function getCountUsers(): int

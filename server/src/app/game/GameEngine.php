@@ -28,7 +28,7 @@ class GameEngine
             foreach ($arrData as $data) {
                 $player = $this->controller->getPlayerByFd($data["fd"]);
                 if (!empty($player)) {
-                    $player->updateStatePlayer($data["payload"], $this->map);
+                    $player->updateMovePlayer($data["payload"], $this->map);
                 }
             }
         }

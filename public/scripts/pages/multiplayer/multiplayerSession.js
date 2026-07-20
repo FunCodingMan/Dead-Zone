@@ -1,4 +1,8 @@
+import { AssetManager } from "../../utils/AssetManager.js";
+import { Game} from "../../core/Game.js";
+import {initPause, togglePauseUI} from "../../ui/Pause.js";
 import { Network } from "../../utils/Network.js";
+import {MultiplayerTestMode} from "../../multiplayer/MultiplayerTestMode.js";
 
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const host = window.location.host;
@@ -11,7 +15,33 @@ const screens = {
     createRoom: document.getElementById('screen-create-room'),
     joinRoom: document.getElementById('screen-join-room'),
     room: document.getElementById('screen-room'),
+    game: document.getElementById('screen-game')
 };
+
+const canvas = document.getElementById('gameCanvas');
+const  assetManager = new AssetManager();
+let game = null;
+const assetsPromise = assetManager.loadAll();
+
+
+initPause({
+    onResume: () => game && game.togglePause(),
+    onRestart: () => {
+        if (game) {
+            game.start(MultiplayerTestMode, network);
+            canvas.focus();
+            if (game.isPaused) game.togglePause();
+            togglePauseUI(false);
+        }
+    },
+    onExitToMenu: () => {
+        if (game) game.stop();
+        togglePauseUI(false);
+
+        network.send('exit-room', {});
+        showScreen('lobbyMenu');
+    }
+});
 
 function showScreen(name) {
     Object.values(screens).forEach(el => el.classList.add('hidden'));
@@ -54,7 +84,9 @@ network.on('stateRoom', (payload) => {
     curCountPlayers.textContent = payload.countUsers;
     maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList(payload.users);
-    showScreen('room');
+    if (screens.game.classList.contains('hidden')) {
+        showScreen('room');
+    }
 });
 
 network.on('join-error', (payload) => {
@@ -62,8 +94,26 @@ network.on('join-error', (payload) => {
     joinErrorMessage.style.display = 'block';
 });
 
-network.on('start-game', () => {
+network.on('start-game',  async() => {
     console.log('ИГРА НАЧАЛАСЬ!');
+
+    const assets = await assetsPromise;
+
+    showScreen('game');
+
+
+    if (!game) {
+        game = new Game(canvas, assets, togglePauseUI);
+    }
+    canvas.focus();
+
+    game.start(MultiplayerTestMode, network);
+
+    if (game.isPaused) {
+        game.togglePause();
+    } else {
+        togglePauseUI(false);
+    }
 });
 
 
@@ -106,8 +156,10 @@ readyBtn.addEventListener('click', () => {
 document.getElementById('btn-exit-room').addEventListener('click', () => {
     network.send('exit-room', {});
     isReady = false;
-    showScreen('lobbyMenu'); // соединение НЕ рвём — мы всё ещё на той же SPA-странице
+    readyBtn.textContent = 'НЕ ГОТОВ';
+    showScreen('lobbyMenu');
 });
 
 network.connect();
 showScreen('lobbyMenu');
+

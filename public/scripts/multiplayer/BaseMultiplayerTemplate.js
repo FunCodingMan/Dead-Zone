@@ -10,10 +10,10 @@ const BORDER_DIFF_BETWEEN_CLIENT_AND_SERVER = 30;
 const LERP_COOF_BETWEEN_CLIENT_AND_SERVER = 0.1;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
-    constructor(engine, url) {
+    constructor(engine, network) {
         super(engine);
 
-        this.network = new Network(url);
+        this.network = network;
 
         this.otherPlayers = new Map();
 
@@ -23,25 +23,25 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.localUserId = null;
 
+
+        this.boundOnSpawn = (data) => this.handleSpawn(data);
+        this.boundOnState = (data) => this.syncWithServer(data);
     }
 
     init() {
         this.setupNetworkListeners();
-        this.network.connect();
     }
 
     setupNetworkListeners() {
-        this.network.on('spawn', (data) => {
-            this.engine.player = new Player(this.engine.map, this.engine.input);
-            this.engine.player.x = data.x;
-            this.engine.player.y = data.y;
-            this.engine.player.isAlive = true;
-            this.onPlayerSpawned(data);
-        });
-
-        this.network.on('state', (data) => {
-            this.syncWithServer(data);
-        });
+        this.network.on('spawn', this.boundOnSpawn);
+        this.network.on('state', this.boundOnState);
+    }
+    handleSpawn(data) {
+        this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player.x = data.x;
+        this.engine.player.y = data.y;
+        this.engine.player.isAlive = true;
+        this.onPlayerSpawned(data);
     }
 
     onPlayerSpawned() {
@@ -228,7 +228,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     }
 
     destroy() {
-        this.network.disconnect();
+        this.network.off('spawn', this.boundOnSpawn);
+        this.network.off('state', this.boundOnState);
         this.otherPlayers.clear();
     }
 

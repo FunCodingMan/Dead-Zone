@@ -82,7 +82,7 @@ class Lobby
         $room = $this->rooms[$roomId];
         $room->setReadyUser($fd, $isReady);
         $this->updateStateRoom($room);
-        if ($room->isAllReady() && $room->isAllReady()) {
+        if (!$room->getIsStart() && $room->isAllReady()) {
             $room->startGame();
             foreach ($room->getFdUsers() as $fdUser) {
                 $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);

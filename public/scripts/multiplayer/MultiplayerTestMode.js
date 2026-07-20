@@ -14,11 +14,8 @@ const testMapData = `
 
 export class MultiplayerTestMode extends BaseMultiplayerTemplate {
 
-    constructor(engine) {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const host = window.location.host;
-        const wsUrl = `${protocol}//${host}/ws/`;
-        super(engine, wsUrl);
+    constructor(engine, network) {
+        super(engine, network);
     }
 
     init() {
