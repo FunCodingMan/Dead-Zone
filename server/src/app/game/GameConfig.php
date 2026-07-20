@@ -17,4 +17,8 @@ class GameConfig
     public const string SYMBOL_PLAYER = 'P';
     public const string SYMBOL_ENEMY = 'E';
     public const string SYMBOL_TARGET = 'T';
+    public const int VISIBILITY_RADIUS = 800;
+    public const float FOV_ANGLE = M_PI * 0.75;
+    public const int RAY_STEP = 10;
+    public const float SHOOT_COOLDOWN_S = 0.15;
 }

@@ -2,8 +2,10 @@
 
 namespace App\app\game;
 
+use App\HitscanResolver;
 use App\PlayerRegistry;
 use App\MessageQueue;
+use App\VisibilityService;
 use App\WebSocketTransport;
 
 class GameEngine
@@ -12,13 +14,17 @@ class GameEngine
     private PlayerRegistry $registry;
     private GameMap $map;
     private MessageQueue $queue;
-
+    private HitscanResolver $hitscan;
+    private VisibilityService $visibility;
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
         $this->ws = $ws;
         $this->registry = $registry;
         $this->map = $map;
         $this->queue = $queue;
+
+        $this->hitscan = new HitscanResolver();
+        $this->visibility = new VisibilityService($map);
     }
 
     public function pushData(): void

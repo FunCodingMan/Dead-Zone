@@ -5,7 +5,7 @@ const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
-const BULLET_SPEED = 20;
+const BULLET_SPEED = 75;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
 const SPREAD_FACTOR = 10;
