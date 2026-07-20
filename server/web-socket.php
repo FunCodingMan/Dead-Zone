@@ -1,7 +1,7 @@
 <?php
 
 use App\app\model\Player;
-use App\ConnectionUser;
+use App\ConnectionRegistry;
 use App\infrastructure\repository\ConnectionProvider;
 use App\infrastructure\repository\UserTable;
 use App\Lobby;
@@ -16,16 +16,16 @@ $server = new \Swoole\WebSocket\Server("0.0.0.0", 9502);
 
 $connectionDatabase = new ConnectionProvider();
 $repository = new UserTable($connectionDatabase);
-$connectionUser= new ConnectionUser($repository);
+$connectionUser= new ConnectionRegistry($repository);
 
 $validator = new MessageValidator();
-$ws = new \App\WebSocketParser($server, $validator);
+$ws = new \App\WebSocketTransport($server, $validator);
 
 $lobby = new Lobby($ws, $connectionUser);
 
 
 $server->on('open', function ($server, $request) use ($connectionUser) {
-    if (!$connectionUser->connection($request->fd, $request->cookie)) {
+    if (!$connectionUser->register($request->fd, $request->cookie)) {
         echo "connection failed\n";
         $server->close($request->fd);
         return;
@@ -42,7 +42,7 @@ $server->on('message', function ($server, $frame) use ($ws, $lobby) {
         return;
     }
 
-    $lobby->handler($data);
+    $lobby->handleMessage($data);
 
     echo json_encode($data, JSON_UNESCAPED_UNICODE) . "---------------------------\n\n";
 });
@@ -50,13 +50,13 @@ $server->on('message', function ($server, $frame) use ($ws, $lobby) {
 $server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
     echo "Клиент #{$fd} отключился\n";
     $lobby->exitUser($fd);
-    $connectionUser->disconnection($fd);
+    $connectionUser->unregister($fd);
 
 });
 
 
-\Swoole\Timer::tick(33, function () use ($connectionUser, $lobby) {
-    $lobby->UpdateGames();
+\Swoole\Timer::tick(5000, function () use ($connectionUser, $lobby) {
+    $lobby->updateActiveRooms();
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";

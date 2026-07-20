@@ -46,15 +46,10 @@ class Player
         return $this->userId;
     }
 
-    public function updateStatePlayer(array $data, GameMap $map): void
+    public function broadcastGameState(array $data, GameMap $map): void
     {
-        if (isset($data['angle'])) {
-            $this->angle = (float)$data['angle'];
-        }
-        match ($data['type']) {
-            "move" => $this->move($data['keys'], $map),
-            default => null,
-        };
+        $this->angle = (float)$data['angle'];
+        $this->move($data['keys'], $map);
     }
 
     public function getFullData(): array
@@ -76,12 +71,6 @@ class Player
             "y" => $this->posY,
             "angle" => $this->angle,
         ];
-    }
-
-
-    public function getArrayPlayer(): array
-    {
-        return ["x" => $this->posX, "y" => $this->posY];
     }
 
     private function calculateVelocity(array $keys): Vector2D

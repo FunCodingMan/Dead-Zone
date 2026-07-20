@@ -8,10 +8,10 @@ class Lobby
     /** @var int[] $fdToRoomId */
     private array $rooms;
     private array $fdToRoomId;
-    private ConnectionUser $connection;
-    private WebSocketParser $ws;
+    private ConnectionRegistry $connection;
+    private WebSocketTransport $ws;
 
-    public function __construct(WebSocketParser $ws, ConnectionUser $connection)
+    public function __construct(WebSocketTransport $ws, ConnectionRegistry $connection)
     {
         $this->rooms = [];
         $this->fdToRoomId = [];
@@ -19,41 +19,41 @@ class Lobby
         $this->connection = $connection;
     }
 
-    public function handler(array $data): void
+    public function handleMessage(array $data): void
     {
         match ($data['type']) {
             'create-room' => $this->createRoom($data["fd"]),
             'join-room' => $this->joinRoom($data["fd"], $data["payload"]["roomId"]),
             'exit-room' => $this->exitUser($data["fd"]),
             'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
-            'start-game' => $this->startGameInRoom($data["fd"]),
-            'move' => $this->handDataRoom($data["fd"], $data["payload"]),
+            'start-game' => $this->startGame($data["fd"]),
+            'move' => $this->handleGameData($data["fd"], $data["payload"]),
             default => null,
         };
     }
 
-    public function handDataRoom(int $fd, $payload): void
+    public function handleGameData(int $fd, $payload): void
     {
         $roomId = $this->fdToRoomId[$fd] ?? null;
         if ($roomId === null) return;
         $room = $this->rooms[$roomId] ?? null;
         if ($room === null) return;
-        if ($room->getIsStart()) {
-            $room->handData($fd, $payload);
+        if ($room->isStarted()) {
+            $room->receiveInput($fd, $payload);
         }
 
     }
 
-    public function UpdateGames(): void
+    public function updateActiveRooms(): void
     {
         foreach ($this->rooms as $room) {
-            if ($room->getIsStart()) {
-                $room->updateStateGame();
+            if ($room->isStarted()) {
+                $room->updateGameState();
             }
         }
     }
 
-    private function startGameInRoom(int $fd): void
+    private function startGame(int $fd): void
     {
         $roomId = $this->fdToRoomId[$fd] ?? null;
         if ($roomId === null) return;
@@ -81,8 +81,8 @@ class Lobby
         $roomId = $this->fdToRoomId[$fd];
         $room = $this->rooms[$roomId];
         $room->setReadyUser($fd, $isReady);
-        $this->updateStateRoom($room);
-        if ($room->isAllReady() && $room->isAllReady()) {
+        $this->updateRoomState($room);
+        if ($room->isAllReady() && $room->hasMaxUsers()) {
             $room->startGame();
             foreach ($room->getFdUsers() as $fdUser) {
                 $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);
@@ -97,14 +97,14 @@ class Lobby
         }
         $room = new Room($this->ws);
         $roomId = $room->getRoomId();
-        $user = $this->connection->getConnectionUserByFd($fd);
+        $user = $this->connection->getUser($fd);
         if ($user === null) {
             return;
         }
         $room->addUser($fd, $user);
         $this->rooms[$roomId] = $room;
         $this->fdToRoomId[$fd] = $roomId;
-        $this->updateStateRoom($room);
+        $this->updateRoomState($room);
     }
 
     private function joinRoom(int $fd, string $roomId): void
@@ -119,13 +119,13 @@ class Lobby
             $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Комната заполнена"]]);
             return;
         }
-        $user = $this->connection->getConnectionUserByFd($fd);
+        $user = $this->connection->getUser($fd);
         if ($user === null) {
             return;
         }
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
-        $this->updateStateRoom($room);
+        $this->updateRoomState($room);
     }
 
     public function exitUser(int $fd): void
@@ -136,14 +136,14 @@ class Lobby
             $room->deleteUser($fd);
             unset($this->fdToRoomId[$fd]);
             if ($room->getCountUsers() >= 1) {
-                $this->updateStateRoom($room);
+                $this->updateRoomState($room);
             } else {
                 unset($this->rooms[$roomId]);
             }
         }
     }
 
-    public function updateStateRoom(Room $room): void
+    public function updateRoomState(Room $room): void
     {
         $state = $room->getStateRoom();
         $fds = $room->getFdUsers();

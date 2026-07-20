@@ -4,7 +4,7 @@ namespace App;
 
 use App\app\model\Player;
 
-class PlayerController
+class PlayerRegistry
 {
     private array $players;
 
@@ -17,6 +17,11 @@ class PlayerController
     {
         $player = new Player($fd, $userId);
         $this->players[$fd] = $player;
+    }
+
+    public function deletePlayer(int $fd): void
+    {
+        unset($this->players[$fd]);
     }
 
     public function getPlayerByFd(int $fd): ?Player

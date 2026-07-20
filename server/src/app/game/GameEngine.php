@@ -2,44 +2,44 @@
 
 namespace App\app\game;
 
-use App\PlayerController;
-use App\QueueData;
-use App\WebSocketParser;
+use App\PlayerRegistry;
+use App\MessageQueue;
+use App\WebSocketTransport;
 
 class GameEngine
 {
-    private WebSocketParser $ws;
-    private PlayerController $controller;
+    private WebSocketTransport $ws;
+    private PlayerRegistry $registry;
     private GameMap $map;
-    private QueueData $queueData;
+    private MessageQueue $queue;
 
-    public function __construct(WebSocketParser $ws, PlayerController $controller, QueueData $queueData, GameMap $map)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
         $this->ws = $ws;
-        $this->controller = $controller;
+        $this->registry = $registry;
         $this->map = $map;
-        $this->queueData = $queueData;
+        $this->queue = $queue;
     }
 
     public function pushData(): void
     {
-        $arrData = $this->queueData->transferData();
+        $arrData = $this->queue->dequeueAll();
         if (!empty($arrData)) {
             foreach ($arrData as $data) {
-                $player = $this->controller->getPlayerByFd($data["fd"]);
+                $player = $this->registry->getPlayerByFd($data["fd"]);
                 if (!empty($player)) {
-                    $player->updateStatePlayer($data["payload"], $this->map);
+                    $player->broadcastGameState($data["payload"], $this->map);
                 }
             }
         }
-        $players = $this->controller->getPlayers();
-        $this->ws->sendStateGame($players);
+        $players = $this->registry->getPlayers();
+        $this->ws->broadcastGameState($players);
     }
 
 
     public function spawnPlayers(): void
     {
-        $players = $this->controller->getPlayers();
+        $players = $this->registry->getPlayers();
         foreach ($players as $player) {
             $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
             $player->setPos($spawn['x'], $spawn['y']);

@@ -14,23 +14,23 @@ class Room
     /** @var LobbyUser[] $lobbyUsers */
     private array $lobbyUsers;
     private string $roomId;
-    private PlayerController $playerController;
+    private PlayerRegistry $registry;
     private GameEngine $gameEngine;
-    private QueueData $queueData;
+    private MessageQueue $queue;
     private bool $isStart;
 
 
     /** @throws RandomException */
-    public function __construct(WebSocketParser $ws)
+    public function __construct(WebSocketTransport $ws)
     {
         $this->isStart = false;
         $this->lobbyUsers = [];
         $this->roomId = bin2hex(random_bytes(8));
         $map = new GameMap();
         $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
-        $this->playerController = new PlayerController();
-        $this->queueData = new QueueData();
-        $this->gameEngine = new GameEngine($ws, $this->playerController, $this->queueData, $map);
+        $this->registry = new PlayerRegistry();
+        $this->queue = new MessageQueue();
+        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map);
     }
 
     public function addUser(int $fd, User $user): void
@@ -61,6 +61,7 @@ class Room
     public function deleteUser(int $fd): void
     {
         unset($this->lobbyUsers[$fd]);
+        $this->registry->deletePlayer($fd);
     }
 
     public function getCountUsers(): int
@@ -95,25 +96,26 @@ class Room
 
     public function startGame(): void
     {
+        if ($this->isStart) return;
         foreach ($this->lobbyUsers as $lobbyUser) {
-            $this->playerController->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId());
+            $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId());
         }
         $this->gameEngine->spawnPlayers();
         $this->isStart = true;
     }
 
-    public function getIsStart(): bool
+    public function isStarted(): bool
     {
         return $this->isStart;
     }
 
-    public function updateStateGame(): void
+    public function updateGameState(): void
     {
         $this->gameEngine->pushData();
     }
 
-    public function handData(int $fd, $payload): void
+    public function receiveInput(int $fd, $payload): void
     {
-        $this->queueData->acceptNewStatePlayer($fd, $payload);
+        $this->queue->enqueue($fd, $payload);
     }
 }

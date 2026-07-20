@@ -5,7 +5,7 @@ namespace App;
 use App\app\model\User;
 use App\app\repository\IUserRepository;
 
-class ConnectionUser
+class ConnectionRegistry
 {
     /** @var User[] $connections */
     private array $connections;
@@ -17,7 +17,7 @@ class ConnectionUser
         $this->repository = $repository;
     }
 
-    public function connection(int $fd, ?array $cookie): bool
+    public function register(int $fd, ?array $cookie): bool
     {
         if (isset($cookie['token'])) {
             $user = $this->repository->getUserByToken($cookie['token']);
@@ -29,14 +29,14 @@ class ConnectionUser
         return false;
     }
 
-    public function disconnection(int $fd): void
+    public function unregister(int $fd): void
     {
         if (isset($this->connections[$fd])) {
             unset($this->connections[$fd]);
         }
     }
 
-    public function getConnectionUserByFd(int $fd): ?User
+    public function getUser(int $fd): ?User
     {
         if (isset($this->connections[$fd])) {
             return $this->connections[$fd];

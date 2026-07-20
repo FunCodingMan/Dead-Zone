@@ -2,7 +2,7 @@
 
 namespace App;
 
-class QueueData
+class MessageQueue
 {
     private array $data;
 
@@ -11,13 +11,13 @@ class QueueData
         $this->data = [];
     }
 
-    public function acceptNewStatePlayer(int $fd, array $payload): void
+    public function enqueue(int $fd, array $payload): void
     {
         $data = ["fd" => $fd, "payload" => $payload];
         $this->data[] = $data;
     }
 
-    public function transferData(): ?array
+    public function dequeueAll(): ?array
     {
         if (!empty($this->data)) {
             $tempData = $this->data;
