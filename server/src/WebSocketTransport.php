@@ -40,19 +40,14 @@ class WebSocketTransport
 
     public function broadcastGameState(array $players): void
     {
-        foreach ($players as $recipient) {
-            $me = $recipient->getFullData();
-            $others = [];
-            foreach ($players as $player) {
-                if ($recipient !== $player) {
-                    $others["{$player->getUserId()}"] = $player->getPublicState();
-                }
-            }
+        foreach ($players as $player) {
+            $me = $player["me"]->getFullData();
+            $others = $player["other"]->getPublicState();
             $data = [
                 "type" => "state",
                 "payload" => ["me" => $me, "others" => $others],
             ];
-            $this->send($recipient->getFd(), $data);
+            $this->send($player->getFd(), $data);
         }
     }
 

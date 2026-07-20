@@ -7,16 +7,19 @@ use App\app\model\Player;
 class PlayerRegistry
 {
     private array $players;
+    private array $playersVisible;
 
     public function __construct()
     {
         $this->players = [];
+        $this->playersVisible = [];
     }
 
     public function addPlayer(int $fd, string $userId): void
     {
         $player = new Player($fd, $userId);
         $this->players[$fd] = $player;
+        $this->playersVisible[$fd] = ["me" => $player, "others" => []];
     }
 
     public function getPlayerByFd(int $fd): ?Player
@@ -31,6 +34,7 @@ class PlayerRegistry
     public function removePlayer(int $fd): void
     {
         unset($this->players[$fd]);
+        unset($this->playersVisible[$fd]);
     }
 
     public function getOthersPlayers(Player $me): array
@@ -42,5 +46,15 @@ class PlayerRegistry
             }
         }
         return $others;
+    }
+
+    public function sendVisiblePlayers(Player $player, array $others): void
+    {
+        $this->playersVisible[$player->getFd()] = ["me" => $player, "others" => $others];
+    }
+
+    public function getVisiblePlayers(): array
+    {
+        return $this->playersVisible;
     }
 }

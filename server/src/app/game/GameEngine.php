@@ -16,7 +16,7 @@ class GameEngine
     private GameMap $map;
     private MessageQueue $queue;
     private HitscanResolver $hitscan;
-//    private VisibilityService $visibility;
+    private VisibilityService $visibility;
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
         $this->ws = $ws;
@@ -25,7 +25,7 @@ class GameEngine
         $this->queue = $queue;
 
         $this->hitscan = new HitscanResolver();
-//        $this->visibility = new VisibilityService($map);
+        $this->visibility = new VisibilityService($map);
     }
 
     public function pushData(): void
@@ -43,9 +43,13 @@ class GameEngine
                 }
             }
         }
-        // перебираю каждого игрока и обновляю его радиус видимости
         $players = $this->registry->getPlayers();
-        $this->ws->broadcastGameState($players);
+        foreach ($players as $player) {
+            $others = $this->visibility->getVisiblePlayers($player, $players);
+            $this->registry->sendVisiblePlayers($player, $others);
+        }
+        $visiblePlayers = $this->registry->getVisiblePlayers();
+        $this->ws->broadcastGameState($visiblePlayers);
     }
 
 
