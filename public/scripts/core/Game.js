@@ -33,6 +33,11 @@ export class Game {
         this.pauseStartTime = 0;
         this.totalPauseTime = 0;
 
+        this.playerSprite;
+        this.playerReloadSprite;
+        this.bulletSprite;
+        this.reloadIconSprite;
+
         this.initSounds();
         
     }
@@ -54,7 +59,7 @@ export class Game {
             return;
         }
 
-        if (Math.random() < RANDOM_SOUND_CHANCE) {
+        if (Math.random() < RANDOM_SOUND_CHANCE) {this.zoom
             const randomIndex = Math.floor(Math.random() * this.randomEnemySounds.length);
             const sound = this.randomEnemySounds[randomIndex];
             sound.stop();
@@ -63,7 +68,39 @@ export class Game {
         }
     }
 
-    start(ModeClass) {
+    initializeClassSprites() {
+        switch (this.player.playerClass.className) {
+            case CONFIG.SOLDIER_CLASS_NAME: 
+                this.playerSprite = this.assets.soldier;
+                this.playerReloadSprite = this.assets.reloadSoldier;
+                this.bulletSprite = this.assets.bullet;
+                this.reloadIcon = this.assets.reloadIcon;
+                break;
+            case CONFIG.FLAMETHROWER_CLASS_NAME:
+                this.playerSprite = this.assets.flamethrower;
+                this.playerReloadSprite = this.assets.flamethrowerReload;
+                this.bulletSprite = this.assets.flame;
+                this.reloadIcon = this.assets.flamethrowerReloadIcon;
+                break;
+        }
+    }
+
+    initializePlayerParameters() {
+        if (this.player.playerClass.attackType = CONFIG.SHOOT_ATTACK_TYPE) {
+            this.player.maxShotsAmount = this.player.playerClass.ammo;
+            this.player.shotsAmount = this.player.maxShotsAmount;
+            this.player.shotCooldown = this.player.playerClass.shootCooldown;
+            this.player.bulletWidth = this.player.playerClass.bulletWidth;
+            this.player.bulletHeight = this.player.playerClass.bulletHeight;
+            this.player.shotOffsetForward = this.player.playerClass.shotOffsetForward;
+            this.player.shotOffsetSide = this.player.playerClass.shotOffsetSide;
+            this.player.bulletSpeed = this.player.playerClass.bulletSpeed; 
+        }
+        this.player.speed = this.player.playerClass.speed;
+        this.player.damage = this.player.playerClass.damage;
+    }
+
+    async start(ModeClass) {
         this.stop();
 
         this.input = new Input(this.canvas, {
@@ -75,7 +112,9 @@ export class Game {
         });
 
         this.currentMode = new ModeClass(this);
-        this.currentMode.init();
+        await this.currentMode.init();
+        this.initializeClassSprites();
+        this.initializePlayerParameters();
 
         this.isPaused = false;
         this.loop();
@@ -152,7 +191,7 @@ export class Game {
         this.ctx.restore();
 
         if (this.player && this.player.isAlive) {
-            this.player.drawReloadInterface(this.ctx, this.assets.reloadIcon, this.canvas);
+            this.player.drawReloadInterface(this.ctx, this.reloadIcon, this.canvas);
             this.player.drawHPInterface(this.ctx, this.assets.heartIcon, this.canvas);
         }
 
@@ -185,12 +224,12 @@ export class Game {
         if (this.player) {
             if (this.player.isAlive) {
                 if (!this.player.isReloading) {
-                    this.player.draw(this.ctx, this.assets.soldier);
+                    this.player.draw(this.ctx, this.playerSprite);
                     if (!this.isPaused) this.player.animateShots(this.ctx, this.assets.shot1, this.assets.shot2, this.player);
                 } else {
-                    this.player.draw(this.ctx, this.assets.reloadSoldier);
+                    this.player.draw(this.ctx, this.playerReloadSprite);
                 }
-                this.player.drawBullets(this.ctx, this.assets.bullet);
+                this.player.drawBullets(this.ctx, this.bulletSprite);
             } else if (this.player.isDying) {
                 this.player.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }

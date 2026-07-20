@@ -1,10 +1,8 @@
     import { BaseGameTemplate } from './BaseGameTemplate.js';
-    import { Map } from '../core/Map.js';
-    import { Player } from '../entities/Player.js';
     import { Enemy } from '../entities/Enemy.js';
     import { CONFIG } from '../core/Config.js';
 
-    // Карта может быть другой для этого режима
+    // Карта может быть другой для этого режимаs
     const wavesLevelData = `
     ################
     #P            E#
@@ -20,16 +18,17 @@
     const MAX_WAVES = 20;
 
     export class WavesMode extends BaseGameTemplate {
-        init() {
-            this.engine.map = new Map();
-            this.engine.map.loadLevel(wavesLevelData);
-            this.engine.player = new Player(this.engine.map, this.engine.input);
-            this.engine.player.bloodManager = this.engine.bloodManager;
+        getLevelData() {
+            return wavesLevelData;
+        }
 
+        setupMode() {
             this.currentWave = 1;
             this.spawnWave();
 
             this.lastAttackTime = 0;
+
+            this.isInitializationReady = true;
         }
 
         spawnWave() {
@@ -53,6 +52,8 @@
         }
 
         update() {
+            if (!this.isInitializationReady) return;
+
             const currentTime = performance.now();
 
             if (!this.engine.player.isAlive) {
@@ -115,6 +116,8 @@
         }
 
         drawUI(ctx, canvas) {
+            if (!this.isInitializationReady) return;
+
             ctx.fillStyle = 'red';
             ctx.font = 'bold 30px Arial';
             const text = `ВОЛНА: ${this.currentWave}`;

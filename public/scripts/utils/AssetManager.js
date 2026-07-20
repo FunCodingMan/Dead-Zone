@@ -14,7 +14,11 @@ export class AssetManager {
             shot2: new Image(),
             heartIcon: new Image(),
             target: new Image(),
-            zombie: new Image()
+            zombie: new Image(),
+            flame: new Image(),
+            flamethrowerReload: new Image(),
+            flamethrower: new Image(),
+            flamethrowerReloadIcon: new Image() 
         };
 
         this.imagePaths = {
@@ -30,7 +34,11 @@ export class AssetManager {
             shot2: '/assets/shot2.png',
             heartIcon: '/assets/heart.png',
             target: '/assets/target.png',
-            zombie: '/assets/zombie.png'
+            zombie: '/assets/zombie.png',
+            flame: '/assets/flame.png',
+            flamethrowerReload: '/assets/reload_flamethrower.png',
+            flamethrower: '/assets/flamethrower.png',
+            flamethrowerReloadIcon: '/assets/flamethrower_reload_icon.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;

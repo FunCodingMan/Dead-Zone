@@ -53,14 +53,21 @@ export class Character {
         this.shootSounds = [];
         for (let i = 0; i < 5; i++) {
             const newSound = new Sound('../../assets/sounds/shot.mp3');
-            newSound.setVolume(0.3);
+            newSound.setVolume(0.5);
             this.shootSounds.push(newSound);
+        }
+
+        this.flameSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/flame_sound.mp3');
+            newSound.setVolume(0.5);
+            this.flameSounds.push(newSound);
         }
 
         this.hitHardSounds = [];
         for (let i = 0; i < 5; i++) {
             const newSound = new Sound('../../assets/sounds/hit-hard.mp3');
-            newSound.setVolume(1);
+            newSound.setVolume(0.5);
             this.hitHardSounds.push(newSound);
         }
 
@@ -76,6 +83,7 @@ export class Character {
         this.hitEnemySound.setVolume(0.5);
 
         this.reloadSound = new Sound('../../assets/sounds/reload.mp3');
+        this.flameReloadSound = new Sound('../../assets/sounds/flame_reload.mp3');
 
         this.explosionSound = new Sound('../../assets/sounds/explosion.mp3');
 
@@ -189,6 +197,7 @@ export class Character {
 
     animateShots(ctx, shot1Img, shot2Img, player) {
         if (!this.isShooting) return;
+        if (player.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) return;
 
         const now = performance.now();
 
