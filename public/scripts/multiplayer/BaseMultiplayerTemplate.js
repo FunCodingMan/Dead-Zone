@@ -27,6 +27,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.localUserId = null;
 
+        this.isMultiplayer = true;
+
         this.isFogOfWarEnabled = true;
 
         this.reloadPacketSent = false;
@@ -109,8 +111,6 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
                 newRemotePlayer.updateServerState(state);
 
-                newRemotePlayer.isAlive = true;
-
                 this.otherPlayers.set(id, newRemotePlayer);
             }
         }
@@ -189,7 +189,6 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                 this.engine.player.isDying = true;
                 this.deathTime = performance.now();
             }
-            return;
         }
 
         if (!this.engine.player.isAlive && this.engine.player.hitpoints > 0) {
@@ -201,12 +200,12 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const now = performance.now();
         const input = this.engine.input;
 
-        this.checkSendMoveData(now);
-
-
         this.otherPlayers.forEach(remotePlayer => {
             remotePlayer.updateInterpolation(0.2, this.engine.map);
         });
+
+        if (this.engine.isPaused || !this.engine.player.isAlive) return;
+        this.checkSendMoveData(now);
 
         this.checkSendShotData(now, input);
 
@@ -243,6 +242,13 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
                 const name = enemy.nickname || enemy.id;
                 this.drawPlayerName(ctx, enemy.x, enemy.y, enemy.w, name);
+            } else if (enemy.isDying) {
+                enemy.drawDeath(
+                    ctx,
+                    this.engine.assets.explosions,
+                    this.engine.isPaused,
+                    this.engine.totalPauseTime
+                );
             }
         });
         this.drawFogOfWar(ctx);

@@ -106,8 +106,17 @@ export class Game {
             this.player.updateReload(this.isPaused, this.totalPauseTime);
         }
 
-        if (this.isPaused) return;
-        if (this.player) this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
+        const isOnline = this.currentMode && this.currentMode.isMultiplayer === true;
+
+        if (this.isPaused && !isOnline) return;
+
+        if (this.player) {
+            if (this.isPaused && isOnline) {
+                this.player.handleBullets(this.map, this.enemies, this.targets);
+            } else {
+                this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
+            }
+        }
 
         if (this.currentMode) this.currentMode.update();
     }
@@ -146,11 +155,15 @@ export class Game {
     }
 
     drawEntities() {
+        const isOnline = this.currentMode && this.currentMode.isMultiplayer === true;
+        const animPaused = this.isPaused && !isOnline;
+        const pauseTime = isOnline ? 0 : this.totalPauseTime;
+
         this.enemies.forEach(enemy => {
             if (enemy.isAlive) {
                 enemy.draw(this.ctx, this.assets.zombie);
             } else if (enemy.isDying) {
-                enemy.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
+                enemy.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
         });
 
@@ -158,7 +171,7 @@ export class Game {
             if (target.isAlive) {
                 target.draw(this.ctx, this.assets.target);
             } else if (target.isDying) {
-                target.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
+                target.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
         })
 
@@ -176,7 +189,7 @@ export class Game {
                 }
                 this.player.drawBullets(this.ctx, this.assets.bullet);
             } else if (this.player.isDying) {
-                this.player.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
+                this.player.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
         }
 
