@@ -15,7 +15,8 @@ const screens = {
     createRoom: document.getElementById('screen-create-room'),
     joinRoom: document.getElementById('screen-join-room'),
     room: document.getElementById('screen-room'),
-    game: document.getElementById('screen-game')
+    game: document.getElementById('screen-game'),
+    gameOver: document.getElementById('screen-game-over')
 };
 
 const canvas = document.getElementById('gameCanvas');
@@ -116,6 +117,37 @@ network.on('start-game',  async() => {
     }
 });
 
+network.on('game-over', (payload) => {
+    console.log('МАТЧ ОКОНЧЕН!', payload);
+    if (game) {
+        game.stop();
+        game.isGameEnded = true;
+        togglePauseUI(false);
+    }
+
+    const tbody = document.getElementById('end-game-stats-body');
+    tbody.innerHTML = '';
+
+    payload.stats.forEach((s, index) => {
+        const color = index === 0 ? '#ffd700' : '#ffffff';
+        const fontWeight = index === 0 ? 'bold' : 'normal';
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #555';
+        tr.style.color = color;
+        tr.style.fontWeight = fontWeight;
+
+        tr.innerHTML = `
+            <td class="table-title">${s.nickname}</td>
+            <td class="table-title">${s.kills}</td>
+            <td class="table-title">${s.deaths}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    showScreen('gameOver');
+});
+
 
 document.querySelector('.btn-createRoom').addEventListener('click', () => {
     isReady = false;
@@ -154,6 +186,13 @@ readyBtn.addEventListener('click', () => {
 });
 
 document.getElementById('btn-exit-room').addEventListener('click', () => {
+    network.send('exit-room', {});
+    isReady = false;
+    readyBtn.textContent = 'НЕ ГОТОВ';
+    showScreen('lobbyMenu');
+});
+
+document.getElementById('btn-exit-to-lobby-from-stats').addEventListener('click', () => {
     network.send('exit-room', {});
     isReady = false;
     readyBtn.textContent = 'НЕ ГОТОВ';

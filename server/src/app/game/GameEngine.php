@@ -17,6 +17,8 @@ class GameEngine
     private MessageQueue $queue;
     private HitscanResolver $hitscan;
     private VisibilityService $visibility;
+    private float $matchStartTime = 0.0;
+    private bool $isMatchEnded = false;
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
         $this->ws = $ws;
@@ -42,7 +44,16 @@ class GameEngine
 
     public function pushData(): void
     {
+        if ($this->isMatchEnded) return;
+
         $now = microtime(true);
+        $timeLeft = max(0, GameConfig::MATCH_DURATION_S - ($now - $this->matchStartTime));
+
+        if ($timeLeft <= 0) {
+            $this->endMatch();
+            return;
+        }
+
         $arrData = $this->queue->dequeueAll();
         if (!empty($arrData)) {
             foreach ($arrData as $data) {
@@ -70,17 +81,23 @@ class GameEngine
             $this->registry->sendVisiblePlayers($player, $others);
         }
         $visiblePlayers = $this->registry->getVisiblePlayers();
-        $this->ws->broadcastGameState($visiblePlayers);
+        $this->ws->broadcastGameState($visiblePlayers, $timeLeft);
     }
 
 
     public function spawnPlayers(): void
     {
+        $this->matchStartTime = microtime(true);
         $players = $this->registry->getPlayers();
         foreach ($players as $player) {
             $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
             $player->setPos($spawn['x'], $spawn['y']);
         }
+    }
+
+    private function killFeed()
+    {
+
     }
 
     private function processAttackImpact(Player $player, array $payload): void
@@ -97,7 +114,11 @@ class GameEngine
 
         $others = $this->registry->getOthersPlayers($player);
         $hitPlayer = $this->hitscan->resolve($player, $finalAngle, $this->map, $others);
-        $hitPlayer?->takeDamage(20, $now);
+        if ($hitPlayer !== null) {
+            $hitPlayer?->takeDamage(20, $now);
+            $this->killFeed(); // Реализовать killFeed
+        }
+
 
         $this->notifyShot($player, $hitPlayer, $finalAngle);
     }
@@ -139,5 +160,27 @@ class GameEngine
     private function processReload(Player $player): void
     {
 
+    }
+    private function endMatch(): void
+    {
+        $this->isMatchEnded = true;
+        $stats = [];
+        foreach ($this->registry->getPlayers() as $player) {
+            $stats[] = [
+                'nickname' => $player->getNickname(),
+                'kills' => $player->getKills(),
+                'deaths' => $player->getDeaths()
+            ];
+        }
+        usort($stats, fn($a, $b) => $b['kills'] <=> $a['kills']);
+        $packet = [
+            'type' => 'game-over',
+            'payload' => [
+                'stats' => $stats
+            ]
+        ];
+        foreach ($this->registry->getPlayers() as $fd => $player) {
+            $this->ws->send($fd, $packet);
+        }
     }
 }

@@ -12,6 +12,7 @@ const VISIBILITY_RADIUS = 800;
 const FOV_ANGLE = Math.PI * 0.25;
 const RAYS_COUNT = 120;
 const RAY_STEP = 1;
+const MATCH_DURATION_S = 120;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -28,6 +29,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.localUserId = null;
 
         this.isMultiplayer = true;
+        this.timeLeft = MATCH_DURATION_S;
 
         this.isFogOfWarEnabled = true;
 
@@ -140,6 +142,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         if (data.me && !this.engine.player) {
             this.spawnByFirstState(data);
+        }
+
+        if (data.timeLeft !== undefined) {
+            this.timeLeft = data.timeLeft;
         }
 
         if (data.me && this.engine.player) {

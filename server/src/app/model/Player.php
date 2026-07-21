@@ -22,6 +22,8 @@ class Player
     private float $reloadEndTime = 0.0;
     private float $deathTime = 0.0;
     private array $pressKeys;
+    private int $kills;
+    private int $deaths;
 
     public function __construct(int $fd, string $userId, string $nickname = "Player")
     {
@@ -36,6 +38,8 @@ class Player
         $this->pressKeys = [];
         $this->speed = GameConfig::PLAYER_SPEED;
         $this->lastShootTime = 0.0;
+        $this->kills = 0;
+        $this->deaths = 0;
     }
 
     public function getRect(): Rect
@@ -203,6 +207,30 @@ class Player
     public function getHealth(): int
     {
         return $this->health;
+    }
+
+    public function addKill(): void
+    {
+        $this->kills++;
+    }
+
+    public function addDeath(): void
+    {
+        $this->deaths++;
+    }
+
+    public function getKills(): int
+    {
+        return $this->kills;
+    }
+
+    public function getDeaths(): int
+    {
+        return $this->deaths;
+    }
+    public function getNickname(): string
+    {
+        return $this->nickname;
     }
 
 }

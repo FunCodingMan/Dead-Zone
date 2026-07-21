@@ -34,5 +34,14 @@ export class MultiplayerTestMode extends BaseMultiplayerTemplate {
         ctx.font = '20px Arial';
         ctx.fillText("ОНЛАЙН-ТЕСТ", 20, 30);
         ctx.fillText(`Врагов в комнате: ${this.otherPlayers.size}`, 20, 60);
+
+        const minutes = Math.floor(this.timeLeft / 60);
+        const seconds = Math.floor(this.timeLeft % 60).toString().padStart(2, '0');
+        const timeText = `${minutes}:${seconds}`;
+
+        ctx.fillStyle = this.timeLeft <= 10 ? '#ff4444' : '#ffffff';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`ВРЕМЯ: ${timeText}`, canvas.width / 2, 40);
     }
 }
