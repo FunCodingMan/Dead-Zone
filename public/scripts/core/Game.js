@@ -41,6 +41,8 @@ export class Game {
     start(ModeClass, ...args) {
         this.stop();
 
+        this.isGameEnded = false;
+
         this.input = new Input(this.canvas, {
             onEscape: () => {
                 this.togglePause();

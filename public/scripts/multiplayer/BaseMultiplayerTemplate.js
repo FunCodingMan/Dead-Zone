@@ -270,7 +270,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const centerY = player.y + player.h / 2;
 
         ctx.save();
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.95)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
         ctx.beginPath();
 
         ctx.rect(centerX - 4000, centerY - 4000, 8000, 8000);
