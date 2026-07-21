@@ -16,8 +16,9 @@ class Player
     private float $angle;
     private int $health;
     private int $countBullets;
-    private float $speed = GameConfig::PLAYER_SPEED;
-    private float $lastShootTime = 0.0;
+    private float $speed;
+    private float $lastShootTime;
+    private array $pressKeys;
 
     public function __construct(int $fd, string $userId)
     {
@@ -28,6 +29,9 @@ class Player
         $this->angle = 90;
         $this->countBullets = 50;
         $this->health = 100;
+        $this->pressKeys = [];
+        $this->speed = GameConfig::PLAYER_SPEED;
+        $this->lastShootTime = 0.0;
     }
 
     public function getRect(): Rect
@@ -47,10 +51,16 @@ class Player
         return $this->userId;
     }
 
-    public function updateMovePlayer(array $data, GameMap $map): void
+    public function setInput(array $keys, float $angle): void
     {
-        $this->angle = (float)$data['angle'];
-        $this->move($data['keys'], $map);
+        $this->pressKeys = $keys;
+        $this->angle = $angle;
+    }
+
+    public function applyMovement(GameMap $map): void
+    {
+        if (empty($this->pressKeys)) return;
+        $this->move($this->pressKeys, $map);
     }
 
     public function getFullData(): array

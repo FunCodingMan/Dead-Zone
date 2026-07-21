@@ -34,16 +34,22 @@ class GameEngine
         if (!empty($arrData)) {
             foreach ($arrData as $data) {
                 $player = $this->registry->getPlayerByFd($data["fd"]);
-                if (!empty($player)) {
-                    match ($data["type"]) {
-                        'move' => $player->updateMovePlayer($data["payload"], $this->map),
-                        'shot' => $this->processAttackImpact($player, $data["payload"]),
-                        default => null
-                    };
-                }
+                if ($player === null) continue;
+
+                match ($data["type"]) {
+                    'move' => $player->setInput($data["payload"]["keys"], (float)$data["payload"]["angle"]),
+                    'shot' => $this->processAttackImpact($player, $data["payload"]),
+                    default => null
+                };
+
             }
         }
         $players = $this->registry->getPlayers();
+
+        foreach ($players as $player) {
+            $player->applyMovement($this->map);
+        }
+
         foreach ($players as $player) {
             $others = $this->visibility->getVisiblePlayers($player, $players);
             $this->registry->sendVisiblePlayers($player, $others);
