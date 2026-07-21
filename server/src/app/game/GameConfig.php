@@ -25,4 +25,5 @@ class GameConfig
     public const int DIFF_GUN_SIDE = 5;
     public const int HEARING_RADIUS = 1500;
     public const int SPREAD_FACTOR = 10;
+    public const bool IS_FOG_ACTIVE = true;
 }

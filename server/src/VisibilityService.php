@@ -10,9 +10,14 @@ use App\app\game\Rect;
 class VisibilityService
 {
     private GameMap $map;
+    private bool $isFogOfWarEnabled = GameConfig::IS_FOG_ACTIVE;
     public function __construct(GameMap $map)
     {
         $this->map = $map;
+    }
+    public function setFogOfWar(bool $enabled): void
+    {
+        $this->isFogOfWarEnabled = $enabled;
     }
 
     public function getVisiblePlayers(Player $observer, array $allPlayers): array
@@ -28,6 +33,10 @@ class VisibilityService
                 continue;
             }
             if ($player->getHealth() <= 0) {
+                continue;
+            }
+            if (!$this->isFogOfWarEnabled) {
+                $visiblePlayers[] = $player;
                 continue;
             }
             $playerState = $player->getPublicState();
