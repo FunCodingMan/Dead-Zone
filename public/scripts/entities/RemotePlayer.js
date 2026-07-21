@@ -11,6 +11,7 @@ export class RemotePlayer extends Character {
         super({x: initialX, y: initialY}, PLAYER_WIDTH, PLAYER_HEIGHT,  -1);
 
         this.id = id;
+        this.nickname = "Player";
 
         this.targetX = initialX;
         this.targetY = initialY;
@@ -29,6 +30,10 @@ export class RemotePlayer extends Character {
 
         if (state.health !== undefined) {
             this.hitpoints = state.health;
+        }
+
+        if (state.nickname !== undefined) {
+            this.nickname = state.nickname;
         }
     }
 

@@ -12,6 +12,7 @@ const VISIBILITY_RADIUS = 800;
 const FOV_ANGLE = Math.PI * 0.25;
 const RAYS_COUNT = 120;
 const RAY_STEP = 1;
+
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
         super(engine);
@@ -239,6 +240,9 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                     this.engine.assets.shot1,
                     this.engine.assets.shot2
                 );
+
+                const name = enemy.nickname || enemy.id;
+                this.drawPlayerName(ctx, enemy.x, enemy.y, enemy.w, name);
             }
         });
         this.drawFogOfWar(ctx);
@@ -320,6 +324,27 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
 
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+    }
+    drawPlayerName(ctx, x, y, width, name) {
+        if (!name) return;
+
+        ctx.save();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowOffsetX = 1;
+        ctx.shadowOffsetY = 1;
+        ctx.shadowBlur = 3;
+        const textX = x + width / 2;
+        const textY = y;
+
+        ctx.fillText(name, textX, textY);
+
         ctx.restore();
     }
 

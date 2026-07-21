@@ -11,6 +11,7 @@ class Player
 {
     private int $fd;
     private string $userId;
+    private string $nickname;
     private float $posX;
     private float $posY;
     private float $angle;
@@ -22,10 +23,11 @@ class Player
     private float $deathTime = 0.0;
     private array $pressKeys;
 
-    public function __construct(int $fd, string $userId)
+    public function __construct(int $fd, string $userId, string $nickname = "Player")
     {
         $this->fd = $fd;
         $this->userId = $userId;
+        $this->nickname = $nickname;
         $this->posX = 0.0;
         $this->posY = 0.0;
         $this->angle = 90;
@@ -71,6 +73,7 @@ class Player
 
         return [
             "user_id" => $this->userId,
+            "nickname" => $this->nickname,
             "x" => $this->posX,
             "y" => $this->posY,
             "angle" => $this->angle,
@@ -85,6 +88,7 @@ class Player
             "x" => $this->posX,
             "y" => $this->posY,
             "angle" => $this->angle,
+            "nickname" => $this->nickname,
         ];
     }
 

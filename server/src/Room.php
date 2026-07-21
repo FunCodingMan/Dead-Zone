@@ -99,7 +99,7 @@ class Room
     {
         if ($this->isStart) return;
         foreach ($this->lobbyUsers as $lobbyUser) {
-            $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId());
+            $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId(), $lobbyUser->getNickname());
         }
         $this->gameEngine->spawnPlayers();
         $this->isStart = true;

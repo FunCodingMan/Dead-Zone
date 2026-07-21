@@ -15,9 +15,9 @@ class PlayerRegistry
         $this->playersVisible = [];
     }
 
-    public function addPlayer(int $fd, string $userId): void
+    public function addPlayer(int $fd, string $userId,  string $nickname): void
     {
-        $player = new Player($fd, $userId);
+        $player = new Player($fd, $userId, $nickname);
         $this->players[$fd] = $player;
         $this->playersVisible[$fd] = ["me" => $player, "others" => []];
     }
