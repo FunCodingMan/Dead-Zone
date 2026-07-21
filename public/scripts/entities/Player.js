@@ -53,6 +53,7 @@ export class Player extends Character {
         this.map = map;
 
         this.isMultiplayer = false;
+        this.hitpoints = MAX_HITPOINTS;
     }
 
     update(map, canvas, zoom, enemies, targets) {
@@ -204,7 +205,7 @@ export class Player extends Character {
                 if (this.map.isIntersecting(bulletRect, entityRect)) {
                     if (!this.isMultiplayer) {
                         this.appliedDamage += this.damage;
-                        enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                        enemy.takeDamage(this.damage, this.map, CONFIG.ENEMY_SYMBOL);
                     }
                     if (!toRemove.includes(bulletIndex)) {
                         toRemove.push(bulletIndex);

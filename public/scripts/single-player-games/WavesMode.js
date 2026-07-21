@@ -189,14 +189,17 @@ export class WavesMode extends BaseGameTemplate {
     }
 
     endGame(isVictory) {
+        const finalDamage = this.engine.player.appliedDamage;
+        const finalKills = this.engine.player.kills;
+
         this.engine.stop();
         this.engine.isGameEnded = true;
 
         const params = new URLSearchParams({
             result: isVictory ? 'win' : 'lose',
             wave: this.currentWave,
-            damage: this.engine.player.appliedDamage,
-            kills: this.engine.player.kills
+            damage: finalDamage,
+            kills: finalKills
         });
 
         window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;

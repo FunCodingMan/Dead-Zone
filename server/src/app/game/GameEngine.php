@@ -52,7 +52,7 @@ class GameEngine
                         continue;
                     }
                     match ($data["type"]) {
-                        'move' => $player->updateMovePlayer($data["payload"], $this->map),
+                        'move' => $player->setInput($data["payload"]["keys"], (float)$data["payload"]["angle"]),
                         'shot' => $this->processAttackImpact($player, $data["payload"]),
                         'reload' => $player->startReload(microtime(true)),
                         default => null
@@ -62,6 +62,9 @@ class GameEngine
         }
         $players = $this->registry->getPlayers();
         $this->checkRespawn($players, $now);
+        foreach ($players as $player) {
+            $player->applyMovement($this->map);
+        }
         foreach ($players as $player) {
             $others = $this->visibility->getVisiblePlayers($player, $players);
             $this->registry->sendVisiblePlayers($player, $others);
