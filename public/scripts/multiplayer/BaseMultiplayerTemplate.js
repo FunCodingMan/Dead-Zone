@@ -137,11 +137,11 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     syncWithServer(data) {
         if (!data) return;
 
-        if (data.me && (!this.engine.player || !this.engine.player.isAlive)) {
+        if (data.me && !this.engine.player) {
             this.spawnByFirstState(data);
         }
 
-        if (data.me && this.engine.player && this.engine.player.isAlive) {
+        if (data.me && this.engine.player) {
             this.syncPlayer(data);
         }
 
@@ -180,12 +180,21 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     }
 
     update() {
-        if (!this.engine.player || !this.engine.player.isAlive) return;
+        if (!this.engine.player) return;
 
-        if (this.engine.player.hitpoints <= 0 && this.engine.player.isAlive) {
-            this.engine.player.isAlive = false;
-            this.engine.player.isDying = true;
-            //Добавить обработку смерти
+        if (this.engine.player.hitpoints <= 0) {
+            if (this.engine.player.isAlive) {
+                this.engine.player.isAlive = false;
+                this.engine.player.isDying = true;
+                this.deathTime = performance.now();
+            }
+            return;
+        }
+
+        if (!this.engine.player.isAlive && this.engine.player.hitpoints > 0) {
+            this.engine.player.isAlive = true;
+            this.engine.player.isDying = false;
+            this.deathTime = 0;
         }
 
         const now = performance.now();
@@ -262,10 +271,28 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.fill('evenodd');
         ctx.restore();
     }
+    drawDeath(ctx, canvas) {
+        ctx.save();
 
-    drawUI(ctx, canvas) {
-        if (this.network.connectionStatus === 'connected') return;
+        ctx.fillStyle = 'rgba(150, 0, 0, 0.4)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 40px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('ВЫ УБИТЫ', canvas.width / 2, canvas.height / 2 - 20);
+
+        const secondsLeft = Math.max(0, 5 - (performance.now() - this.deathTime) / 1000).toFixed(1);
+
+        ctx.font = '20px Arial';
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText(`Возрождение через ${secondsLeft} сек...`, canvas.width / 2, canvas.height / 2 + 30);
+
+        ctx.restore();
+    }
+
+    drawConnecting(ctx, canvas) {
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -294,6 +321,17 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
         ctx.restore();
+    }
+
+    drawUI(ctx, canvas) {
+        if (this.network.connectionStatus !== 'connected') {
+            this.drawConnecting(ctx, canvas);
+            return;
+        }
+
+        if (this.engine.player && !this.engine.player.isAlive) {
+            this.drawDeath(ctx, canvas);
+        }
     }
 
     createVisionRay(startX, startY, angle) {

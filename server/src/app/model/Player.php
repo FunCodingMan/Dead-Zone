@@ -19,7 +19,7 @@ class Player
     private float $speed = GameConfig::PLAYER_SPEED;
     private float $lastShootTime = 0.0;
     private float $reloadEndTime = 0.0;
-
+    private float $deathTime = 0.0;
     public function __construct(int $fd, string $userId)
     {
         $this->fd = $fd;
@@ -155,10 +155,34 @@ class Player
         $this->lastShootTime = $now;
     }
 
-    public function takeDamage(int $damage): void
+    public function takeDamage(int $damage, float $now): void
     {
+        if ($this->health <= 0) return;
+
         $this->health -= $damage;
-        if ($this->health < 0) $this->health = 0;
+        if ($this->health <= 0) {
+            $this->health = 0;
+            $this->deathTime = $now;
+        }
+    }
+
+    public function isDead(): bool
+    {
+        return $this->health <= 0;
+    }
+    public function getDeathTime(): float
+    {
+        return $this->deathTime;
+    }
+
+    public function respawn(float $x, float $y): void
+    {
+        $this->health = GameConfig::HP_SIZE;
+        $this->countBullets = GameConfig::MAX_BULLETS;
+        $this->posX = $x;
+        $this->posY = $y;
+        $this->deathTime = 0.0;
+        $this->reloadEndTime = 0.0;
     }
 
     public function getHealth(): int

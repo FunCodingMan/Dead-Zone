@@ -28,13 +28,29 @@ class GameEngine
         $this->visibility = new VisibilityService($map);
     }
 
+    private function checkRespawn(array $players, float $now): void
+    {
+        foreach ($players as $player) {
+            if ($player->isDead()) {
+                if (($now - $player->getDeathTime()) >= GameConfig::RESPAWN_TIME_S) {
+                    $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
+                    $player->respawn($spawn['x'], $spawn['y']);
+                }
+            }
+        }
+    }
+
     public function pushData(): void
     {
+        $now = microtime(true);
         $arrData = $this->queue->dequeueAll();
         if (!empty($arrData)) {
             foreach ($arrData as $data) {
                 $player = $this->registry->getPlayerByFd($data["fd"]);
                 if (!empty($player)) {
+                    if ($player->isDead()) {
+                        continue;
+                    }
                     match ($data["type"]) {
                         'move' => $player->updateMovePlayer($data["payload"], $this->map),
                         'shot' => $this->processAttackImpact($player, $data["payload"]),
@@ -45,6 +61,7 @@ class GameEngine
             }
         }
         $players = $this->registry->getPlayers();
+        $this->checkRespawn($players, $now);
         foreach ($players as $player) {
             $others = $this->visibility->getVisiblePlayers($player, $players);
             $this->registry->sendVisiblePlayers($player, $others);
@@ -76,8 +93,8 @@ class GameEngine
         $finalAngle = $angle + $randomSpread;
 
         $others = $this->registry->getOthersPlayers($player);
-        $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
-        $hitPlayer?->takeDamage(20);
+        $hitPlayer = $this->hitscan->resolve($player, $finalAngle, $this->map, $others);
+        $hitPlayer?->takeDamage(20, $now);
 
         $this->notifyShot($player, $hitPlayer, $finalAngle);
     }

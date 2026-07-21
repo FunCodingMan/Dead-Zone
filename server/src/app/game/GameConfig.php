@@ -27,5 +27,6 @@ class GameConfig
     public const float RELOAD_TIME_S = 2.0;
     public const int MAX_BULLETS = 50;
     public const int HP_SIZE = 100;
+    public const float RESPAWN_TIME_S = 5.0;
 
 }

@@ -10,53 +10,32 @@ use App\MessageValidator;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+
+
 $server = new \Swoole\WebSocket\Server("0.0.0.0", 9502);
 
-$connectionUser = null;
-$lobby = null;
-$ws = null;
+$connectionDatabase = new ConnectionProvider();
+$repository = new UserTable($connectionDatabase);
+$connectionUser= new ConnectionRegistry($repository);
+
 $validator = new MessageValidator();
+$ws = new \App\WebSocketTransport($server, $validator);
 
-$server->on('WorkerStart', function (\Swoole\WebSocket\Server $server, int $workerId) use (&$connectionUser, &$lobby, &$ws, $validator) {
-    $connectionDatabase = new ConnectionProvider();
-    $repository = new UserTable($connectionDatabase);
-    $connectionUser = new ConnectionRegistry($repository);
+$lobby = new Lobby($ws, $connectionUser);
 
-    $ws = new \App\WebSocketTransport($server, $validator);
-    $lobby = new Lobby($ws, $connectionUser);
 
-    if ($workerId === 0) {
-        \Swoole\Timer::tick(33, function () use (&$lobby) {
-            if ($lobby) {
-                $lobby->updateActiveRooms();
-            }
-        });
-    }
-
-    echo "Воркер #{$workerId} готов к работе!\n";
-});
-
-$server->on('open', function ($server, $request) use (&$connectionUser) {
-    if (!$connectionUser) {
-        $server->close($request->fd);
-        return;
-    }
-
+$server->on('open', function ($server, $request) use ($connectionUser) {
     if (!$connectionUser->register($request->fd, $request->cookie)) {
         echo "connection failed\n";
         $server->close($request->fd);
         return;
     }
     echo "Клиент #{$request->fd} подключился\n";
+
 });
 
-$server->on('message', function ($server, $frame) use (&$ws, &$lobby) {
+$server->on('message', function ($server, $frame) use ($ws, $lobby) {
     echo "Получено от #{$frame->fd}: {$frame->data}\n";
-
-    if (!$ws || !$lobby) {
-        return;
-    }
-
     $data = $ws->parse($frame->fd, $frame->data);
 
     if (empty($data)) {
@@ -68,10 +47,16 @@ $server->on('message', function ($server, $frame) use (&$ws, &$lobby) {
     echo json_encode($data, JSON_UNESCAPED_UNICODE) . "---------------------------\n\n";
 });
 
-$server->on('close', function ($server, $fd) use (&$connectionUser, &$lobby) {
+$server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {
     echo "Клиент #{$fd} отключился\n";
-    if ($lobby) $lobby->exitUser($fd);
-    if ($connectionUser) $connectionUser->unregister($fd);
+    $lobby->exitUser($fd);
+    $connectionUser->unregister($fd);
+
+});
+
+
+\Swoole\Timer::tick(33, function () use ($connectionUser, $lobby) {
+    $lobby->updateActiveRooms();
 });
 
 echo "WebSocket-сервер запущен на порту 9502\n";
