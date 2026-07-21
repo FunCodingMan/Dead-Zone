@@ -18,7 +18,6 @@ class Player
     private int $countBullets;
     private float $speed = GameConfig::PLAYER_SPEED;
     private float $lastShootTime = 0.0;
-    private float $lastReloadTime = 0.0;
     private float $reloadEndTime = 0.0;
 
     public function __construct(int $fd, string $userId)
