@@ -28,6 +28,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.isFogOfWarEnabled = true;
 
+        this.reloadPacketSent = false;
+
         this.boundOnSpawn = (data) => this.handleSpawn(data);
         this.boundOnState = (data) => this.syncWithServer(data);
         this.boundOnShotFired = (data) => this.handleShotFired(data);
@@ -165,9 +167,15 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
     }
 
-    checkSendReloadData(input) {
-        if (input.isJustPressed('KeyR') && !this.engine.player.isReloading) {
+    checkSendReloadData() {
+        const player = this.engine.player;
+        console.log('RELOAD')
+        if (player.isReloading && !this.reloadPacketSent) {
+            console.log('RELOAD: TRUE');
             this.network.send('reload', {});
+            this.reloadPacketSent = true;
+        } else if (!player.isReloading) {
+            this.reloadPacketSent = false;
         }
     }
 
@@ -192,7 +200,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.checkSendShotData(now, input);
 
-        this.checkSendReloadData(input);
+        this.checkSendReloadData();
     }
 
 

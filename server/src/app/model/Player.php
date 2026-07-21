@@ -18,6 +18,8 @@ class Player
     private int $countBullets;
     private float $speed = GameConfig::PLAYER_SPEED;
     private float $lastShootTime = 0.0;
+    private float $lastReloadTime = 0.0;
+    private float $reloadEndTime = 0.0;
 
     public function __construct(int $fd, string $userId)
     {
@@ -26,8 +28,8 @@ class Player
         $this->posX = 0.0;
         $this->posY = 0.0;
         $this->angle = 90;
-        $this->countBullets = 50;
-        $this->health = 100;
+        $this->countBullets = GameConfig::MAX_BULLETS;
+        $this->health = GameConfig::HP_SIZE;
     }
 
     public function getRect(): Rect
@@ -55,6 +57,8 @@ class Player
 
     public function getFullData(): array
     {
+        $this->processReload(microtime(true));
+
         return [
             "user_id" => $this->userId,
             "x" => $this->posX,
@@ -120,9 +124,29 @@ class Player
         $this->posX = $x;
         $this->posY = $y;
     }
+    public function startReload(float $now): void
+    {
+        if ($this->countBullets === GameConfig::MAX_BULLETS) return;
+
+        if ($this->reloadEndTime > 0.0) return;
+
+        $this->reloadEndTime = $now + GameConfig::RELOAD_TIME_S;
+    }
+    private function processReload(float $now): void
+    {
+        if ($this->reloadEndTime > 0.0 && $now >= $this->reloadEndTime)
+        {
+            $this->countBullets = GameConfig::MAX_BULLETS;
+            $this->reloadEndTime = 0.0;
+        }
+    }
 
     public function canShoot($now): bool
     {
+        $this->processReload($now);
+        if ($this->reloadEndTime > 0.0) {
+            return false;
+        }
         return $this->countBullets > 0 && (($now - $this->lastShootTime) >= GameConfig::SHOOT_COOLDOWN_S);
     }
 

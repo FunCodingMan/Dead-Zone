@@ -38,6 +38,7 @@ class GameEngine
                     match ($data["type"]) {
                         'move' => $player->updateMovePlayer($data["payload"], $this->map),
                         'shot' => $this->processAttackImpact($player, $data["payload"]),
+                        'reload' => $player->startReload(microtime(true)),
                         default => null
                     };
                 }
@@ -114,6 +115,9 @@ class GameEngine
                 ]
             ]);
         }
+    }
+    private function processReload(Player $player): void
+    {
 
     }
 }

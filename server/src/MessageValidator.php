@@ -14,6 +14,7 @@ class MessageValidator
             'ready' => $this->isValidReady($data),
             'start-game' => $this->isValidStartGame($data),
             'shot' => $this->isValidShotPlayer($data),
+            'reload' => $this->isValidReloadPlayer($data),
             default => false,
         };
     }
@@ -76,5 +77,10 @@ class MessageValidator
     private function isValidShotPlayer(array $data): bool
     {
         return isset($data['angle']) && is_numeric($data['angle']);
+    }
+
+    private function isValidReloadPlayer(array $data): bool
+    {
+        return empty($data);
     }
 }

@@ -83,7 +83,7 @@ export class Network {
             console.error('Ошибка парсинга JSON от сервера:', error);
             return;
         }
-        console.log('Пришло сообщение от сервера: ', message);
+        // console.log('Пришло сообщение от сервера: ', message);
         if (message && message.type) {
             this.emit(message.type, message.payload);
         }
@@ -108,7 +108,7 @@ export class Network {
 
         this.socket.send(message);
 
-        console.log('Данные успешно отправлены на сервер: ', message);
+        // console.log('Данные успешно отправлены на сервер: ', message);
     }
     disconnect() {
         if (this.reconnectTimer) clearInterval(this.reconnectTimer);

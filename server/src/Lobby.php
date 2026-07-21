@@ -27,7 +27,7 @@ class Lobby
             'exit-room' => $this->exitUser($data["fd"]),
             'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
             'start-game' => $this->startGame($data["fd"]),
-            'move', 'shot' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
+            'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
     }

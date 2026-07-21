@@ -6,12 +6,10 @@ namespace App\app\game;
 class GameConfig
 {
     public const int CELL_SIZE = 64;
-
     public const int PLAYER_WIDTH = 28;
     public const int PLAYER_HEIGHT = 48;
     public const int HITBOX_SIZE = 28;
     public const float PLAYER_SPEED = 8.0;
-
     public const string SYMBOL_WALL = '#';
     public const string SYMBOL_BOX = 'B';
     public const string SYMBOL_PLAYER = 'P';
@@ -26,4 +24,8 @@ class GameConfig
     public const int HEARING_RADIUS = 1500;
     public const int SPREAD_FACTOR = 10;
     public const bool IS_FOG_ACTIVE = true;
+    public const float RELOAD_TIME_S = 2.0;
+    public const int MAX_BULLETS = 50;
+    public const int HP_SIZE = 100;
+
 }
