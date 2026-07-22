@@ -100,8 +100,8 @@ class GameEngine
         if ($hitPlayer->getHealth() > 0) return;
         $shoter->increaseKills();
         $hitPlayer->increaseDeaths();
-
-        $message = ["type" => "kill-feed", "payload" => ["killer" => $shoter->getNickname(), "death" => $hitPlayer->getNickname()]];
+        $message = ["type" => "kill-feed", "payload" => ["killer" => $shoter->getNickname(), "victim" => $hitPlayer->getNickname()]];
+        echo json_encode($message);
         foreach ($this->registry->getPlayers() as $player) {
             $this->ws->send($player->getFd(), $message);
         }

@@ -28,5 +28,5 @@ class GameConfig
     public const int MAX_BULLETS = 50;
     public const int HP_SIZE = 100;
     public const float RESPAWN_TIME_S = 5.0;
-    public const float MATCH_DURATION_S = 20.0;
+    public const float MATCH_DURATION_S = 60_0;
 }
