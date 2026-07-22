@@ -50,14 +50,14 @@ export class RemotePlayer extends Character {
         });
     }
 
-    updateInterpolation(interpolationFactor = 0.2, map = null) {
+    updateInterpolation(interpolationFactor = 0.2, map = null, localPlayer = null, otherPlayers = null) {
         this.x += (this.targetX - this.x) * interpolationFactor;
         this.y += (this.targetY - this.y) * interpolationFactor;
 
-        this.handleNetworkBullets(map);
+        this.handleNetworkBullets(map, localPlayer, otherPlayers);
     }
 
-    handleNetworkBullets(map) {
+    handleNetworkBullets(map, localPlayer, otherPlayers) {
         const toRemove = [];
         this.bullets.forEach((bullet, index) => {
             bullet.x += bullet.xDirection * bullet.bulletSpeed;
@@ -66,8 +66,28 @@ export class RemotePlayer extends Character {
             const bulletRect = {
                 x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT
             };
+            let isHit = false
 
             if (map && map.checkCollision(bulletRect)) {
+                isHit = true;
+            }
+
+            if (!isHit && localPlayer && localPlayer.isAlive) {
+                if (map.isIntersecting(bulletRect, localPlayer)) {
+                    isHit = true;
+                }
+            }
+
+            if (!isHit && otherPlayers) {
+                for (const [id, rp] of otherPlayers) {
+                    if (map.isIntersecting(bulletRect, rp)) {
+                        isHit = true;
+                        break;
+                    }
+                }
+            }
+
+            if (isHit) {
                 toRemove.push(index);
             }
         });
@@ -75,6 +95,10 @@ export class RemotePlayer extends Character {
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
         }
+    }
+
+    takeDamage(damage, map, symbol) {
+
     }
 
     draw(ctx, image, bulletImg, shot1Img, shot2Img) {

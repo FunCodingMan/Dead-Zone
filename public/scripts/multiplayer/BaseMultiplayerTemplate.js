@@ -13,6 +13,8 @@ const FOV_ANGLE = Math.PI * 0.25;
 const RAYS_COUNT = 120;
 const RAY_STEP = 1;
 const MATCH_DURATION_S = 120;
+const BULLET_WIDTH = 5;
+const BULLET_HEIGHT = 10;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -207,8 +209,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const input = this.engine.input;
 
         this.otherPlayers.forEach(remotePlayer => {
-            remotePlayer.updateInterpolation(0.2, this.engine.map);
+            remotePlayer.updateInterpolation(0.2, this.engine.map, this.engine.player, this.engine.otherPlayers);
         });
+
+        this.checkCollisionWithLocalBullets();
 
         if (this.engine.isPaused || !this.engine.player.isAlive) return;
         this.checkSendMoveData(now);
@@ -216,6 +220,27 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.checkSendShotData(now, input);
 
         this.checkSendReloadData();
+    }
+
+    checkCollisionWithLocalBullets() {
+        const hitBullets = [];
+
+        this.engine.player.bullets.forEach((bullet, index) => {
+            const bulletRect = {
+                x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT
+            };
+
+            for (const [id, enemy] of this.otherPlayers) {
+                if (enemy.isAlive && this.engine.map.isIntersecting(bulletRect, enemy)) {
+                    hitBullets.push(index);
+                    break;
+                }
+            }
+        });
+
+        for (let i = hitBullets.length - 1; i >= 0; i--) {
+            this.engine.bullets.splice(hitBullets[i], 1);
+        }
     }
 
 
