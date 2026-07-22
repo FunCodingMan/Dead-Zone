@@ -16,13 +16,20 @@ export class Input {
         this.handleMouseDown = this.handleMouseDown.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
 
+
         window.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('keyup', this.handleKeyUp);
         window.addEventListener('mousemove', this.handleMouseMove);
         window.addEventListener('mousedown', this.handleMouseDown);
         window.addEventListener('mouseup', this.handleMouseUp);
 
+        window.addEventListener('blur', this.boundOnBlur);
+
         this.canvas.addEventListener('contextmenu', this.handleContextMenu);
+    }
+
+    boundOnBlur = () => {
+        this.reset();
     }
 
     handleContextMenu(e) {
@@ -83,5 +90,6 @@ export class Input {
         window.removeEventListener('mousemove', this.handleMouseMove);
         window.removeEventListener('mousedown', this.handleMouseDown);
         window.removeEventListener('mouseup', this.handleMouseUp);
+        window.removeEventListener('blur', this.boundOnBlur);
     }
 }

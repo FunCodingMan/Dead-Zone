@@ -50,6 +50,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
     init() {
         this.setupNetworkListeners();
+        window.addEventListener('blur', this.boundOnWindowBlur);
     }
 
     setupNetworkListeners() {
@@ -93,6 +94,15 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     onPlayerSpawned() {
 
     }
+
+    boundOnWindowBlur = () => {
+        if (this.network && this.network.connectionStatus === 'connected' && this.engine.player) {
+            this.network.send('move', {
+                keys: [],
+                angle: this.engine.player.angle
+            });
+        }
+    };
 
     teleportPlayer(x, y) {
         if (!this.engine.player) return;
@@ -495,6 +505,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network.off('shotFired', this.boundOnShotFired);
         this.network.off('kill-feed', this.boundOnShotFired);
         this.otherPlayers.clear();
+
+        window.removeEventListener('blur', this.boundOnWindowBlur);
     }
 
 

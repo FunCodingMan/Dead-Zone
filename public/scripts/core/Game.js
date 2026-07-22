@@ -3,6 +3,7 @@ import { CONFIG } from './Config.js';
 import { BloodManager } from './BloodManager.js';
 
 const FPS = 60;
+const BASE_HEIGHT = 1080;
 
 export class Game {
     constructor(canvas, assets, onPauseToggle) {
@@ -43,6 +44,8 @@ export class Game {
     resizeHandler = () => {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+
+        this.zoom = (window.innerHeight / BASE_HEIGHT) * 1.5;
     };
 
     start(ModeClass, ...args) {
