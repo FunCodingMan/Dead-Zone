@@ -15,7 +15,7 @@ const RAY_STEP = 1;
 const MATCH_DURATION_S = 120;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
-const MSG_KILL_FEED_DURATION_MS = 5000;
+const MSG_KILL_FEED_DURATION_MS = 10000;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -43,7 +43,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.boundOnSpawn = (data) => this.handleSpawn(data);
         this.boundOnState = (data) => this.syncWithServer(data);
         this.boundOnShotFired = (data) => this.handleShotFired(data);
-        this.boundOnKillfeed = (data) => this.handleKillfeed(data);
+        this.boundOnKillFeed = (data) => this.handleKillFeed(data);
     }
 
     init() {
@@ -54,7 +54,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network.on('spawn', this.boundOnSpawn);
         this.network.on('state', this.boundOnState);
         this.network.on('shotFired', this.boundOnShotFired);
-        this.network.on('kill-feed', this.boundOnKillfeed);
+        this.network.on('kill-feed', this.boundOnKillFeed);
     }
     handleSpawn(data) {
         this.engine.player = new Player(this.engine.map, this.engine.input);
@@ -256,7 +256,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         });
 
         for (let i = hitBullets.length - 1; i >= 0; i--) {
-            this.engine.bullets.splice(hitBullets[i], 1);
+            this.engine.player.bullets.splice(hitBullets[i], 1);
         }
     }
 
@@ -426,7 +426,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                 alpha = 1 - ((timePassed -  (MSG_KILL_FEED_DURATION_MS - 1000)) / 1000);
             }
 
-            ctx.globalAlpha(Math.max(0, alpha));
+            ctx.globalAlpha = Math.max(0, alpha);
 
             const text = `${msg.killer} 🔪 ${msg.victim}`;
             const textWidth = ctx.measureText(text).width;
