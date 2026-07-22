@@ -15,7 +15,10 @@ const RAY_STEP = 5;
 const MATCH_DURATION_S = 120;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
-const MSG_KILL_FEED_DURATION_MS = 10000;
+const MSG_KILL_FEED_DURATION_MS = 5000;
+const KILL_FEED_FONT_SIZE = 30;
+const KILL_ICON_SIZE = 34;
+const KILL_SPACING_SIZE = 14;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -426,12 +429,12 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.killfeed = this.killfeed.filter(msg => now - msg.timestamp < MSG_KILL_FEED_DURATION_MS);
 
         ctx.save();
-        ctx.textAlign = 'right';
+        ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.font = 'bold 24px Arial';
+        ctx.font = `bold ${KILL_FEED_FONT_SIZE}px Arial`;
 
         let startY = 15;
-        const startX = canvas.width - 20;
+        const rightEdgeX = canvas.width - 20;
 
         this.killfeed.forEach(msg => {
             const timePassed = now - msg.timestamp;
@@ -444,17 +447,31 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
             ctx.globalAlpha = Math.max(0, alpha);
 
-            const text = `${msg.killer} 🔪 ${msg.victim}`;
-            const textWidth = ctx.measureText(text).width;
+            const killerWidth = ctx.measureText(msg.killer).width;
+            const victimWidth = ctx.measureText(msg.victim).width;
+            const killIcon = this.engine.assets.killIcon;
+            let iconWidth = Math.round(KILL_ICON_SIZE * (killIcon.naturalWidth / killIcon.naturalHeight));
+
+            const totalWidth = killerWidth + KILL_SPACING_SIZE * 2 + iconWidth + victimWidth;
+
+            const startX = rightEdgeX - totalWidth;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
 
-            ctx.fillRect(startX - textWidth - 15, startY - 8, textWidth + 30, 40);
+            ctx.fillRect(startX - 15, startY - 10, totalWidth + 30, KILL_FEED_FONT_SIZE + 18);
 
             ctx.fillStyle = '#ffffff';
-            ctx.fillText(text, startX, startY);
 
-            startY += 45;
+            ctx.fillText(msg.killer, startX, startY);
+            if (this.engine.assets.killIcon) {
+                ctx.drawImage(this.engine.assets.killIcon, startX + killerWidth + KILL_SPACING_SIZE, startY - 1, iconWidth, KILL_ICON_SIZE);
+            } else {
+                ctx.fillText('💀', startX + killerWidth + KILL_SPACING_SIZE, startY);
+            }
+            ctx.fillStyle = '#ff4444';
+            ctx.fillText(msg.victim, startX + killerWidth + KILL_SPACING_SIZE * 2 + iconWidth, startY);
+
+            startY += KILL_FEED_FONT_SIZE + 22;
         });
 
         ctx.restore();

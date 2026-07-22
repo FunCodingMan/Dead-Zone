@@ -14,7 +14,8 @@ export class AssetManager {
             shot2: new Image(),
             heartIcon: new Image(),
             target: new Image(),
-            zombie: new Image()
+            zombie: new Image(),
+            killIcon: new Image()
         };
 
         this.imagePaths = {
@@ -30,7 +31,8 @@ export class AssetManager {
             shot2: '/assets/shot2.png',
             heartIcon: '/assets/heart.png',
             target: '/assets/target.png',
-            zombie: '/assets/zombie.png'
+            zombie: '/assets/zombie.png',
+            killIcon: '/assets/kill_icon.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;
