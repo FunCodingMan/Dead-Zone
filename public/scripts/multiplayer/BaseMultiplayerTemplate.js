@@ -15,6 +15,7 @@ const RAY_STEP = 1;
 const MATCH_DURATION_S = 120;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
+const MSG_KILL_FEED_DURATION_MS = 5000;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -23,6 +24,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network = network;
 
         this.otherPlayers = new Map();
+
+        this.killfeed = [];
 
         this.lastMoveSendTime = 0;
 
@@ -40,6 +43,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.boundOnSpawn = (data) => this.handleSpawn(data);
         this.boundOnState = (data) => this.syncWithServer(data);
         this.boundOnShotFired = (data) => this.handleShotFired(data);
+        this.boundOnKillfeed = (data) => this.handleKillfeed(data);
     }
 
     init() {
@@ -50,6 +54,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network.on('spawn', this.boundOnSpawn);
         this.network.on('state', this.boundOnState);
         this.network.on('shotFired', this.boundOnShotFired);
+        this.network.on('kill-feed', this.boundOnKillfeed);
     }
     handleSpawn(data) {
         this.engine.player = new Player(this.engine.map, this.engine.input);
@@ -68,6 +73,18 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             remoteShooter.angle = payload.angle;
             remoteShooter.isShooting = true;
             setTimeout(() => { remoteShooter.isShooting = false; }, 100);
+        }
+    }
+
+    handleKillFeed(data) {
+        this.killfeed.push({
+            killer: data.killer,
+            victim: data.victim,
+            timestamp: performance.now()
+        });
+
+        if (this.killfeed.length > 5) {
+            this.killfeed.shift();
         }
     }
 
@@ -385,6 +402,48 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.restore();
     }
 
+    drawKillFeed(ctx, canvas) {
+        if (this.killfeed.length === 0) return;
+
+        const now = performance.now();
+
+        this.killfeed = this.killfeed.filter(msg => now - msg.timestamp < MSG_KILL_FEED_DURATION_MS);
+
+        ctx.save();
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.font = 'bold 16px Arial';
+
+        let startY = 15;
+        const startX = canvas.width - 20;
+
+        this.killfeed.forEach(msg => {
+            const timePassed = now - msg.timestamp;
+
+            let alpha = 1;
+
+            if (MSG_KILL_FEED_DURATION_MS - timePassed <= 1000) {
+                alpha = 1 - ((timePassed -  (MSG_KILL_FEED_DURATION_MS - 1000)) / 1000);
+            }
+
+            ctx.globalAlpha(Math.max(0, alpha));
+
+            const text = `${msg.killer} 🔪 ${msg.victim}`;
+            const textWidth = ctx.measureText(text).width;
+
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+
+            ctx.fillRect(startX - textWidth - 10, startY - 5, textWidth + 20, 26);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(text, startX, startY);
+
+            startY += 30;
+        });
+
+        ctx.restore();
+    }
+
     drawUI(ctx, canvas) {
         if (this.network.connectionStatus !== 'connected') {
             this.drawConnecting(ctx, canvas);
@@ -394,6 +453,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         if (this.engine.player && !this.engine.player.isAlive) {
             this.drawDeath(ctx, canvas);
         }
+
+        this.drawKillFeed(ctx, canvas);
     }
 
     createVisionRay(startX, startY, angle) {
@@ -422,6 +483,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     destroy() {
         this.network.off('spawn', this.boundOnSpawn);
         this.network.off('state', this.boundOnState);
+        this.network.off('shotFired', this.boundOnShotFired);
+        this.network.off('kill-feed', this.boundOnShotFired);
         this.otherPlayers.clear();
     }
 
