@@ -11,7 +11,7 @@ const LERP_COOF_BETWEEN_CLIENT_AND_SERVER = 0.1;
 const VISIBILITY_RADIUS = 800;
 const FOV_ANGLE = Math.PI * 0.25;
 const RAYS_COUNT = 120;
-const RAY_STEP = 1;
+const RAY_STEP = 5;
 const MATCH_DURATION_S = 120;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
@@ -39,6 +39,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.isFogOfWarEnabled = true;
 
         this.reloadPacketSent = false;
+
+        this.totalPlayers = 1;
 
         this.boundOnSpawn = (data) => this.handleSpawn(data);
         this.boundOnState = (data) => this.syncWithServer(data);
@@ -165,6 +167,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         if (data.timeLeft !== undefined) {
             this.timeLeft = data.timeLeft;
+        }
+
+        if (data.totalPlayers !== undefined) {
+            this.totalPlayers = data.totalPlayers;
         }
 
         if (data.me && this.engine.player) {
@@ -412,7 +418,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.save();
         ctx.textAlign = 'right';
         ctx.textBaseline = 'top';
-        ctx.font = 'bold 16px Arial';
+        ctx.font = 'bold 24px Arial';
 
         let startY = 15;
         const startX = canvas.width - 20;
@@ -433,12 +439,12 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
 
-            ctx.fillRect(startX - textWidth - 10, startY - 5, textWidth + 20, 26);
+            ctx.fillRect(startX - textWidth - 15, startY - 8, textWidth + 30, 40);
 
             ctx.fillStyle = '#ffffff';
             ctx.fillText(text, startX, startY);
 
-            startY += 30;
+            startY += 45;
         });
 
         ctx.restore();
@@ -466,14 +472,17 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         let distance = 0;
 
+        const check = {x: 0, y: 0, w: 2, h: 2};
+
         while (distance < VISIBILITY_RADIUS) {
             curX += dx;
             curY += dy;
             distance += RAY_STEP;
 
-            const check = {x: curX - 1, y: curY -1, w: 2, h: 2};
+            check.x = curX - 1;
+            check.y = curY - 1;
 
-            if (this.engine.map.checkCollision(check, [], [])) {
+            if (this.engine.map.isSolidPoint(curX, curY)) {
                 return {x: curX, y: curY};
             }
         }

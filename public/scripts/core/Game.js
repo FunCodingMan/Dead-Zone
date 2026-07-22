@@ -35,8 +35,15 @@ export class Game {
 
         this.pauseStartTime = 0;
         this.totalPauseTime = 0;
+
+        window.addEventListener('resize', this.resizeHandler);
+        this.resizeHandler();
         
     }
+    resizeHandler = () => {
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+    };
 
     start(ModeClass, ...args) {
         this.stop();
@@ -66,6 +73,9 @@ export class Game {
         if (this.input) {
             this.input.destroyListeners();
             this.input = null;
+        }
+        if (this.resizeHandler) {
+            window.removeEventListener('resize', this.resizeHandler);
         }
         this.enemies = [];
         this.targets = [];
@@ -135,7 +145,13 @@ export class Game {
         }
 
         if (this.map) {
-            this.map.draw(this.ctx, this.assets);
+            let camX = this.canvas.width / 2;
+            let camY = this.canvas.height / 2;
+            if (this.player) {
+                camX = this.player.x + this.player.w / 2;
+                camY = this.player.y + this.player.h / 2;
+            }
+            this.map.draw(this.ctx, this.assets, camX, camY, this.canvas.width, this.canvas.height, this.zoom);
         }
 
         if (this.bloodManager) {

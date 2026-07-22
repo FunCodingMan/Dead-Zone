@@ -40,6 +40,8 @@ class WebSocketTransport
 
     public function broadcastGameState(array $visiblePlayersData, float $timeLeft): void
     {
+        $totalPlayers = count($visiblePlayersData);
+
         foreach ($visiblePlayersData as $fd => $data) {
             $me = $data["me"]->getFullData();
             $others = [];
@@ -48,7 +50,7 @@ class WebSocketTransport
             }
             $packet = [
                 "type" => 'state',
-                "payload" => ["me" => $me, "others" => $others, 'timeLeft' => $timeLeft],
+                "payload" => ["me" => $me, "others" => $others, 'timeLeft' => $timeLeft, 'totalPlayers' => $totalPlayers],
             ];
             $this->send($fd, $packet);
         }

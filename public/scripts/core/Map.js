@@ -175,8 +175,6 @@ export class Map {
     }
 
     loadLevel(levelString) {
-        this.walls = [];
-        this.boxes = [];
         this.playerSpawns = [];
         this.targetSpawns = [];
         this.enemySpawns = [];
@@ -230,43 +228,69 @@ export class Map {
         }
     }
 
-    draw(ctx, assets) {
-        for (let x = 0; x < this.width; x += this.cellSize) {
-            for (let y = 0; y < this.height; y += this.cellSize) {
+    isSolidPoint(x, y) {
+        const col = Math.floor(x / this.cellSize);
+        const row = Math.floor(y / this.cellSize);
+
+        if (!this.grid[row] || !this.grid[row][col]) return true;
+
+        const cell = this.grid[row][col];
+        return cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL;
+    }
+
+    draw(ctx, assets, cameraX, cameraY, canvasWidth, canvasHeight, zoom) {
+        const viewWidth = canvasWidth / zoom;
+        const viewHeight = canvasHeight / zoom;
+
+        const startCol = Math.max(0, Math.floor((cameraX - viewWidth / 2) / this.cellSize));
+        const endCol = Math.min(this.grid[0].length - 1, Math.ceil((cameraX + viewWidth / 2) / this.cellSize));
+        const startRow = Math.max(0, Math.floor((cameraY - viewHeight / 2) / this.cellSize));
+        const endRow = Math.min(this.grid.length - 1, Math.ceil((cameraY + viewHeight / 2) / this.cellSize));
+
+
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                const x = col * this.cellSize;
+                const y = row * this.cellSize;
+                const cell = this.grid[row][col];
+
                 ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
+
+                if (cell === CONFIG.WALL_SYMBOL) {
+                    ctx.drawImage(assets.wall, x, y, this.cellSize, this.cellSize);
+                } else if (cell === CONFIG.BOX_SYMBOL) {
+                    ctx.drawImage(assets.box, x, y, this.cellSize, this.cellSize);
+                }
             }
-        }
-        for (let wall of this.walls) {
-            ctx.drawImage(assets.wall, wall.x, wall.y, wall.w, wall.h);
-        }
-        for (let box of this.boxes) {
-            ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }
     }
 
     checkCollision(rect, enemies = [], targets = []) {
-        for (let wall of this.walls) {
-            if (this.isIntersecting(rect, wall)) {
-                return true;
-            }
-        }
-        for (let box of this.boxes) {
-            if (this.isIntersecting(rect, box)) {
-                return true;
-            }
-        }
-        for (let target of targets) {
-            if (this.isIntersecting(rect, target)) {
-                return true;
+        const startCol = Math.floor(rect.x / this.cellSize);
+        const endCol = Math.floor((rect.x + rect.w) / this.cellSize);
+        const startRow = Math.floor(rect.y / this.cellSize);
+        const endRow = Math.floor((rect.y + rect.h) / this.cellSize);
+
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                if (!this.grid[row] || !this.grid[row][col]) return true;
+
+                const cell = this.grid[row][col];
+                if (cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL) {
+                    return true;
+                }
             }
         }
 
-        const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
-        for (let enemy of aliveEnemies) {
-            if (this.isIntersecting(rect, enemy)) {
-                return true;
-            }
+        for (let target of targets) {
+            if (this.isIntersecting(rect, target)) return true;
         }
+
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i];
+            if ((enemy.isAlive || enemy.isDying) && this.isIntersecting(rect, enemy)) return true;
+        }
+
         return false;
     }
 

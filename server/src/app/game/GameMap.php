@@ -4,17 +4,14 @@ namespace App\app\game;
 
 class GameMap
 {
-    private array $walls = [];
-    private array $boxes = [];
     private array $playerSpawns = [];
-
+    private array $grid = [];
+    private array $boxMap = [];
     private int $width = 0;
     private int $height = 0;
 
     public function loadLevel(string $levelString): void
     {
-        $this->walls = [];
-        $this->boxes = [];
         $this->playerSpawns = [];
 
         $lines = explode("\n", trim($levelString));
@@ -33,27 +30,25 @@ class GameMap
     {
         $length = strlen($line);
         for ($col = 0; $col < $length; $col++) {
-            $this->parseCell($line[$col], $col * GameConfig::CELL_SIZE, $row * GameConfig::CELL_SIZE);
+            $this->grid[$row][$col] = $line[$col];
+            $this->parseCell($line[$col], $col * GameConfig::CELL_SIZE, $row * GameConfig::CELL_SIZE, $row, $col);
         }
     }
 
-    private function parseCell(string $symbol, float $x, float $y): void
+    private function parseCell(string $symbol, float $x, float $y, int $row, int $col): void
     {
         match ($symbol) {
-            GameConfig::SYMBOL_WALL => $this->addWall($x, $y),
-            GameConfig::SYMBOL_BOX => $this->addBox($x, $y),
+            GameConfig::SYMBOL_BOX => $this->addBox($x, $y, $row, $col),
             GameConfig::SYMBOL_PLAYER => $this->addPlayerSpawn($x, $y),
             default => null,
         };
     }
 
-    private function addWall(float $x, float $y): void
+    private function addBox(float $x, float $y,  int $row, int $col): void
     {
-        $this->walls[] = new Rect($x, $y, GameConfig::CELL_SIZE, GameConfig::CELL_SIZE);
-    }
-    private function addBox(float $x, float $y): void
-    {
-        $this->boxes[] = new Box(new Rect($x, $y, GameConfig::CELL_SIZE, GameConfig::CELL_SIZE));
+        $box = new Box(new Rect($x, $y, GameConfig::CELL_SIZE, GameConfig::CELL_SIZE));
+
+        $this->boxMap["{$row}_{$col}"] = $box;
     }
 
     private function addPlayerSpawn(float $x, float $y): void
@@ -63,16 +58,24 @@ class GameMap
         $this->playerSpawns[] = ['x' => $x + $offsetX, 'y' => $y + $offsetY, 'isFree' => true];
     }
 
-    private function collidesWithObstacles(Rect $targetRect): bool
+    public function isSolidPoint(float $x, float $y): bool
     {
-        foreach ($this->walls as $wall) {
-            if ($targetRect->intersects($wall)) {
-                return true;
-            }
+        $col = (int)floor($x / GameConfig::CELL_SIZE);
+        $row = (int)floor($y / GameConfig::CELL_SIZE);
+
+        if (!isset($this->grid[$row][$col])) {
+            return true;
         }
 
-        foreach ($this->boxes as $box) {
-            if (!$box->isDestroyed() && $targetRect->intersects($box->getRect())) {
+        $symbol = $this->grid[$row][$col];
+
+        if ($symbol === GameConfig::SYMBOL_WALL) {
+            return true;
+        }
+
+        if ($symbol === GameConfig::SYMBOL_BOX) {
+            $key = "{$row}_{$col}";
+            if (isset($this->boxMap[$key]) && !$this->boxMap[$key]->isDestroyed()) {
                 return true;
             }
         }
@@ -82,7 +85,23 @@ class GameMap
 
     public function checkCollision(Rect $targetRect): bool
     {
-        return $this->collidesWithObstacles($targetRect);
+        $startCol = (int)floor($targetRect->getX() / GameConfig::CELL_SIZE);
+        $endCol = (int)floor(($targetRect->getX() + $targetRect->getWidth()) / GameConfig::CELL_SIZE);
+        $startRow = (int)floor($targetRect->getY() / GameConfig::CELL_SIZE);
+        $endRow = (int)floor(($targetRect->getY() + $targetRect->getHeight()) / GameConfig::CELL_SIZE);
+
+        for ($row = $startRow; $row <= $endRow; $row++) {
+            for ($col = $startCol; $col <= $endCol; $col++) {
+                $cellCenterX = ($col * GameConfig::CELL_SIZE) + (GameConfig::CELL_SIZE / 2);
+                $cellCenterY = ($row * GameConfig::CELL_SIZE) + (GameConfig::CELL_SIZE / 2);
+
+                if ($this->isSolidPoint($cellCenterX, $cellCenterY)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public function findFreeSpawn(string $symbol): array

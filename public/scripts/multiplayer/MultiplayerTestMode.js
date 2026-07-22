@@ -1,8 +1,37 @@
 import { BaseMultiplayerTemplate } from "./BaseMultiplayerTemplate.js";
 import { Map } from '../core/Map.js';
 
-// Простая тестовая карта (или возьми любую существующую из TrainingMode)
 const testMapData = `
+###########################################################
+#       #      #                       P                 P#
+#  P    #      #                     #############        #
+#       #      #                     #   BB     BB        #
+#  P                                     BB           B   #
+#                                    #BB   ########       #
+#      B#      #                     ####B #      #       #
+#       #  P   #                     #     #      #       #
+#       ########      #######        #     #      ####### #
+#  B B  #            #  P                          P      #
+#  B B  #     P#BBBB##BBBBB ##########     #B      #      #
+#       ########      #                     ########B     #
+#B B                  #        P                    B     #
+#B B  P #             #                      ####B        #
+#########             #                    #    ########  #
+#       ########     #######          BBBB##  B     #     #
+#       #      #           #    P     BBBB##    P    #    #
+#   B   #                                 ########   B    #
+#       #      #           #                         P B  #
+####    #      ########B####B######B      #B         B    #
+# P#    #    P B      B#  #        #      #BB   ##        #
+#  #                          B    #  B B #     ##        #
+#  ##  ###B#####   B   #  #        #  ####     ###B#####  #
+#  # P    #           B#  #                 B         #   #
+#         #        B  B#  #                 B   B     # P #
+#         #  P BBBBBBBB#  #      P #       BBBBB  P   #   #
+###########################################################
+`;
+
+const testMapData_ = `
 ################
 #P            P#
 #  ####  ####  #
@@ -30,10 +59,12 @@ export class MultiplayerTestMode extends BaseMultiplayerTemplate {
 
         if  (this.network.connectionStatus !== 'connected') return;
 
+        const enemiesCount = this.totalPlayers;
+
         ctx.fillStyle = '#00FF00';
         ctx.font = '20px Arial';
-        ctx.fillText("ОНЛАЙН-ТЕСТ", 20, 30);
-        ctx.fillText(`Врагов в комнате: ${this.otherPlayers.size}`, 20, 60);
+        ctx.fillText("ОНЛАЙН-ТЕСТ", 100, 30);
+        ctx.fillText(`Игроков в комнате: ${enemiesCount}`, 100, 60);
 
         const minutes = Math.floor(this.timeLeft / 60);
         const seconds = Math.floor(this.timeLeft % 60).toString().padStart(2, '0');

@@ -87,9 +87,7 @@ class VisibilityService
             $currentX += $dx * GameConfig::RAY_STEP;
             $currentY += $dy * GameConfig::RAY_STEP;
 
-            $checkRect = new Rect($currentX - 2, $currentY - 2, 4, 4);
-
-            if ($this->map->checkCollision($checkRect)) {
+            if ($this->map->isSolidPoint($currentX, $currentY)) {
                 return false;
             }
         }

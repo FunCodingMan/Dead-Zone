@@ -32,11 +32,11 @@ class HitscanResolver
             $x += $dx;
             $y += $dy;
 
-            $check = new Rect($x - 2, $y - 2, 4, 4);
-
-            if ($map->checkCollision($check)) {
+            if ($map->isSolidPoint($x, $y)) {
                 return null;
             }
+
+            $check = new Rect($x - 2, $y - 2, 4, 4);
 
             foreach ($otherPlayers as $player) {
                 if ($player->getHealth() > 0 && $check->intersects($player->getRect())) {
