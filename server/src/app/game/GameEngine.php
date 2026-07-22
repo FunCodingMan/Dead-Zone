@@ -95,9 +95,16 @@ class GameEngine
         }
     }
 
-    private function killFeed()
+    private function killFeed(Player $shoter, Player $hitPlayer): void
     {
+        if ($hitPlayer->getHealth() > 0) return;
+        $shoter->increaseKills();
+        $hitPlayer->increaseDeaths();
 
+        $message = ["type" => "kill-feed", "payload" => ["killer" => $shoter->getNickname(), "death" => $hitPlayer->getNickname()]];
+        foreach ($this->registry->getPlayers() as $player) {
+            $this->ws->send($player->getFd(), $message);
+        }
     }
 
     private function processAttackImpact(Player $player, array $payload): void
@@ -116,7 +123,7 @@ class GameEngine
         $hitPlayer = $this->hitscan->resolve($player, $finalAngle, $this->map, $others);
         if ($hitPlayer !== null) {
             $hitPlayer?->takeDamage(20, $now);
-            $this->killFeed(); // Реализовать killFeed
+            $this->killFeed($player, $hitPlayer);
         }
 
 

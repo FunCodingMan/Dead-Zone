@@ -233,4 +233,14 @@ class Player
         return $this->nickname;
     }
 
+    public function increaseKills(): void
+    {
+        $this->kills++;
+    }
+
+    public function increaseDeaths(): void
+    {
+        $this->deaths++;
+    }
+
 }
