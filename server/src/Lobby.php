@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\app\game\GameConfig;
+
 class Lobby
 {
     /** @var Room[] $rooms */
@@ -115,7 +117,7 @@ class Lobby
             $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Комната не найдена"]]);
             return;
         }
-        if ($room->getCountUsers() >= Room::MAX_COUNT_USERS) {
+        if ($room->getCountUsers() >= GameConfig::MAX_COUNT_USERS) {
             $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Комната заполнена"]]);
             return;
         }

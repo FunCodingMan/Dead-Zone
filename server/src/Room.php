@@ -3,14 +3,13 @@
 namespace App;
 
 use App\app\game\GameEngine;
+use App\app\game\GameConfig;
 use App\app\game\GameMap;
 use App\app\model\User;
 use Random\RandomException;
 
 class Room
 {
-    const int MAX_COUNT_USERS = 4;
-
     /** @var LobbyUser[] $lobbyUsers */
     private array $lobbyUsers;
     private string $roomId;
@@ -49,7 +48,7 @@ class Room
         $state['roomId'] = $this->roomId;
         $state['users'] = $users;
         $state['countUsers'] = $this->getCountUsers();
-        $state["maxCountUsers"] = self::MAX_COUNT_USERS;
+        $state["maxCountUsers"] = GameConfig::MAX_COUNT_USERS;
         return $state;
     }
 
@@ -83,7 +82,7 @@ class Room
 
     public function hasMaxUsers(): bool
     {
-        if (count($this->lobbyUsers) < self::MAX_COUNT_USERS) return false;
+        if (count($this->lobbyUsers) < GameConfig::MAX_COUNT_USERS) return false;
         return true;
     }
 

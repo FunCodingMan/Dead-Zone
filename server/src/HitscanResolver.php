@@ -32,7 +32,7 @@ class HitscanResolver
             $x += $dx;
             $y += $dy;
 
-            if ($map->isSolidPoint($x, $y)) {
+            if ($map->checkCollision(new Rect($x - 2, $y - 2, 4, 4))) {
                 return null;
             }
 

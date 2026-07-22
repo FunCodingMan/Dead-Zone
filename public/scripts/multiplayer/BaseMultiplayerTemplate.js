@@ -482,7 +482,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             check.x = curX - 1;
             check.y = curY - 1;
 
-            if (this.engine.map.isSolidPoint(curX, curY)) {
+            if (this.engine.map.checkWallCollision({x: curX - 2, y: curY - 2, w: 4, h: 4})) {
                 return {x: curX, y: curY};
             }
         }

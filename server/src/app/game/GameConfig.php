@@ -29,4 +29,5 @@ class GameConfig
     public const int HP_SIZE = 100;
     public const float RESPAWN_TIME_S = 5.0;
     public const float MATCH_DURATION_S = 60_0;
+    public const int MAX_COUNT_USERS = 15;
 }

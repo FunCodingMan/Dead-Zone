@@ -227,15 +227,28 @@ export class Map {
             }
         }
     }
-
-    isSolidPoint(x, y) {
-        const col = Math.floor(x / this.cellSize);
-        const row = Math.floor(y / this.cellSize);
-
-        if (!this.grid[row] || !this.grid[row][col]) return true;
-
+    isSolidCell(row, col) {
+        if (!this.grid[row] || !this.grid[row][col]) return true; // Граница карты = стена
         const cell = this.grid[row][col];
         return cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL;
+    }
+
+    isSolidPoint(x, y) {
+        return this.isSolidCell(Math.floor(y / this.cellSize), Math.floor(x / this.cellSize));
+    }
+
+    checkWallCollision(rect) {
+        const startCol = Math.floor(rect.x / this.cellSize);
+        const endCol = Math.floor((rect.x + rect.w) / this.cellSize);
+        const startRow = Math.floor(rect.y / this.cellSize);
+        const endRow = Math.floor((rect.y + rect.h) / this.cellSize);
+
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                if (this.isSolidCell(row, col)) return true; // <--- Никакого дублирования кода!
+            }
+        }
+        return false;
     }
 
     draw(ctx, assets, cameraX, cameraY, canvasWidth, canvasHeight, zoom) {
@@ -266,31 +279,16 @@ export class Map {
     }
 
     checkCollision(rect, enemies = [], targets = []) {
-        const startCol = Math.floor(rect.x / this.cellSize);
-        const endCol = Math.floor((rect.x + rect.w) / this.cellSize);
-        const startRow = Math.floor(rect.y / this.cellSize);
-        const endRow = Math.floor((rect.y + rect.h) / this.cellSize);
+        if (this.checkWallCollision(rect)) return true;
 
-        for (let row = startRow; row <= endRow; row++) {
-            for (let col = startCol; col <= endCol; col++) {
-                if (!this.grid[row] || !this.grid[row][col]) return true;
-
-                const cell = this.grid[row][col];
-                if (cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL) {
-                    return true;
-                }
-            }
-        }
-
-        for (let target of targets) {
-            if (this.isIntersecting(rect, target)) return true;
+        for (let i = 0; i < targets.length; i++) {
+            if (this.isIntersecting(rect, targets[i])) return true;
         }
 
         for (let i = 0; i < enemies.length; i++) {
             const enemy = enemies[i];
             if ((enemy.isAlive || enemy.isDying) && this.isIntersecting(rect, enemy)) return true;
         }
-
         return false;
     }
 
