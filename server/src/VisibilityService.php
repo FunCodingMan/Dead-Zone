@@ -22,6 +22,10 @@ class VisibilityService
 
     public function getVisiblePlayers(Player $observer, array $allPlayers): array
     {
+        if ($observer->isDead()) {
+            return [];
+        }
+
         $visiblePlayers = [];
         $observerState = $observer->getPublicState();
         $obsX = $observerState['x'] + (GameConfig::PLAYER_WIDTH / 2);
