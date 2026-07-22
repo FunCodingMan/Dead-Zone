@@ -67,6 +67,8 @@ class Player
 
     public function applyMovement(GameMap $map): void
     {
+        if ($this->isDead()) return;
+
         if (empty($this->pressKeys)) return;
         $this->move($this->pressKeys, $map);
     }
@@ -182,6 +184,7 @@ class Player
         if ($this->health <= 0) {
             $this->health = 0;
             $this->deathTime = $now;
+            $this->pressKeys = [];
         }
     }
 
