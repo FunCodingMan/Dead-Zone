@@ -151,7 +151,7 @@ network.on('game-over', (payload) => {
 
 document.querySelector('.btn-createRoom').addEventListener('click', () => {
     isReady = false;
-    readyBtn.textContent = 'НЕ ГОТОВ';
+    readyBtn.textContent = 'ГОТОВ';
     network.send('create-room', {});
 });
 
@@ -175,20 +175,20 @@ document.getElementById('btn-submit-join').addEventListener('click', (e) => {
     const roomId = inputRoomId.value.trim();
     if (!roomId) return;
     isReady = false;
-    readyBtn.textContent = 'НЕ ГОТОВ';
+    readyBtn.textContent = 'ГОТОВ';
     network.send('join-room', { roomId });
 });
 
 readyBtn.addEventListener('click', () => {
     isReady = !isReady;
-    readyBtn.textContent = isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
+    readyBtn.textContent = isReady ? 'НЕ ГОТОВ' : 'ГОТОВ';
     network.send('ready', { isReady });
 });
 
 document.getElementById('btn-exit-room').addEventListener('click', () => {
     network.send('exit-room', {});
     isReady = false;
-    readyBtn.textContent = 'НЕ ГОТОВ';
+    readyBtn.textContent = 'ГОТОВ';
     showScreen('lobbyMenu');
 });
 

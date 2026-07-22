@@ -50,13 +50,18 @@ class VisibilityService
                 continue;
             }
 
-            if (!$this->isInFOV($obsX, $obsY, $obsAngle, $targetX, $targetY)) {
+            $inFov = $this->isInFOV($obsX, $obsY, $obsAngle, $targetX, $targetY);
+            $inCloseRange = $distance <= GameConfig::RADIUS_OF_CLOSE_OBSERVE;
+
+            if (!$inFov && !$inCloseRange) {
                 continue;
             }
 
             if ($this->hasObstacleInSight($obsX, $obsY, $targetX, $targetY, $distance)) {
-                $visiblePlayers[] = $player;
+                continue;
             }
+
+            $visiblePlayers[] = $player;
         }
         return $visiblePlayers;
     }
@@ -88,10 +93,10 @@ class VisibilityService
             $currentY += $dy * GameConfig::RAY_STEP;
 
             if ($this->map->checkCollision(new Rect($currentX - 2, $currentY - 2, 4, 4))) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
 }

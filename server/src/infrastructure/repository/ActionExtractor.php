@@ -37,7 +37,7 @@ class ActionExtractor implements IActionExtractor
             'path' => '/',
             'httponly' => true,
             'samesite' => 'Lax',
-            'secure' => true,
+            'secure' => false,
         ]);
     }
 
