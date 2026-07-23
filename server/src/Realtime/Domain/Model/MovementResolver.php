@@ -35,6 +35,6 @@ class MovementResolver
             if ($key === 'd') $x += 1.0;
             if ($key === 'a') $x -= 1.0;
         }
-        return new Vector2D($x, $y)->normalize()->scale($speed);
+        return (new Vector2D($x, $y))->normalize()->scale($speed);
     }
 }
