@@ -37,6 +37,8 @@ const CROSSHAIR_HIT_DURATION = 150;
 const CROSSHAIR_HIT_SIZE = 8;
 const CROSSHAIR_HIT_OFFSET = 4;
 
+const FPS = 60;
+
 export class Player extends Character {
     constructor(map, input, resetPauseTimeCallback) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
@@ -72,17 +74,19 @@ export class Player extends Character {
         this.remoteEnemies = [];
     }
 
-    update(map, canvas, zoom, enemies, targets) {
+    update(map, canvas, zoom, enemies, targets, dt) {
         if (!this.isAlive) return;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
+
+        const timeScale = (dt || 0.0166) * FPS;
 
         const worldMouseX = (this.input.mouseX - canvas.width / 2) / zoom + centerX;
         const worldMouseY = (this.input.mouseY - canvas.height / 2) / zoom + centerY;
 
         this.angle = Math.atan2(worldMouseY - centerY, worldMouseX - centerX);
 
-        this.move(map, enemies, targets);
+        this.move(map, enemies, targets, timeScale);
         this.shoot(worldMouseX, worldMouseY);
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
@@ -90,15 +94,15 @@ export class Player extends Character {
         }
 
         if (this.isShooting && this.shotsFired > 1) {
-            this.visualSpread += (MAX_SPREAD - this.visualSpread) * 0.3;
+            this.visualSpread += (MAX_SPREAD - this.visualSpread) * Math.min(1, 0.3 * timeScale);
         } else {
-            this.visualSpread += (BASE_SPREAD - this.visualSpread) * 0.15;
+            this.visualSpread += (BASE_SPREAD - this.visualSpread) * Math.min(1, 0.15 * timeScale);
         }
 
-        this.handleBullets(map, enemies, targets);
+        this.handleBullets(map, enemies, targets, timeScale);
     }
 
-    move(map, enemies, targets) {
+    move(map, enemies, targets, timeScale) {
         let nextX = this.x;
         let nextY = this.y;
 
@@ -122,8 +126,8 @@ export class Player extends Character {
             dx /= length;
             dy /= length;
 
-            nextX += dx * this.speed;
-            nextY += dy * this.speed;
+            nextX += dx * this.speed * timeScale;
+            nextY += dy * this.speed * timeScale;
         }
 
         if (nextX < 0) nextX = 0;
@@ -203,11 +207,11 @@ export class Player extends Character {
         });
     }
 
-    handleBullets(map, enemies, targets) {
+    handleBullets(map, enemies, targets, timeScale) {
         const toRemove = [];
 
         for (let i = 0; i < this.bullets.length; i++) {
-            const isHit = this.processBulletPhysics(this.bullets[i], enemies, targets);
+            const isHit = this.processBulletPhysics(this.bullets[i], enemies, targets, timeScale);
             if (isHit) {
                 toRemove.push(i);
             }
@@ -218,10 +222,12 @@ export class Player extends Character {
         }
     }
 
-    processBulletPhysics(bullet, enemies, targets) {
-        const steps = Math.ceil(bullet.bulletSpeed / 10);
-        const stepX = (bullet.xDirection * bullet.bulletSpeed) / steps;
-        const stepY = (bullet.yDirection * bullet.bulletSpeed) / steps;
+    processBulletPhysics(bullet, enemies, targets, timeScale) {
+        const actualSpeed = bullet.bulletSpeed * timeScale;
+
+        const steps = Math.max(1, Math.ceil(actualSpeed / 10));
+        const stepX = (bullet.xDirection * actualSpeed) / steps;
+        const stepY = (bullet.yDirection * actualSpeed) / steps;
 
         for (let s = 0; s < steps; s++) {
             bullet.x += stepX;

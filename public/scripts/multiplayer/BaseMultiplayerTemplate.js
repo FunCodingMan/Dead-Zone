@@ -19,6 +19,7 @@ const MSG_KILL_FEED_DURATION_MS = 5000;
 const KILL_FEED_FONT_SIZE = 30;
 const KILL_ICON_SIZE = 34;
 const KILL_SPACING_SIZE = 14;
+const FPS = 60;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -224,7 +225,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
     }
 
-    update() {
+    update(dt) {
         if (!this.engine.player) return;
 
         if (this.engine.player.hitpoints <= 0) {
@@ -244,8 +245,11 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const now = performance.now();
         const input = this.engine.input;
 
+        const timeScale = dt * FPS;
+        const lerpFactor = Math.min(1, 0.2 * timeScale);
+
         this.otherPlayers.forEach(remotePlayer => {
-            remotePlayer.updateInterpolation(0.2, this.engine.map, this.engine.player, this.engine.otherPlayers);
+            remotePlayer.updateInterpolation(lerpFactor, this.engine.map, this.engine.player, this.engine.otherPlayers);
         });
 
         this.engine.player.remoteEnemies = Array.from(this.otherPlayers.values());

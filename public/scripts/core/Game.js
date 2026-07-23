@@ -3,7 +3,9 @@ import { CONFIG } from './Config.js';
 import { BloodManager } from './BloodManager.js';
 
 const FPS = 60;
+const BASE_WIDTH = 1920;
 const BASE_HEIGHT = 1080;
+const BASE_ZOOM = 1.5;
 
 export class Game {
     constructor(canvas, assets, onPauseToggle) {
@@ -36,16 +38,27 @@ export class Game {
 
         this.pauseStartTime = 0;
         this.totalPauseTime = 0;
+        this.renderWidth = 1920;
+        this.renderHeight = 1080;
+
+        this.lastFrameTime = 0;
 
         window.addEventListener('resize', this.resizeHandler);
         this.resizeHandler();
         
     }
-    resizeHandler = () => {
-        this.canvas.width = window.innerWidth;
-        this.canvas.height = window.innerHeight;
 
-        this.zoom = (window.innerHeight / BASE_HEIGHT) * 1.5;
+    setResolution(width, height) {
+        this.renderWidth = width;
+        this.renderHeight = height;
+        this.resizeHandler();
+    }
+
+    resizeHandler = () => {
+        this.canvas.width = this.renderWidth;
+        this.canvas.height = this.renderHeight;
+
+        this.zoom = (this.renderHeight / BASE_HEIGHT) * BASE_ZOOM;
     };
 
     start(ModeClass, ...args) {
@@ -64,8 +77,8 @@ export class Game {
 
         this.isPaused = false;
 
-        this.then = performance.now();
-        this.loop(this.then);
+        this.lastFrameTime = performance.now();
+        this.loop(this.lastFrameTime);
     }
 
     stop() {
@@ -106,16 +119,16 @@ export class Game {
 
         this.animationId = requestAnimationFrame(this.loop);
 
-        const elapsed = currentTime - this.then;
+        let dt = (currentTime - this.lastFrameTime) / 1000;
+        this.lastFrameTime = currentTime;
 
-        if (elapsed >= this.fpsInterval) {
-            this.then = currentTime - (elapsed % this.fpsInterval);
-            this.update();
-            this.draw();
-        }
+        if (dt > 0.1) dt = 0.1;
+
+        this.update(dt);
+        this.draw();
     }
 
-    update() {
+    update(dt) {
 
         if (this.player) {
             this.player.updateReload(this.isPaused, this.totalPauseTime);
@@ -127,13 +140,13 @@ export class Game {
 
         if (this.player) {
             if (this.isPaused && isOnline) {
-                this.player.handleBullets(this.map, this.enemies, this.targets);
+                this.player.handleBullets(this.map, this.enemies, this.targets, dt);
             } else {
-                this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets);
+                this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets, dt);
             }
         }
 
-        if (this.currentMode) this.currentMode.update();
+        if (this.currentMode) this.currentMode.update(dt);
     }
 
     draw() {

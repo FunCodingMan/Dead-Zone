@@ -17,6 +17,7 @@ const wavesLevelData = `
 `;
 
 const MAX_WAVES = 10;
+const FPS = 60;
 
 export class WavesMode extends BaseGameTemplate {
     init() {
@@ -53,7 +54,7 @@ export class WavesMode extends BaseGameTemplate {
         }
     }
 
-    update() {
+    update(dt) {
         const currentTime = performance.now();
 
         if (!this.engine.player.isAlive) {
@@ -73,10 +74,12 @@ export class WavesMode extends BaseGameTemplate {
             return;
         }
 
+        const timeScale = dt * FPS;
+
         aliveEnemies.forEach(enemy => {
             if (enemy.isAlive) {
                 // Используем статический граф для поиска пути
-                this.enemyPathFind(enemy, this.staticPathGraph);
+                this.enemyPathFind(enemy, this.staticPathGraph, timeScale);
 
                 const distance = Math.sqrt(
                     (this.engine.player.x - enemy.x) ** 2 +
@@ -93,7 +96,7 @@ export class WavesMode extends BaseGameTemplate {
         this.separateEnemies(aliveEnemies);
     }
 
-    enemyPathFind(enemy, pathGraph) {
+    enemyPathFind(enemy, pathGraph, timeScale) {
         if (enemy.isDying) return;
 
         const playerPosition = this.engine.map.getCharacterPositionOnGrid(
@@ -103,7 +106,7 @@ export class WavesMode extends BaseGameTemplate {
         const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
 
         if (currentCell.row === playerPosition.row && currentCell.col === playerPosition.col) {
-            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y);
+            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
         }
 
@@ -116,7 +119,7 @@ export class WavesMode extends BaseGameTemplate {
         );
 
         if (nextCell.row === currentCell.row && nextCell.col === currentCell.col) {
-            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y);
+            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
         }
 
@@ -124,18 +127,20 @@ export class WavesMode extends BaseGameTemplate {
         const targetX = nextCell.col * cellSize + (cellSize - enemy.w) / 2;
         const targetY = nextCell.row * cellSize + (cellSize - enemy.h) / 2;
 
-        this.moveEnemyTowardsPixel(enemy, targetX, targetY);
+        this.moveEnemyTowardsPixel(enemy, targetX, targetY, timeScale);
     }
 
-    moveEnemyTowardsPixel(enemy, targetX, targetY) {
+    moveEnemyTowardsPixel(enemy, targetX, targetY, timeScale) {
         const dx = targetX - enemy.x;
         const dy = targetY - enemy.y;
 
         const distance = Math.hypot(dx, dy);
 
         if (distance > 0) {
-            const moveX = (dx / distance) * enemy.speed;
-            const moveY = (dy / distance) * enemy.speed;
+            const actualSpeed = enemy.speed * timeScale;
+
+            const moveX = (dx / distance) * actualSpeed;
+            const moveY = (dy / distance) * actualSpeed;
 
             enemy.x += Math.abs(moveX) > Math.abs(dx) ? dx : moveX;
             enemy.y += Math.abs(moveY) > Math.abs(dy) ? dy : moveY;

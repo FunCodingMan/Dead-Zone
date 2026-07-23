@@ -44,7 +44,7 @@ export class TrainingMode extends BaseGameTemplate {
         }            
     }
 
-    update() {
+    update(dt) {
         this.engine.targets = this.engine.targets.filter(t => t.isAlive || t.isDying);
 
         const aliveTargets = this.engine.targets.filter(t => t.isAlive);

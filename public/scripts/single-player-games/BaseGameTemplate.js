@@ -8,7 +8,7 @@ export class BaseGameTemplate {
         this.engine.isGameEnded = false;
     }
     // Логика режима (проверка на победу, спавн врагов и т.д.)
-    update () {
+    update (dt) {
 
     }
     // Отрисовка UI (таймеры, счётчики и т.д.)
