@@ -2,13 +2,13 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use App\app\service\UserService;
-use App\infrastructure\controller\UserController;
-use App\infrastructure\repository\ActionExtractor;
-use App\infrastructure\repository\ConnectionProvider;
-use App\infrastructure\repository\PagesRender;
-use App\infrastructure\repository\RequestDataParser;
-use App\infrastructure\repository\UserTable;
+use App\Site\app\service\UserService;
+use App\Site\infrastructure\controller\UserController;
+use App\Site\infrastructure\repository\ActionExtractor;
+use App\Site\infrastructure\repository\ConnectionProvider;
+use App\Site\infrastructure\repository\PagesRender;
+use App\Site\infrastructure\repository\RequestDataParser;
+use App\Site\infrastructure\repository\UserTable;
 
 try {
     $connectionProvider = new ConnectionProvider();

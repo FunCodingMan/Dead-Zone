@@ -1,12 +1,10 @@
 <?php
 
-use App\app\model\Player;
-use App\ConnectionRegistry;
-use App\infrastructure\repository\ConnectionProvider;
-use App\infrastructure\repository\UserTable;
-use App\Lobby;
-use App\LobbyUser;
-use App\MessageValidator;
+use App\Realtime\Application\Lobby;
+use App\Realtime\Infrastructure\ConnectionRegistry;
+use App\Realtime\Infrastructure\MessageValidator;
+use App\Site\infrastructure\repository\ConnectionProvider;
+use App\Site\infrastructure\repository\UserTable;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -19,7 +17,7 @@ $repository = new UserTable($connectionDatabase);
 $connectionUser= new ConnectionRegistry($repository);
 
 $validator = new MessageValidator();
-$ws = new \App\WebSocketTransport($server, $validator);
+$ws = new \App\Realtime\Infrastructure\WebSocketTransport($server, $validator);
 
 $lobby = new Lobby($ws, $connectionUser);
 
