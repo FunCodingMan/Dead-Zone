@@ -29,7 +29,7 @@ class Weapon
         if ($this->reloadEndTime > 0.0) {
             return false;
         }
-        return $this->countBullets > 0 && (($now - $this->lastShootTime) >= $this->shootCooldown);
+        return $this->countBullets > 0 && (($now - $this->lastShootTime) >= $this->shootCooldown - 0.05);
     }
 
     public function registerShot(float $now): void
