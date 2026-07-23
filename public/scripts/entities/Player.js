@@ -138,9 +138,11 @@ export class Player extends Character {
                 this.isShooting = true;
             } else if (this.shotsAmount <= 0 || this.isReloading) {
                 this.isShooting = false;
+                this.shotsFired = 0;
             }
         } else {
             this.isShooting = false;
+            this.shotsFired = 0;
         }
     }
 

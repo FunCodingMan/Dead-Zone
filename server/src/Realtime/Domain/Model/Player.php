@@ -120,5 +120,5 @@ class Player
     public function canShoot(float $now): bool { return $this->weapon->canShoot($now); }
     public function registerShot(float $now): void { $this->weapon->registerShot($now); }
     public function startReload(float $now): void { $this->weapon->startReload($now); }
-
+    public function isFirstShot(float $now): bool { return $this->weapon->isFirstShot($now); }
 }

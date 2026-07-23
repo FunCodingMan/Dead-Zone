@@ -65,4 +65,8 @@ class Weapon
             $this->reloadEndTime = 0.0;
         }
     }
+    public function isFirstShot(float $now): bool
+    {
+        return ($now - $this->lastShootTime) > ($this->shootCooldown * 1.5);
+    }
 }

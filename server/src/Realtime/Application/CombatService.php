@@ -24,11 +24,14 @@ class CombatService
     public function handleShot(Player $player, array $payload, float $now): void
     {
         if (!$player->canShoot($now)) return;
+
+        $isFirstShot = $player->isFirstShot($now);
+
         $player->registerShot($now);
 
         $shooterState = $player->getPublicState();
         $angle = (float)($payload['angle'] ?? $shooterState["angle"]);
-        $finalAngle = $angle + $this->randomSpread();
+        $finalAngle = $isFirstShot ? $angle : ($angle + $this->randomSpread());
 
         $others = $this->registry->getOthersPlayers($player);
         $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
