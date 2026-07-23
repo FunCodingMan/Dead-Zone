@@ -121,4 +121,5 @@ class Player
     public function registerShot(float $now): void { $this->weapon->registerShot($now); }
     public function startReload(float $now): void { $this->weapon->startReload($now); }
     public function isFirstShot(float $now): bool { return $this->weapon->isFirstShot($now); }
+    public function getBurstCount(): int { return $this->weapon->getBurstCount(); }
 }

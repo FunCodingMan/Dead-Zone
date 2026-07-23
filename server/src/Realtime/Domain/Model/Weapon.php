@@ -12,6 +12,7 @@ class Weapon
     private int $countBullets;
     private float $shootCooldown;
     private float $reloadEndTime;
+    private int $burstCount;
 
     public function __construct()
     {
@@ -21,6 +22,7 @@ class Weapon
         $this->countBullets = $this->maxCountBullets;
         $this->lastShootTime = 0.0;
         $this->reloadEndTime = 0.0;
+        $this->burstCount = 0;
     }
 
     public function canShoot($now): bool
@@ -34,6 +36,12 @@ class Weapon
 
     public function registerShot(float $now): void
     {
+        if ($this->isFirstShot($now)) {
+            $this->burstCount = 1;
+        } else {
+            $this->burstCount++;
+        }
+
         $this->countBullets--;
         $this->lastShootTime = $now;
     }
@@ -68,5 +76,9 @@ class Weapon
     public function isFirstShot(float $now): bool
     {
         return ($now - $this->lastShootTime) > ($this->shootCooldown * 1.5);
+    }
+    public function getBurstCount(): int
+    {
+        return $this->burstCount;
     }
 }

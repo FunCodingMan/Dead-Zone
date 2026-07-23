@@ -248,7 +248,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             remotePlayer.updateInterpolation(0.2, this.engine.map, this.engine.player, this.engine.otherPlayers);
         });
 
-        this.checkCollisionWithLocalBullets();
+        this.engine.player.remoteEnemies = Array.from(this.otherPlayers.values());
 
         if (this.engine.isPaused || !this.engine.player.isAlive) return;
         this.checkSendMoveData(now);
@@ -257,29 +257,6 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.checkSendReloadData();
     }
-
-    checkCollisionWithLocalBullets() {
-        const hitBullets = [];
-
-        this.engine.player.bullets.forEach((bullet, index) => {
-            const bulletRect = {
-                x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT
-            };
-
-            for (const [id, enemy] of this.otherPlayers) {
-                if (enemy.isAlive && this.engine.map.isIntersecting(bulletRect, enemy)) {
-                    hitBullets.push(index);
-                    break;
-                }
-            }
-        });
-
-        for (let i = hitBullets.length - 1; i >= 0; i--) {
-            this.engine.player.bullets.splice(hitBullets[i], 1);
-        }
-    }
-
-
 
     sendMoveData() {
         const input = this.engine.input;
@@ -477,6 +454,74 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.restore();
     }
 
+    drawCrosshair(ctx) {
+        const input = this.engine.input;
+        const player = this.engine.player;
+
+        const mouseX = input.mouseX;
+        const mouseY = input.mouseY;
+
+        const spread = player.visualSpread;
+
+        ctx.save();
+        ctx.translate(mouseX, mouseY);
+
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        const lineLen = 8;
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, -spread);
+        ctx.lineTo(0, -spread - lineLen);
+        ctx.moveTo(0, spread);
+        ctx.lineTo(0, spread + lineLen);
+
+        ctx.moveTo(-spread, 0);
+        ctx.lineTo(-spread - lineLen, 0);
+        ctx.moveTo(spread, 0);
+        ctx.lineTo(spread + lineLen, 0);
+
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (player.lastHitTime) {
+            const now = performance.now();
+            const timeSinceHit = now - player.lastHitTime;
+
+            const hitDuration = 150;
+
+            if (timeSinceHit < hitDuration) {
+                const alpha = 1 - (timeSinceHit / hitDuration);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 2;
+
+                const hitSize = 8;
+                const offset = spread + 4;
+
+                ctx.beginPath();
+
+                ctx.moveTo(-offset, -offset);
+                ctx.lineTo(-offset - hitSize, -offset - hitSize);
+                ctx.moveTo(offset, -offset);
+                ctx.lineTo(offset + hitSize, -offset - hitSize);
+                ctx.moveTo(-offset, offset);
+                ctx.lineTo(-offset - hitSize, offset + hitSize);
+                ctx.moveTo(offset, offset);
+                ctx.lineTo(offset + hitSize, offset + hitSize);
+                ctx.stroke();
+
+            }
+        }
+        ctx.restore();
+    }
+
     drawUI(ctx, canvas) {
         if (this.network.connectionStatus !== 'connected') {
             this.drawConnecting(ctx, canvas);
@@ -488,6 +533,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         }
 
         this.drawKillFeed(ctx, canvas);
+
+        if (this.engine.player && this.engine.player.isAlive) {
+            this.drawCrosshair(ctx);
+        }
     }
 
     createVisionRay(startX, startY, angle) {

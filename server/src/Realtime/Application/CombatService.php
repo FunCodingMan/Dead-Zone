@@ -31,7 +31,10 @@ class CombatService
 
         $shooterState = $player->getPublicState();
         $angle = (float)($payload['angle'] ?? $shooterState["angle"]);
-        $finalAngle = $isFirstShot ? $angle : ($angle + $this->randomSpread());
+
+        $burstCount = $player->getBurstCount();
+
+        $finalAngle = $angle + $this->calculateDynamicSpread($burstCount);
 
         $others = $this->registry->getOthersPlayers($player);
         $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
@@ -42,6 +45,16 @@ class CombatService
         }
 
         $this->notifyShot($player, $finalAngle);
+    }
+
+    private function calculateDynamicSpread(int $burstCount): float {
+        if ($burstCount <= 1) return 0.0;
+
+        $spreadMultiplier = min(1.0, ($burstCount - 1) / 5.0);
+
+        $baseSpread = ((mt_rand() / mt_getrandmax() - 0.5)) / GameConfig::SPREAD_FACTOR;
+
+        return $baseSpread * $spreadMultiplier;
     }
 
     private function randomSpread(): float

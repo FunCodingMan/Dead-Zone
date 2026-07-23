@@ -5,9 +5,11 @@ const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
-const BULLET_SPEED = 75;
-const BULLET_WIDTH = 5;
-const BULLET_HEIGHT = 10;
+const BULLET_SPEED = 55;
+const BULLET_WIDTH = 3;
+const BULLET_HEIGHT = 45;
+const BASE_SPREAD = 5;
+const MAX_SPREAD = 22;
 const SPREAD_FACTOR = 10;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 40;
@@ -54,6 +56,10 @@ export class Player extends Character {
 
         this.isMultiplayer = false;
         this.hitpoints = MAX_HITPOINTS;
+
+        this.visualSpread = 5;
+        this.lastHitTime = 0;
+        this.remoteEnemies = [];
     }
 
     update(map, canvas, zoom, enemies, targets) {
@@ -73,7 +79,11 @@ export class Player extends Character {
             this.isReloading = true;
         }
 
-        //вызов перезарядки вынесен в Game update для обработки во время паузы
+        if (this.isShooting && this.shotsFired > 1) {
+            this.visualSpread += (MAX_SPREAD - this.visualSpread) * 0.3;
+        } else {
+            this.visualSpread += (BASE_SPREAD - this.visualSpread) * 0.15;
+        }
 
         this.handleBullets(map, enemies, targets);
     }
@@ -180,59 +190,72 @@ export class Player extends Character {
     handleBullets(map, enemies, targets) {
         const toRemove = [];
 
-        this.bullets.forEach((bullet, index) => {
-            bullet.x += bullet.xDirection * bullet.bulletSpeed;
-            bullet.y += bullet.yDirection * bullet.bulletSpeed;
-
-            const bulletRect = { 
-                x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT 
-            };
-
-            this.handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, index);
-
-            if (map.checkCollision(bulletRect)) {
-                toRemove.push(index);
+        for (let i = 0; i < this.bullets.length; i++) {
+            const isHit = this.processBulletPhysics(this.bullets[i], enemies, targets);
+            if (isHit) {
+                toRemove.push(i);
             }
-        });
+        }
 
         for (let i = toRemove.length - 1; i >= 0; i--) {
             this.bullets.splice(toRemove[i], 1);
         }
     }
 
-   handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, bulletIndex) {
-        enemies.forEach((enemy) => {
-            if (enemy.isAlive) {
-                const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    if (!this.isMultiplayer) {
-                        this.appliedDamage += this.damage;
-                        enemy.takeDamage(this.damage, this.map, CONFIG.ENEMY_SYMBOL);
-                    }
-                    if (!toRemove.includes(bulletIndex)) {
-                        toRemove.push(bulletIndex);
-                    }
-                }
-            }
-        });
+    processBulletPhysics(bullet, enemies, targets) {
+        const steps = Math.ceil(bullet.bulletSpeed / 10);
+        const stepX = (bullet.xDirection * bullet.bulletSpeed) / steps;
+        const stepY = (bullet.yDirection * bullet.bulletSpeed) / steps;
 
-        targets.forEach((target) => {
-            if (target.isAlive) {
-                const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    if (!this.isMultiplayer) {
-                        this.appliedDamage += this.damage;
-                        target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
-                    }
-                    if (!toRemove.includes(bulletIndex)) {
-                        toRemove.push(bulletIndex);
-                    }
+        for (let s = 0; s < steps; s++) {
+            bullet.x += stepX;
+            bullet.y += stepY;
+
+            const bulletRect = {
+                x: bullet.x - BULLET_WIDTH / 2,
+                y: bullet.y - BULLET_HEIGHT / 2,
+                w: BULLET_WIDTH,
+                h: BULLET_HEIGHT
+            };
+
+            if (this.checkEntityCollision(bulletRect, enemies, CONFIG.ENEMY_SYMBOL)) return true;
+            if (this.checkEntityCollision(bulletRect, targets, CONFIG.TARGET_SYMBOL)) return true;
+            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) return true;
+            if (this.map.checkCollision(bulletRect)) return true;
+        }
+
+        return false; // Пуля летит дальше
+    }
+
+    checkEntityCollision(bulletRect, entities, symbol) {
+        if (!entities) return false;
+        for (let i = 0; i < entities.length; i++) {
+            const entity = entities[i];
+
+            if (!entity.isAlive || (entity.hitpoints !== undefined && entity.hitpoints <= 0)) continue;
+
+            const entityRect = {x: entity.x, y: entity.y, w: entity.w, h: entity.h};
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                if (!this.isMultiplayer) {
+                    this.appliedDamage += this.damage;
+                    entity.takeDamage(this.damage, this.map, symbol);
                 }
+
+                this.lastHitTime = performance.now();
+
+                return true;
             }
-        });
+        }
+        return false;
     }
 
     drawBullets(ctx, bulletImg) {
+        ctx.save();
+
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffaa00';
+
         this.bullets.forEach(bullet => {
             ctx.save();
             ctx.translate(bullet.x, bullet.y);
@@ -241,6 +264,7 @@ export class Player extends Character {
             ctx.drawImage(bulletImg, -BULLET_WIDTH / 2, -BULLET_HEIGHT / 2, BULLET_WIDTH, BULLET_HEIGHT);
             ctx.restore();
         });
+        ctx.restore();
     }
 
     drawReloadInterface(ctx, reloadImg, canvas) {
