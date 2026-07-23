@@ -15,22 +15,25 @@ class MatchResultNotifier
         $this->registry = $registry;
     }
 
-    public function notifyGameOver(): void
+    public function notifyGameOver(array $disconnectedStats = []): void
     {
         $stats = [];
-        foreach ($this->registry->getPlayers() as $player) {
+        $activePlayers = $this->registry->getPlayers();
+        foreach ($activePlayers as $player) {
             $stats[] = [
                 'nickname' => $player->getNickname(),
                 'kills' => $player->getKills(),
                 'deaths' => $player->getDeaths(),
             ];
         }
-        usort($stats, fn($a, $b) => $b['kills'] <=> $a['kills']);
+        $finalStats = array_merge($stats, $disconnectedStats);
+
+        usort($finalStats, fn($a, $b) => $b['kills'] <=> $a['kills']);
         $packet = [
             'type' => 'game-over',
-            'payload' => ['stats' => $stats],
+            'payload' => ['stats' => $finalStats],
         ];
-        foreach ($this->registry->getPlayers() as $fd => $player) {
+        foreach ($activePlayers as $fd => $player) {
             $this->ws->send($fd, $packet);
         }
     }

@@ -76,6 +76,10 @@ class Room
     {
         $wasHost = $this->isUserHost($fd);
 
+        if ($this->isStart) {
+            $this->gameEngine->saveDisconnectedPlayerStats($fd);
+        }
+
         unset($this->lobbyUsers[$fd]);
         $this->registry->removePlayer($fd);
 

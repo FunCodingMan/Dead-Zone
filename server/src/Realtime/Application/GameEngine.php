@@ -18,6 +18,7 @@ class GameEngine
     private VisibilityService $visibility;
     private MatchLifecycle $lifecycle;
     private MatchResultNotifier $resultNotifier;
+    private array $disconnectedStats = [];
 
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
     {
@@ -59,6 +60,18 @@ class GameEngine
     public function setFogOfWar(bool $enabled): void
     {
         $this->visibility->setFogOfWar($enabled);
+    }
+    public function saveDisconnectedPlayerStats(int $fd): void
+    {
+        $player = $this->registry->getPlayerByFd($fd);
+
+        if ($player !== null) {
+            $this->disconnectedStats[] = [
+                'nickname' => $player->getNickname(),
+                'kills'    => $player->getKills(),
+                'deaths'   => $player->getDeaths()
+            ];
+        }
     }
 
 
@@ -105,6 +118,6 @@ class GameEngine
     private function endMatch(): void
     {
         $this->lifecycle->markEnded();
-        $this->resultNotifier->notifyGameOver();
+        $this->resultNotifier->notifyGameOver($this->disconnectedStats);
     }
 }
