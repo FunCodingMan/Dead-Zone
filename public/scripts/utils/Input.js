@@ -37,6 +37,9 @@ export class Input {
     }
 
     handleKeyDown(e) {
+        if (e.code === 'Tab' || e.code === 'Space') {
+            e.preventDefault();
+        }
         if (!this.keys[e.code]) {
             this.justPressed[e.code] = true;
         }
