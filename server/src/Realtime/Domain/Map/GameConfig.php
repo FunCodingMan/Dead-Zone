@@ -31,4 +31,5 @@ class GameConfig
     public const float MATCH_DURATION_S = 60_0;
     public const int MAX_COUNT_USERS = 15;
     public const int RADIUS_OF_CLOSE_OBSERVE = 200;
+    public const int MAX_HEALTH_PLAYER = 100;
 }
