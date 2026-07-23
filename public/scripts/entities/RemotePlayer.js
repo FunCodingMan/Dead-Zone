@@ -5,6 +5,8 @@ const PLAYER_HEIGHT = 48;
 const BULLET_SPEED = 55;
 const BULLET_WIDTH = 3;
 const BULLET_HEIGHT = 45;
+const BULLET_REAL_WIDTH = 4;
+const BULLET_REAL_HEIGHT = 4;
 
 export class RemotePlayer extends Character {
     constructor(id, initialX, initialY) {
@@ -82,10 +84,10 @@ export class RemotePlayer extends Character {
             bullet.y += stepY;
 
             const bulletRect = {
-                x: bullet.x - BULLET_WIDTH / 2,
-                y: bullet.y - BULLET_HEIGHT / 2,
-                w: BULLET_WIDTH,
-                h: BULLET_HEIGHT
+                x: bullet.x - BULLET_REAL_WIDTH / 2,
+                y: bullet.y - BULLET_REAL_HEIGHT / 2,
+                w: BULLET_REAL_HEIGHT,
+                h: BULLET_REAL_WIDTH
             };
 
             if (localPlayer && localPlayer.isAlive && map && map.isIntersecting(bulletRect, localPlayer)) {

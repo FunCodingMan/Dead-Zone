@@ -19,6 +19,10 @@ const MSG_KILL_FEED_DURATION_MS = 5000;
 const KILL_FEED_FONT_SIZE = 30;
 const KILL_ICON_SIZE = 34;
 const KILL_SPACING_SIZE = 14;
+const CROSSHAIR_LINE_LEN = 8;
+const CROSSHAIR_HIT_DURATION = 150;
+const CROSSHAIR_HIT_SIZE = 8;
+const CROSSHAIR_HIT_OFFSET = 4;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -470,7 +474,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.lineWidth = 2;
         ctx.lineCap = 'round';
 
-        const lineLen = 8;
+        const lineLen = CROSSHAIR_LINE_LEN;
 
         ctx.beginPath();
 
@@ -495,15 +499,15 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             const now = performance.now();
             const timeSinceHit = now - player.lastHitTime;
 
-            const hitDuration = 150;
+            const hitDuration = CROSSHAIR_HIT_DURATION;
 
             if (timeSinceHit < hitDuration) {
                 const alpha = 1 - (timeSinceHit / hitDuration);
                 ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.lineWidth = 2;
 
-                const hitSize = 8;
-                const offset = spread + 4;
+                const hitSize = CROSSHAIR_HIT_SIZE;
+                const offset = spread + CROSSHAIR_HIT_OFFSET;
 
                 ctx.beginPath();
 

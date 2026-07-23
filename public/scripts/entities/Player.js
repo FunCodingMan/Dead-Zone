@@ -8,6 +8,10 @@ const SPEED = 4;
 const BULLET_SPEED = 55;
 const BULLET_WIDTH = 3;
 const BULLET_HEIGHT = 45;
+
+const BULLET_REAL_WIDTH = 4;
+const BULLET_REAL_HEIGHT = 4;
+
 const BASE_SPREAD = 5;
 const MAX_SPREAD = 22;
 const SPREAD_FACTOR = 10;
@@ -156,7 +160,7 @@ export class Player extends Character {
         }
     }
 
-    createBullet(targetX, targetY) {
+    createBullet() {
         this.shotsAmount--;
 
         const centerX = this.x + this.w / 2;
@@ -168,22 +172,26 @@ export class Player extends Character {
         spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
         spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
 
-        const dx = targetX - spawnX;
-        const dy = targetY - spawnY;
-        const length = Math.sqrt(dx * dx + dy * dy);
-
-        let directionX = dx / length;
-        let directionY = dy / length;
-
         this.shotsFired++;
 
+        let finalAngle = this.angle;
+
         if (this.shotsFired > 1) {
-            directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
-            directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
+            const spreadMultiplier = Math.min(1.0, (this.shotsFired - 1) / 5.0);
+            const baseSpread = (Math.random() - 0.5) / SPREAD_FACTOR;
+
+            finalAngle += baseSpread * spreadMultiplier;
         }
 
+        let directionX = Math.cos(finalAngle);
+        let directionY = Math.sin(finalAngle);
+
         this.bullets.push({
-            x: spawnX, y: spawnY, xDirection: directionX, yDirection: directionY, bulletSpeed: BULLET_SPEED
+            x: spawnX,
+            y: spawnY,
+            xDirection: directionX,
+            yDirection: directionY,
+            bulletSpeed: BULLET_SPEED
         });
     }
 
@@ -212,10 +220,10 @@ export class Player extends Character {
             bullet.y += stepY;
 
             const bulletRect = {
-                x: bullet.x - BULLET_WIDTH / 2,
-                y: bullet.y - BULLET_HEIGHT / 2,
-                w: BULLET_WIDTH,
-                h: BULLET_HEIGHT
+                x: bullet.x - BULLET_REAL_WIDTH / 2,
+                y: bullet.y - BULLET_REAL_HEIGHT / 2,
+                w: BULLET_REAL_WIDTH,
+                h: BULLET_REAL_HEIGHT
             };
 
             if (this.checkEntityCollision(bulletRect, enemies, CONFIG.ENEMY_SYMBOL)) return true;
