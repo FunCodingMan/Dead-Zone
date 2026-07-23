@@ -186,6 +186,9 @@ export class WavesMode extends BaseGameTemplate {
         ctx.font = 'bold 30px Arial';
         const text = `ВОЛНА: ${this.currentWave}`;
         ctx.fillText(text, canvas.width / 2 - 70, 50);
+        if (this.engine.player) {
+            this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);
+        }
     }
 
     endGame(isVictory) {

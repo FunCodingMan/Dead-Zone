@@ -69,5 +69,9 @@ export class TrainingMode extends BaseGameTemplate {
         ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", 20, 40);
         ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, 20, 60);
         ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, 20, 80);
+
+        if (this.engine.player) {
+            this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);
+        }
     }
 }

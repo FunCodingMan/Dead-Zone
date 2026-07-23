@@ -15,6 +15,7 @@ const BULLET_REAL_HEIGHT = 4;
 const BASE_SPREAD = 5;
 const MAX_SPREAD = 22;
 const SPREAD_FACTOR = 10;
+const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 40;
 const DIFF_GUN_FORWARD = 1;
@@ -30,6 +31,11 @@ const HP_SIZE = 80;
 const RELOAD_TEXT_PADDING = 20;
 const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
+
+const CROSSHAIR_LINE_LEN = 8;
+const CROSSHAIR_HIT_DURATION = 150;
+const CROSSHAIR_HIT_SIZE = 8;
+const CROSSHAIR_HIT_OFFSET = 4;
 
 export class Player extends Character {
     constructor(map, input, resetPauseTimeCallback) {
@@ -144,19 +150,21 @@ export class Player extends Character {
     }
 
     shoot(x, y) {
+        const now = performance.now();
+
+        if (now - this.lastShootTime >= SPREAD_RECOVERY_TIME_MS) {
+            this.shotsFired = 0;
+        }
         if (this.input.isMouseDown) {
-            const now = performance.now();
             if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
                 this.createBullet(x, y);
                 this.lastShootTime = now;
                 this.isShooting = true;
             } else if (this.shotsAmount <= 0 || this.isReloading) {
                 this.isShooting = false;
-                this.shotsFired = 0;
             }
         } else {
             this.isShooting = false;
-            this.shotsFired = 0;
         }
     }
 
@@ -314,6 +322,80 @@ export class Player extends Character {
         ctx.drawImage(this.hpCanvas, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING);
     }
 
+    drawCrosshair(ctx, canvas, isPaused) {
+        if (!this.isAlive || isPaused) {
+            canvas.style.cursor = 'default';
+            if (!this.isAlive) return;
+        } else {
+            canvas.style.cursor = 'none';
+        }
+
+        if (isPaused) return;
+
+        const mouseX = this.input.mouseX;
+        const mouseY = this.input.mouseY;
+
+        const spread = this.visualSpread;
+
+        ctx.save();
+        ctx.translate(mouseX, mouseY);
+
+        ctx.strokeStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+
+        const lineLen = CROSSHAIR_LINE_LEN;
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, -spread);
+        ctx.lineTo(0, -spread - lineLen);
+        ctx.moveTo(0, spread);
+        ctx.lineTo(0, spread + lineLen);
+
+        ctx.moveTo(-spread, 0);
+        ctx.lineTo(-spread - lineLen, 0);
+        ctx.moveTo(spread, 0);
+        ctx.lineTo(spread + lineLen, 0);
+
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.beginPath();
+        ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (this.lastHitTime) {
+            const now = performance.now();
+            const timeSinceHit = now - this.lastHitTime;
+
+            const hitDuration = CROSSHAIR_HIT_DURATION;
+
+            if (timeSinceHit < hitDuration) {
+                const alpha = 1 - (timeSinceHit / hitDuration);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = 2;
+
+                const hitSize = CROSSHAIR_HIT_SIZE;
+                const offset = spread + CROSSHAIR_HIT_OFFSET;
+
+                ctx.beginPath();
+
+                ctx.moveTo(-offset, -offset);
+                ctx.lineTo(-offset - hitSize, -offset - hitSize);
+                ctx.moveTo(offset, -offset);
+                ctx.lineTo(offset + hitSize, -offset - hitSize);
+                ctx.moveTo(-offset, offset);
+                ctx.lineTo(-offset - hitSize, offset + hitSize);
+                ctx.moveTo(offset, offset);
+                ctx.lineTo(offset + hitSize, offset + hitSize);
+                ctx.stroke();
+
+            }
+        }
+        ctx.restore();
+    }
+
     updateReload(isPaused, totalPauseTime) {
         if (!this.isReloading) {
             this.reloadStartTime = undefined;
@@ -333,4 +415,6 @@ export class Player extends Character {
             this.reloadStartTime = undefined;
         }
     }
+
+
 }

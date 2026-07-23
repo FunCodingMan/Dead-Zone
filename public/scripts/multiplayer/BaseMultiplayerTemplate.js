@@ -19,10 +19,6 @@ const MSG_KILL_FEED_DURATION_MS = 5000;
 const KILL_FEED_FONT_SIZE = 30;
 const KILL_ICON_SIZE = 34;
 const KILL_SPACING_SIZE = 14;
-const CROSSHAIR_LINE_LEN = 8;
-const CROSSHAIR_HIT_DURATION = 150;
-const CROSSHAIR_HIT_SIZE = 8;
-const CROSSHAIR_HIT_OFFSET = 4;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -458,74 +454,6 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.restore();
     }
 
-    drawCrosshair(ctx) {
-        const input = this.engine.input;
-        const player = this.engine.player;
-
-        const mouseX = input.mouseX;
-        const mouseY = input.mouseY;
-
-        const spread = player.visualSpread;
-
-        ctx.save();
-        ctx.translate(mouseX, mouseY);
-
-        ctx.strokeStyle = 'rgba(0, 255, 100, 0.9)';
-        ctx.lineWidth = 2;
-        ctx.lineCap = 'round';
-
-        const lineLen = CROSSHAIR_LINE_LEN;
-
-        ctx.beginPath();
-
-        ctx.moveTo(0, -spread);
-        ctx.lineTo(0, -spread - lineLen);
-        ctx.moveTo(0, spread);
-        ctx.lineTo(0, spread + lineLen);
-
-        ctx.moveTo(-spread, 0);
-        ctx.lineTo(-spread - lineLen, 0);
-        ctx.moveTo(spread, 0);
-        ctx.lineTo(spread + lineLen, 0);
-
-        ctx.stroke();
-
-        ctx.fillStyle = 'rgba(0, 255, 100, 0.9)';
-        ctx.beginPath();
-        ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        if (player.lastHitTime) {
-            const now = performance.now();
-            const timeSinceHit = now - player.lastHitTime;
-
-            const hitDuration = CROSSHAIR_HIT_DURATION;
-
-            if (timeSinceHit < hitDuration) {
-                const alpha = 1 - (timeSinceHit / hitDuration);
-                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-                ctx.lineWidth = 2;
-
-                const hitSize = CROSSHAIR_HIT_SIZE;
-                const offset = spread + CROSSHAIR_HIT_OFFSET;
-
-                ctx.beginPath();
-
-                ctx.moveTo(-offset, -offset);
-                ctx.lineTo(-offset - hitSize, -offset - hitSize);
-                ctx.moveTo(offset, -offset);
-                ctx.lineTo(offset + hitSize, -offset - hitSize);
-                ctx.moveTo(-offset, offset);
-                ctx.lineTo(-offset - hitSize, offset + hitSize);
-                ctx.moveTo(offset, offset);
-                ctx.lineTo(offset + hitSize, offset + hitSize);
-                ctx.stroke();
-
-            }
-        }
-        ctx.restore();
-    }
-
     drawUI(ctx, canvas) {
         if (this.network.connectionStatus !== 'connected') {
             this.drawConnecting(ctx, canvas);
@@ -538,8 +466,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         this.drawKillFeed(ctx, canvas);
 
-        if (this.engine.player && this.engine.player.isAlive) {
-            this.drawCrosshair(ctx);
+        if (this.engine.player) {
+            this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);
         }
     }
 

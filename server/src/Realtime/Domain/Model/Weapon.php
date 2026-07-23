@@ -75,7 +75,7 @@ class Weapon
     }
     public function isFirstShot(float $now): bool
     {
-        return ($now - $this->lastShootTime) > ($this->shootCooldown * 1.5);
+        return ($now - $this->lastShootTime) >= (GameConfig::SPREAD_RECOVERY_TIME_S - 0.08);
     }
     public function getBurstCount(): int
     {
