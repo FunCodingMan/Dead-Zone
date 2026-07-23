@@ -63,8 +63,8 @@ class Lobby
         if ($roomId === null) return;
         $room = $this->rooms[$roomId];
 
-        if (!$room->hasMaxUsers()) {
-            echo "Комната не заполнена!\n";
+        if (!$room->isUserHost($fd)) {
+            echo "Только хост может начать игру!\n";
             return;
         }
 
@@ -86,12 +86,6 @@ class Lobby
         $room = $this->rooms[$roomId];
         $room->setReadyUser($fd, $isReady);
         $this->updateStateRoom($room);
-        if (!$room->isStarted() && $room->isAllReady()) {
-            $room->startGame();
-            foreach ($room->getFdUsers() as $fdUser) {
-                $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);
-            }
-        }
     }
 
     private function createRoom(int $fd): void
@@ -152,7 +146,9 @@ class Lobby
         $state = $room->getStateRoom();
         $fds = $room->getFdUsers();
         foreach ($fds as $fd) {
-            $this->ws->send($fd, ["type" => "stateRoom", "payload" => $state]);
+            $personalState = $state;
+            $personalState['amIHost'] = $room->isUserHost($fd);
+            $this->ws->send($fd, ["type" => "stateRoom", "payload" => $personalState]);
         }
     }
 }

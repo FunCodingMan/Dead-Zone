@@ -37,6 +37,11 @@ class Room
     public function addUser(int $fd, User $user): void
     {
         $lobbyUser = new LobbyUser($fd, $user->getUserId(), $user->getNickname());
+
+        if (empty($this->lobbyUsers)) {
+            $lobbyUser->setHost(true);
+        }
+
         $this->lobbyUsers[$fd] = $lobbyUser;
     }
 
@@ -45,7 +50,11 @@ class Room
         $state = [];
         $users = [];
         foreach ($this->lobbyUsers as $lobbyUser) {
-            $users[] = ["nickname" => $lobbyUser->getNickname(), "isReady" => $lobbyUser->isReady()];
+            $users[] = [
+                "nickname" => $lobbyUser->getNickname(),
+                "isReady" => $lobbyUser->isReady(),
+                "isHost" => $lobbyUser->isHost()
+            ];
         }
         $state['roomId'] = $this->roomId;
         $state['users'] = $users;
@@ -61,9 +70,20 @@ class Room
 
     public function deleteUser(int $fd): void
     {
-        unset($this->lobbyUsers[$fd]);
+        $wasHost = $this->isUserHost($fd);
 
+        unset($this->lobbyUsers[$fd]);
         $this->registry->removePlayer($fd);
+
+        if ($wasHost && !empty($this->lobbyUsers)) {
+            $firstFd = array_key_first($this->lobbyUsers);
+            $this->lobbyUsers[$firstFd]->setHost(true);
+        }
+    }
+
+    public function isUserHost(int $fd): bool
+    {
+        return isset($this->lobbyUsers[$fd]) && $this->lobbyUsers[$fd]->isHost();
     }
 
     public function getCountUsers(): int

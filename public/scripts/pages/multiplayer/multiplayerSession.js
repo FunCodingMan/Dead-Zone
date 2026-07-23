@@ -56,6 +56,7 @@ const curCountPlayers = document.getElementById('cur-players-count');
 const maxCountPlayers = document.getElementById('max-players-count');
 const inputRoomId = document.getElementById('input-room-id');
 const joinErrorMessage = document.getElementById('join-error-message');
+const startGameBtn = document.getElementById('start-game-btn');
 
 let isReady = false;
 let currentRoomId = null;
@@ -71,8 +72,9 @@ function renderPlayersList(players) {
         playerDiv.className = 'player-item';
         const status = player.isReady ? 'ready' : 'waiting';
         const statusText = player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
+        const hostIcon = player.isHost ? ' 👑' : '';
         playerDiv.innerHTML = `
-            <span class="player-name">${player.nickname}</span>
+            <span class="player-name">${player.nickname}${hostIcon}</span>
             <span class="player-status ${status}">${statusText}</span>
         `;
         playerList.appendChild(playerDiv);
@@ -85,8 +87,29 @@ network.on('stateRoom', (payload) => {
     curCountPlayers.textContent = payload.countUsers;
     maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList(payload.users);
+
+    if (payload.amIHost) {
+        startGameBtn.classList.remove('hidden');
+        const isEveryoneReady = payload.users.every(u => u.isReady);
+
+        if (isEveryoneReady) {
+            startGameBtn.classList.remove('disabled');
+            startGameBtn.disabled = false;
+        } else {
+            startGameBtn.classList.add('disabled');
+            startGameBtn.disabled = true;
+        }
+    } else {
+        startGameBtn.classList.add('hidden');
+    }
     if (screens.game.classList.contains('hidden')) {
         showScreen('room');
+    }
+});
+
+startGameBtn.addEventListener('click', () => {
+    if (!startGameBtn.disabled) {
+        network.send('start-game', {});
     }
 });
 
