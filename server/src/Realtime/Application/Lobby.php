@@ -25,12 +25,14 @@ class Lobby
 
     public function handleMessage(array $data): void
     {
+        $payload = $data['payload'] ?? [];
         match ($data['type']) {
             'create-room' => $this->createRoom($data["fd"]),
             'join-room' => $this->joinRoom($data["fd"], $data["payload"]["roomId"]),
             'exit-room' => $this->exitUser($data["fd"]),
             'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
             'start-game' => $this->startGame($data["fd"]),
+            'toggle-fog' => $this->toggleFog($data["fd"], isset($payload["isEnabled"]) ? (bool)$payload["isEnabled"] : true),
             'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
@@ -75,7 +77,7 @@ class Lobby
 
         $room->startGame();
         foreach ($room->getFdUsers() as $fdUser) {
-            $this->ws->send($fdUser, ["type" => "start-game", "payload" => []]);
+            $this->ws->send($fdUser, ["type" => "start-game", "payload" => ["isFogEnabled" => $room->isFogEnabled()]]);
         }
     }
 
@@ -149,6 +151,19 @@ class Lobby
             $personalState = $state;
             $personalState['amIHost'] = $room->isUserHost($fd);
             $this->ws->send($fd, ["type" => "stateRoom", "payload" => $personalState]);
+        }
+    }
+
+    private function toggleFog(int $fd, bool $isEnabled): void
+    {
+        echo 'TOGGLEFOG123';
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->isUserHost($fd)) {
+            $room->setFogEnabled($isEnabled);
+            $this->updateStateRoom($room);
         }
     }
 }

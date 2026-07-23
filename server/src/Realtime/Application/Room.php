@@ -19,6 +19,7 @@ class Room
     private GameEngine $gameEngine;
     private MessageQueue $queue;
     private bool $isStart;
+    private bool $isFogEnabled;
 
 
     /** @throws RandomException */
@@ -32,6 +33,8 @@ class Room
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
         $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map);
+        $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
+        $this->gameEngine->setFogOfWar($this->isFogEnabled);
     }
 
     public function addUser(int $fd, User $user): void
@@ -60,6 +63,7 @@ class Room
         $state['users'] = $users;
         $state['countUsers'] = $this->getCountUsers();
         $state["maxCountUsers"] = GameConfig::MAX_COUNT_USERS;
+        $state['isFogEnabled'] = $this->isFogEnabled;
         return $state;
     }
 
@@ -140,4 +144,15 @@ class Room
     {
         $this->queue->enqueue($fd, $type, $payload);
     }
+    public function setFogEnabled(bool $enabled): void
+    {
+        $this->isFogEnabled = $enabled;
+        $this->gameEngine->setFogOfWar($enabled);
+    }
+    public function isFogEnabled(): bool
+    {
+        return $this->isFogEnabled;
+    }
+
+
 }

@@ -56,6 +56,10 @@ class GameEngine
         $visiblePlayers = $this->registry->getVisiblePlayers();
         $this->ws->broadcastGameState($visiblePlayers, $this->lifecycle->getTimeLeft($now));
     }
+    public function setFogOfWar(bool $enabled): void
+    {
+        $this->visibility->setFogOfWar($enabled);
+    }
 
 
     public function spawnPlayers(): void

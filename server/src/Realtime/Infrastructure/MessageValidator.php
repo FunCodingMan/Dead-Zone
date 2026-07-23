@@ -15,6 +15,7 @@ class MessageValidator
             'start-game' => $this->isValidStartGame($data),
             'shot' => $this->isValidShotPlayer($data),
             'reload' => $this->isValidReloadPlayer($data),
+            'toggle-fog' => $this->isValidToggleFog($data),
             default => false,
         };
     }
@@ -82,5 +83,10 @@ class MessageValidator
     private function isValidReloadPlayer(array $data): bool
     {
         return empty($data);
+    }
+
+    private function isValidToggleFog(array $data): bool
+    {
+        return isset($data['isEnabled']);
     }
 }

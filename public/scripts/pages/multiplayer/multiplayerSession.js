@@ -57,6 +57,8 @@ const maxCountPlayers = document.getElementById('max-players-count');
 const inputRoomId = document.getElementById('input-room-id');
 const joinErrorMessage = document.getElementById('join-error-message');
 const startGameBtn = document.getElementById('start-game-btn');
+const fogToggle = document.getElementById('fog-toggle');
+const labelFogToggle = document.getElementById('label-fog-toggle');
 
 let isReady = false;
 let currentRoomId = null;
@@ -88,8 +90,13 @@ network.on('stateRoom', (payload) => {
     maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList(payload.users);
 
+    fogToggle.checked = payload.isFogEnabled;
+
     if (payload.amIHost) {
         startGameBtn.classList.remove('hidden');
+        fogToggle.disabled = false;
+        labelFogToggle.classList.remove('disabled');
+
         const isEveryoneReady = payload.users.every(u => u.isReady);
 
         if (isEveryoneReady) {
@@ -101,6 +108,8 @@ network.on('stateRoom', (payload) => {
         }
     } else {
         startGameBtn.classList.add('hidden');
+        fogToggle.disabled = true;
+        labelFogToggle.classList.add('disabled');
     }
     if (screens.game.classList.contains('hidden')) {
         showScreen('room');
@@ -112,13 +121,17 @@ startGameBtn.addEventListener('click', () => {
         network.send('start-game', {});
     }
 });
+fogToggle.addEventListener('change', (e) => {
+    const isFogOn = fogToggle.checked === true;
+    network.send('toggle-fog', { isEnabled: isFogOn});
+});
 
 network.on('join-error', (payload) => {
     joinErrorMessage.textContent = payload.message;
     joinErrorMessage.style.display = 'block';
 });
 
-network.on('start-game',  async() => {
+network.on('start-game',  async(payload) => {
     console.log('ИГРА НАЧАЛАСЬ!');
 
     const assets = await assetsPromise;
@@ -132,6 +145,10 @@ network.on('start-game',  async() => {
     canvas.focus();
 
     game.start(MultiplayerTestMode, network);
+
+    if (game.currentMode) {
+        game.currentMode.isFogOfWarEnabled = payload.isFogEnabled;
+    }
 
     if (game.isPaused) {
         game.togglePause();
