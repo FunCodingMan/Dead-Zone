@@ -18,7 +18,13 @@ export class AssetManager {
             flame: new Image(),
             flamethrowerReload: new Image(),
             flamethrower: new Image(),
-            flamethrowerReloadIcon: new Image() 
+            flamethrowerReloadIcon: new Image(),
+            bossDefault: new Image(),
+            bossLightningAttack1: new Image(),
+            bossLightningAttack2: new Image(),
+            bossLaserAttack: new Image(),
+            bossLaser: new Image(),
+            bossLightning: new Image()
         };
 
         this.imagePaths = {
@@ -38,7 +44,13 @@ export class AssetManager {
             flame: '/assets/flame.png',
             flamethrowerReload: '/assets/reload_flamethrower.png',
             flamethrower: '/assets/flamethrower.png',
-            flamethrowerReloadIcon: '/assets/flamethrower_reload_icon.png'
+            flamethrowerReloadIcon: '/assets/flamethrower_reload_icon.png',
+            bossDefault: '/assets/boss.png',
+            bossLightningAttack1: '/assets/boss_lightning_attack_1.png',
+            bossLightningAttack2: '/assets/boss_lightning_attack_2.png',
+            bossLaserAttack: '/assets/boss_laser_attack.png',
+            bossLaser: '/assets/laser.png',
+            bossLightning: '/assets/lightning.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;

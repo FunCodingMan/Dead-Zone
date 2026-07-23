@@ -5,9 +5,15 @@ export const CONFIG = {
     SPACE_SYMBOL: " ",
     WALL_SYMBOL: "#",
     BOX_SYMBOL: "B",
+    BOSS_SYMBOL: "Q",
+    TURRET_SYMBOL: "R",
 
     SOLDIER_CLASS_NAME: "soldier",
     FLAMETHROWER_CLASS_NAME: "flamethrower",
 
-    SHOOT_ATTACK_TYPE: "shoot"
+    SHOOT_ATTACK_TYPE: "shoot",
+
+    BOSS_MAX_HITPOINTS: 5000,
+    FIRST_LIGHTNING_ANIMATION_FRAME: 1,
+    SECOND_LIGHTNING_ANIMATION_FRAME: 2,
 }

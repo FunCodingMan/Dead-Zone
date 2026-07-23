@@ -8,14 +8,19 @@ const ATTACK_DISTANCE = 60;
 const DAMAGE = 10;
 const DAMAGE_COOLDOWN = 100;
 
+const HITPOINTS = 100;
+
 export class Enemy extends Character{
     constructor(map, playerPosition) {
-        const spawn = 
-
-        super(map.findFreeSpawn(CONFIG.ENEMY_SYMBOL, playerPosition, ENEMY_WIDTH, ENEMY_HEIGHT), ENEMY_WIDTH, ENEMY_HEIGHT, null);
+        const spawn = map.findFreeSpawn(CONFIG.ENEMY_SYMBOL, playerPosition, ENEMY_WIDTH, ENEMY_HEIGHT);
+        const spawnIndex = map.enemySpawns.indexOf(spawn);
+        super(
+            spawn, ENEMY_WIDTH, ENEMY_HEIGHT, spawnIndex, null, HITPOINTS
+        );
         this.speed = SPEED;
         this.attackDistance = ATTACK_DISTANCE;
         this.damage = DAMAGE;
         this.damageCooldown = DAMAGE_COOLDOWN;
+        this.hitpoints = HITPOINTS;
     }
 }

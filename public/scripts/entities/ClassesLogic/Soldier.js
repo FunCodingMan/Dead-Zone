@@ -7,7 +7,7 @@ export class Soldier extends Player {
         super(map, input, playerClass);
     }
 
-    createBulletSoldier(directionX, directionY, spawnX, spawnY) {
+    createBulletSoldier(directionX, directionY, spawnX, spawnY, owner, bullets) {
         this.shotsAmount--;
         
         this.playFrequentSound(this.shootSounds);
@@ -19,8 +19,14 @@ export class Soldier extends Player {
             directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
         }
 
-        this.bullets.push({
-            x: spawnX, y: spawnY, xDirection: directionX, yDirection: directionY, bulletSpeed: this.bulletSpeed, offset: 0
+        bullets.push({
+            x: spawnX, 
+            y: spawnY, 
+            xDirection: directionX, 
+            yDirection: directionY, 
+            bulletSpeed: this.bulletSpeed, 
+            offset: 0, 
+            owner: owner
         });
     }
 

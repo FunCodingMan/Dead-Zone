@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const wave = document.getElementById('wave');
     const damage = document.getElementById('damage');
     const kills = document.getElementById('kills');
+    const boss = document.getElementById('boss');
     const image = document.getElementById('image');
     
     const menuBtn = document.getElementById('menu');
@@ -28,9 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = '/mode-selection/singleplayer/waves';
     });
 
-    if (gameResult.result === 'win') {
+    if (gameResult.result == 'win') {
         result.textContent = 'ПОБЕДА';
         result.classList.add('green');
+        boss.textContent = 'Босс побеждён';
         image.src = winImageSrc;
 
     } else {
@@ -43,3 +45,4 @@ document.addEventListener('DOMContentLoaded', () => {
     damage.textContent = `нанесено урона: ${gameResult.damage}`;
     kills.textContent = `уничтожено врагов: ${gameResult.kills}`;
 })
+

@@ -27,12 +27,13 @@ body {
 }
 
 .image {
-    width: 400px;
-    height: 400px;
+    width: 370px;
+    height: 370px;
 }
 
 .text {
     font-size: 24px;
+    margin: 20px 0;
 }
 
 .buttons {

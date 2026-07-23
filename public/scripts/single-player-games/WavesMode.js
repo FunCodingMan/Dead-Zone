@@ -1,23 +1,30 @@
-    import { BaseGameTemplate } from './BaseGameTemplate.js';
-    import { Enemy } from '../entities/Enemy.js';
-    import { CONFIG } from '../core/Config.js';
+import { BaseGameTemplate } from './BaseGameTemplate.js';
+import { Enemy } from '../entities/Enemy.js';
+import { CONFIG } from '../core/Config.js';
+import { Boss } from '../entities/Boss.js';
 
     // Карта может быть другой для этого режимаs
     const wavesLevelData = `
     ################
-    #P            E#
-    #              #
-    #       B  B   #
-    #      B  B    #
-    #     B  B     #
-    #    B  B      #
-    #E            E#
+    #P       B    E#
+    # Q         R     #
+    #        B     #
+    #  R           #
+    #           Q  #
+    #   B          #
+    #E        R   E#
     ################
     `;
 
-    const MAX_WAVES = 20;
+    const MAX_WAVES = 1;
+    const MAX_BOSS_HEALTHBAR_WIDTH = 1000;
 
     export class WavesMode extends BaseGameTemplate {
+        constructor(engine) {
+            super(engine);
+            this.isBossPhase = false;
+        }
+
         getLevelData() {
             return wavesLevelData;
         }
@@ -51,23 +58,16 @@
             }
         }
 
-        update() {
-            if (!this.isInitializationReady) return;
-
+        waveBehaviour() {
             const currentTime = performance.now();
-
-            if (!this.engine.player.isAlive) {
-                this.endGame(false);
-                return;
-            }
 
             let aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
             if (aliveEnemies.length == 0) {
                 if (this.currentWave >= MAX_WAVES) {
-                    this.endGame(true);
+                    this.createBoss();
                     return;
                 }
-                
+                    
                 this.currentWave++;
                 this.spawnWave();
                 return;
@@ -115,13 +115,74 @@
             enemy.angle = Math.atan2(dy, dx);
         }
 
+        update() {
+            if (!this.isInitializationReady) return;
+
+            if (!this.engine.player.isAlive) {
+                this.endGame(false);
+                return;
+            }
+
+            if (!this.isBossPhase) {
+                this.waveBehaviour();
+            } else {
+                if (!this.engine.boss.isAlive && !this.engine.boss.isDying) {
+                    this.endGame(true);
+                    return;
+                }
+
+                this.bossBehaviour();
+            }
+        }
+
+        createBoss() {
+            this.isBossPhase = true;
+
+            const playerPosition = {
+                x: this.engine.player.x, 
+                y: this.engine.player.y, 
+                w: this.engine.player.w, 
+                h: this.engine.player.h
+            };
+            this.engine.boss =  new Boss(this.engine.map, playerPosition);
+            this.engine.boss.bloodManager = this.engine.bloodManager;
+        }
+
+        bossBehaviour() {
+            const target = {x: this.engine.player.x, y: this.engine.player.y};
+
+            const dx = this.engine.boss.x - target.x ;
+            const dy = this.engine.boss.y - target.y;
+
+            if (!this.engine.boss.isLaser) {
+                this.engine.boss.angle = Math.atan2(dy, dx);
+            }
+            
+            this.engine.boss.selectBossAction(this.engine.player);
+            this.engine.boss.doBossAction(this.engine.player);
+        }
+
         drawUI(ctx, canvas) {
             if (!this.isInitializationReady) return;
 
             ctx.fillStyle = 'red';
             ctx.font = 'bold 30px Arial';
-            const text = `ВОЛНА: ${this.currentWave}`;
-            ctx.fillText(text, canvas.width / 2 - 70, 50);
+            let text;
+
+            if (!this.isBossPhase) {
+                text = `ВОЛНА: ${this.currentWave}`;
+            } else {
+                text = `___ ЗАЯЦ ___`;
+
+                const width = this.engine.boss.hitpoints / CONFIG.BOSS_MAX_HITPOINTS * MAX_BOSS_HEALTHBAR_WIDTH;  
+
+                ctx.beginPath();
+                ctx.roundRect(canvas.width / 2 - width / 2, 70, width, 25, 20); 
+                ctx.fill();
+            }
+  
+            ctx.textAlign = 'center';
+            ctx.fillText(text, canvas.width / 2, 50);
         }
 
         endGame(isVictory) {

@@ -3,6 +3,7 @@ import { CONFIG } from "./Config.js";
 const RESPAWN_INTERVAL = 2000;
 const AVAILABLE_CELL = 1;
 const UNAVAILABLE_CELL = 0;
+const BOSS_SIZE_ON_GRID = 3;
 
 export class Map {
     constructor() {
@@ -16,6 +17,7 @@ export class Map {
         this.playerSpawns = [];
         this.enemySpawns = [];
         this.targetSpawns = [];
+        this.bossSpawns = [];
 
         this.grid = [];
 
@@ -113,14 +115,16 @@ export class Map {
     getSpawns(symbol, playerPosition, characterWidth, characterHeight) {
         let spawns;
 
-        if (symbol === CONFIG.PLAYER_SYMBOL) {
+        if (symbol == CONFIG.PLAYER_SYMBOL) {
             spawns = this.playerSpawns;
-        } else if (symbol === CONFIG.TARGET_SYMBOL) {
+        } else if (symbol == CONFIG.TARGET_SYMBOL) {
             const now = performance.now();
             this.diedTargets = this.diedTargets.filter(d => now - d.time < RESPAWN_INTERVAL);
             spawns = this.targetSpawns;
-        } else if (symbol === CONFIG.ENEMY_SYMBOL) {
+        } else if (symbol == CONFIG.ENEMY_SYMBOL) {
             spawns = this.enemySpawns;
+        } else if (symbol == CONFIG.BOSS_SYMBOL) {
+            spawns = this.bossSpawns;
         }
 
         if (symbol != CONFIG.PLAYER_SYMBOL) {
@@ -133,13 +137,44 @@ export class Map {
                     spawn.x, 
                     spawn.y, 
                     characterWidth, 
-                    characterHeight
+                    characterHeight,
                 );
-                return !(spawnPosIndex.row == playerPosIndex.row && spawnPosIndex.col == playerPosIndex.col);
+                return !this.isPlayerInArea(symbol, playerPosIndex, spawnPosIndex);
             });
+
+
         }
 
         return spawns;
+    }
+
+    isPlayerInArea(symbol, playerIndex, spawnIndex) {
+        const mapData = this.grid;
+        const rows = mapData.length;
+        const cols = mapData[0].length;
+
+        let offsetRow;
+        let offsetCol;
+
+        let isPlayerInArea = false;
+
+        if (symbol == CONFIG.BOSS_SYMBOL) {
+            offsetRow = BOSS_SIZE_ON_GRID - 1;
+            offsetCol = BOSS_SIZE_ON_GRID - 1;
+        } else {
+            offsetRow = 0;
+            offsetCol = 0;
+        }
+
+        for (let row = spawnIndex.row; row <= spawnIndex.row + offsetRow && row < rows; row++) {
+            for (let col = spawnIndex.col; col <= spawnIndex.col + offsetCol && col < cols; col++) {
+                if (row == playerIndex.row && col == playerIndex.col) {
+                    isPlayerInArea = true;
+                }
+            }
+        }
+
+        return isPlayerInArea;
     }
 
     findFreeSpawn(symbol, playerPosition, characterWidth, characterHeight) {
@@ -232,29 +267,33 @@ export class Map {
                             y: y + (this.cellSize - this.playerSize) / 2,
                             isFree: true
                         }); 
+                        break;
+                    case CONFIG.BOSS_SYMBOL:
+                        this.bossSpawns.push({
+                            x: x + (this.cellSize - this.playerSize) / 2,
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        });
                 }
             }
         }
     }
 
     draw(ctx, assets) {
-        //Рисуем пол
         for (let x = 0; x < this.width; x += this.cellSize) {
             for (let y = 0; y < this.height; y += this.cellSize) {
                 ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
             }
         }
-        //Рисуем стены
         for (let wall of this.walls) {
             ctx.drawImage(assets.wall, wall.x, wall.y, wall.w, wall.h);
         }
-        //Рисуем коробки
         for (let box of this.boxes) {
             ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
         }
     }
 
-    checkCollision(rect, enemies = [], targets = []) {
+    checkCollision(rect, enemies = [], targets = [], boss) {
         for (let wall of this.walls) {
             if (this.isIntersecting(rect, wall)) {
                 return true;
@@ -277,7 +316,28 @@ export class Map {
                 return true;
             }
         }
+
+        if (boss && this.isIntersecting(rect, boss)) {
+            return true;
+        }
+
         return false;
+    }
+
+    laserCollision(rect) {
+        for (let i = 0; i < this.walls.length; i++) {
+            if (this.isIntersecting(rect, this.walls[i])) {
+                this.walls.splice(i, 1);
+                return;
+            }
+        }
+
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (this.isIntersecting(rect, this.boxes[i])) {
+                this.boxes.splice(i, 1);
+                return;
+            }
+        }
     }
 
     isIntersecting(r1, r2) {

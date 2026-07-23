@@ -15,7 +15,7 @@ export class Flamethrower extends Player {
         };
     }
 
-    createBulletFlamethrower(directionX, directionY, spawnX, spawnY, angle) {
+    createBulletFlamethrower(directionX, directionY, spawnX, spawnY, angle, owner, bullets) {
         this.shotsAmount -= 5;
         
         this.playFrequentSound(this.flameSounds);
@@ -26,14 +26,14 @@ export class Flamethrower extends Player {
         const farLeft = this.rotateVector(directionX, directionY, -SPREAD * 1.5 * Math.random());
         const farRight = this.rotateVector(directionX, directionY, SPREAD * 1.5 * Math.random());
 
-        this.bullets.push(
+        bullets.push(
             {
-                x: spawnX,
-                y: spawnY,
+                x: spawnX, y: spawnY,
                 xDirection: center.x,
                 yDirection: center.y,
                 bulletSpeed: this.bulletSpeed,
-                offset: 0
+                offset: 0,
+                owner: owner
             },
             {
                 x: spawnX,
@@ -41,7 +41,8 @@ export class Flamethrower extends Player {
                 xDirection: left.x,
                 yDirection: left.y,
                 bulletSpeed: this.bulletSpeed,
-                offset: 0
+                offset: 0,
+                owner: owner
             },
             {
                 x: spawnX,
@@ -49,7 +50,8 @@ export class Flamethrower extends Player {
                 xDirection: right.x,
                 yDirection: right.y,
                 bulletSpeed: this.bulletSpeed,
-                offset: 0
+                offset: 0,
+                owner: owner
             },
             {
                 x: spawnX,
@@ -57,7 +59,8 @@ export class Flamethrower extends Player {
                 xDirection: farLeft.x,
                 yDirection: farLeft.y,
                 bulletSpeed: this.bulletSpeed,
-                offset: 0
+                offset: 0,
+                owner: owner
             },
             {
                 x: spawnX,
@@ -65,7 +68,8 @@ export class Flamethrower extends Player {
                 xDirection: farRight.x,
                 yDirection: farRight.y,
                 bulletSpeed: this.bulletSpeed,
-                offset: 0
+                offset: 0,
+                owner: owner
             }
         );
     }
