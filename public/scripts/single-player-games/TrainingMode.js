@@ -64,11 +64,19 @@ export class TrainingMode extends BaseGameTemplate {
     }
 
     drawUI(ctx, canvas) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '24px Arial';
-        ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", 20, 40);
-        ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, 20, 60);
-        ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, 20, 80);
+        const uiScale = canvas.height / 1080;
+        const fontSize = Math.floor(35 * uiScale);
+        const startX = 30 * uiScale;
+        const startY = 50 * uiScale;
+        const lineSpacing = 45 * uiScale;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'left';
+
+        ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", startX, startY);
+        ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, startX, startY + lineSpacing);
+        ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, startX, startY + lineSpacing * 2);
 
         if (this.engine.player) {
             this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);

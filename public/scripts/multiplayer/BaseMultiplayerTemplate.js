@@ -16,10 +16,15 @@ const MATCH_DURATION_S = 120;
 const BULLET_WIDTH = 5;
 const BULLET_HEIGHT = 10;
 const MSG_KILL_FEED_DURATION_MS = 5000;
-const KILL_FEED_FONT_SIZE = 30;
-const KILL_ICON_SIZE = 34;
-const KILL_SPACING_SIZE = 14;
+const KILL_FEED_FONT_SIZE = 35;
+const KILL_ICON_SIZE = 40;
+const KILL_SPACING_SIZE = 15;
 const FPS = 60;
+const BASE_HEIGHT = 1080;
+const DEATH_FONT_SIZE = 70;
+const DEATH_FONT_SUB_SIZE = 30;
+const CONNECTING_TITLE_SIZE = 45;
+const CONNECTING_TITLE_SUB_SIZE = 25;
 
 export class BaseMultiplayerTemplate extends BaseGameTemplate {
     constructor(engine, network) {
@@ -330,20 +335,24 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.restore();
     }
     drawDeath(ctx, canvas) {
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const titleSize = Math.floor(DEATH_FONT_SIZE * uiScale);
+        const subSize = Math.floor(DEATH_FONT_SUB_SIZE * uiScale);
+
         ctx.save();
 
         ctx.fillStyle = 'rgba(150, 0, 0, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 40px Arial';
+        ctx.font = `bold ${titleSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('ВЫ УБИТЫ', canvas.width / 2, canvas.height / 2 - 20);
 
         const secondsLeft = Math.max(0, 5 - (performance.now() - this.deathTime) / 1000).toFixed(1);
 
-        ctx.font = '20px Arial';
+        ctx.font = `${subSize}px Arial`;
         ctx.fillStyle = '#aaaaaa';
         ctx.fillText(`Возрождение через ${secondsLeft} сек...`, canvas.width / 2, canvas.height / 2 + 30);
 
@@ -351,6 +360,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     }
 
     drawConnecting(ctx, canvas) {
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const titleSize = Math.floor(CONNECTING_TITLE_SIZE * uiScale);
+        const subSize = Math.floor(CONNECTING_TITLE_SUB_SIZE * uiScale);
+
         ctx.save();
         ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -369,13 +382,16 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                 text = `ПОТЕРЯНО СОЕДИНЕНИЕ. ОЖИДАНИЕ... (${elapsedSeconds} сек)`;
             }
 
-            ctx.font = '20px Arial';
+            ctx.font = `${subSize}px Arial`;
             ctx.fillStyle = '#aaaaaa';
             ctx.fillText('Нажмите ESC, чтобы выйти в меню', canvas.width / 2, canvas.height / 2 + 50);
 
-            ctx.font = 'bold 32px Arial';
             ctx.fillStyle = '#ff4444';
+        } else {
+            ctx.fillStyle = '#ffffff';
         }
+
+        ctx.font = `bold ${titleSize}px Arial`;
 
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
         ctx.restore();
@@ -405,6 +421,11 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     drawKillFeed(ctx, canvas) {
         if (this.killfeed.length === 0) return;
 
+        const uiScale = canvas.height / 1080;
+        const fontSize = Math.floor(KILL_FEED_FONT_SIZE * uiScale);
+        const iconSize = Math.floor(KILL_ICON_SIZE * uiScale);
+        const spacing = Math.floor(KILL_SPACING_SIZE * uiScale);
+
         const now = performance.now();
 
         this.killfeed = this.killfeed.filter(msg => now - msg.timestamp < MSG_KILL_FEED_DURATION_MS);
@@ -412,18 +433,17 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.save();
         ctx.textAlign = 'left';
         ctx.textBaseline = 'top';
-        ctx.font = `bold ${KILL_FEED_FONT_SIZE}px Arial`;
+        ctx.font = `bold ${fontSize}px Arial`;
 
         let startY = 15;
         const rightEdgeX = canvas.width - 20;
 
         this.killfeed.forEach(msg => {
             const timePassed = now - msg.timestamp;
-
             let alpha = 1;
 
-            if (MSG_KILL_FEED_DURATION_MS - timePassed <= 1000) {
-                alpha = 1 - ((timePassed -  (MSG_KILL_FEED_DURATION_MS - 1000)) / 1000);
+            if (5000 - timePassed <= 1000) {
+                alpha = 1 - ((timePassed - 4000) / 1000);
             }
 
             ctx.globalAlpha = Math.max(0, alpha);
@@ -431,28 +451,31 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             const killerWidth = ctx.measureText(msg.killer).width;
             const victimWidth = ctx.measureText(msg.victim).width;
             const killIcon = this.engine.assets.killIcon;
-            let iconWidth = Math.round(KILL_ICON_SIZE * (killIcon.naturalWidth / killIcon.naturalHeight));
 
-            const totalWidth = killerWidth + KILL_SPACING_SIZE * 2 + iconWidth + victimWidth;
+            let currentIconWidth = iconSize;
+            if (killIcon) {
+                currentIconWidth = Math.round(iconSize * (killIcon.naturalWidth / killIcon.naturalHeight));
+            }
 
+            const totalWidth = killerWidth + spacing * 2 + currentIconWidth + victimWidth;
             const startX = rightEdgeX - totalWidth;
 
             ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-
-            ctx.fillRect(startX - 15, startY - 10, totalWidth + 30, KILL_FEED_FONT_SIZE + 18);
+            ctx.fillRect(startX - spacing, startY - (8 * uiScale), totalWidth + (spacing * 2), fontSize + (16 * uiScale));
 
             ctx.fillStyle = '#ffffff';
-
             ctx.fillText(msg.killer, startX, startY);
-            if (this.engine.assets.killIcon) {
-                ctx.drawImage(this.engine.assets.killIcon, startX + killerWidth + KILL_SPACING_SIZE, startY - 1, iconWidth, KILL_ICON_SIZE);
-            } else {
-                ctx.fillText('💀', startX + killerWidth + KILL_SPACING_SIZE, startY);
-            }
-            ctx.fillStyle = '#ff4444';
-            ctx.fillText(msg.victim, startX + killerWidth + KILL_SPACING_SIZE * 2 + iconWidth, startY);
 
-            startY += KILL_FEED_FONT_SIZE + 22;
+            if (killIcon) {
+                ctx.drawImage(killIcon, startX + killerWidth + spacing, startY - (2 * uiScale), currentIconWidth, iconSize);
+            } else {
+                ctx.fillText('💀', startX + killerWidth + spacing, startY);
+            }
+
+            ctx.fillStyle = '#ff4444';
+            ctx.fillText(msg.victim, startX + killerWidth + spacing * 2 + currentIconWidth, startY);
+
+            startY += fontSize + (25 * uiScale);
         });
 
         ctx.restore();

@@ -24,10 +24,10 @@ const MAX_SHOTS_AMOUNT = 50;
 const RELOAD_TIME = 2000;
 
 const MAX_HITPOINTS = 100;
-const RELOAD_PADDING = 10;
-const RELOAD_SIZE = 50;
-const HP_PADDING = 10;
-const HP_SIZE = 80;
+const RELOAD_PADDING = 40;
+const RELOAD_SIZE = 80;
+const HP_PADDING = 25;
+const HP_SIZE = 120;
 const RELOAD_TEXT_PADDING = 20;
 const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
@@ -38,6 +38,9 @@ const CROSSHAIR_HIT_SIZE = 8;
 const CROSSHAIR_HIT_OFFSET = 4;
 
 const FPS = 60;
+
+const BASE_HEIGHT = 1080;
+const AMMUNITION_SIZE = 40;
 
 export class Player extends Character {
     constructor(map, input, resetPauseTimeCallback) {
@@ -290,42 +293,59 @@ export class Player extends Character {
     }
 
     drawReloadInterface(ctx, reloadImg, canvas) {
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const reloadSize = Math.floor(RELOAD_SIZE * uiScale);
+        const reloadPadding = Math.floor(RELOAD_PADDING * uiScale);
+        const fontSize = Math.floor(AMMUNITION_SIZE * uiScale);
         ctx.save();
         ctx.drawImage(
             reloadImg,
-            canvas.width - RELOAD_PADDING - RELOAD_SIZE,
-            canvas.height - RELOAD_PADDING - RELOAD_SIZE,
-            RELOAD_SIZE, RELOAD_SIZE
+            canvas.width - reloadPadding - reloadSize,
+            canvas.height - reloadPadding - reloadSize,
+            reloadSize, reloadSize
         );
         ctx.fillStyle = 'white';
-        ctx.font = '18px Arial';
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
         ctx.fillText(
             this.shotsAmount,
-            canvas.width - RELOAD_PADDING - RELOAD_SIZE - RELOAD_TEXT_PADDING - RELOAD_TEXT_SIZE,
-            canvas.height - RELOAD_PADDING - RELOAD_TEXT_SIZE
+            canvas.width - reloadPadding - reloadSize - (15 * uiScale),
+            canvas.height - reloadPadding - (reloadSize / 2) + (3 * uiScale)
         );
         ctx.restore();
     }
 
     drawHPInterface(ctx, hearthImg, canvas) {
-        this.hpCtx.clearRect(0, 0, HP_SIZE, HP_SIZE);
-        this.hpCtx.drawImage(hearthImg, 0, 0, HP_SIZE, HP_SIZE);
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const hpSize = Math.floor(HP_SIZE * uiScale);
+        const hpPadding = Math.floor(HP_PADDING * uiScale);
+
+        if (this.hpCanvas.width !== hpSize) {
+            this.hpCanvas.width = hpSize;
+            this.hpCanvas.height = hpSize;
+        }
+
+
+        this.hpCtx.clearRect(0, 0, hpSize, hpSize);
+        this.hpCtx.drawImage(hearthImg, 0, 0, hpSize, hpSize);
 
         this.hpCtx.globalCompositeOperation = 'source-in';
 
-        const percent = this.hitpoints / MAX_HITPOINTS;
-        const height = HP_SIZE * percent;
+        const percent = Math.max(0, this.hitpoints / MAX_HITPOINTS);
+        const height = hpSize * percent;
 
         this.hpCtx.fillStyle = '#ff0000';
-        this.hpCtx.fillRect(0, HP_SIZE - height, HP_SIZE, height);
+        this.hpCtx.fillRect(0, hpSize - height, hpSize, height);
         this.hpCtx.globalCompositeOperation = 'source-over';
 
         ctx.save();
         ctx.globalAlpha = 0.3;
-        ctx.drawImage(hearthImg, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING, HP_SIZE, HP_SIZE);
+        ctx.drawImage(hearthImg, hpPadding, canvas.height - hpSize - hpPadding, hpSize, hpSize);
         ctx.restore();
 
-        ctx.drawImage(this.hpCanvas, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING);
+        ctx.drawImage(this.hpCanvas, hpPadding, canvas.height - hpSize - hpPadding);
     }
 
     drawCrosshair(ctx, canvas, isPaused) {
@@ -341,16 +361,19 @@ export class Player extends Character {
         const mouseX = this.input.mouseX;
         const mouseY = this.input.mouseY;
 
-        const spread = this.visualSpread;
+        const uiScale = canvas.height / BASE_HEIGHT;
+
+        const spread = this.visualSpread * uiScale;
+        const lineLen = CROSSHAIR_LINE_LEN * uiScale;
+        const lineWidth = Math.max(1, 2 * uiScale);
+        const dotRadius = Math.max(1, 1.5 * uiScale);
 
         ctx.save();
         ctx.translate(mouseX, mouseY);
 
         ctx.strokeStyle = 'rgba(0, 255, 100, 0.9)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
-
-        const lineLen = CROSSHAIR_LINE_LEN;
 
         ctx.beginPath();
 
@@ -368,7 +391,7 @@ export class Player extends Character {
 
         ctx.fillStyle = 'rgba(0, 255, 100, 0.9)';
         ctx.beginPath();
-        ctx.arc(0, 0, 1.5, 0, Math.PI * 2);
+        ctx.arc(0, 0, dotRadius, 0, Math.PI * 2);
         ctx.fill();
 
         if (this.lastHitTime) {
@@ -382,8 +405,8 @@ export class Player extends Character {
                 ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
                 ctx.lineWidth = 2;
 
-                const hitSize = CROSSHAIR_HIT_SIZE;
-                const offset = spread + CROSSHAIR_HIT_OFFSET;
+                const hitSize = CROSSHAIR_HIT_SIZE * uiScale;
+                const offset = spread + (CROSSHAIR_HIT_OFFSET * uiScale);
 
                 ctx.beginPath();
 

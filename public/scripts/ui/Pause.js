@@ -1,16 +1,45 @@
-export function initPause(actions) {
-    document.getElementById('btn-continue').addEventListener('click', () => {
-        actions.onResume();
-    });
+let globalGameReference = null;
 
-    document.getElementById('btn-new-game').addEventListener('click', () => {
-        actions.onRestart();
-    });
+export function initPause(callbacks) {
+    const btnContinue = document.getElementById('btn-continue');
+    const btnNewGame = document.getElementById('btn-new-game');
+    const btnExit = document.querySelector('.pause-btn-back');
+    const resolutionSelect = document.getElementById('resolution-select'); // Находим наш селект
 
-    document.querySelector('.pause-btn-back').addEventListener('click', () => {
-        actions.onExitToMenu();
-    });
+    if (btnContinue) {
+        btnContinue.replaceWith(btnContinue.cloneNode(true));
+        document.getElementById('btn-continue').addEventListener('click', () => {
+            if (callbacks.onResume) callbacks.onResume();
+        });
+    }
 
+    if (btnNewGame) {
+        btnNewGame.replaceWith(btnNewGame.cloneNode(true));
+        document.getElementById('btn-new-game').addEventListener('click', () => {
+            if (callbacks.onRestart) callbacks.onRestart();
+        });
+    }
+
+    if (btnExit) {
+        btnExit.replaceWith(btnExit.cloneNode(true));
+        document.querySelector('.pause-btn-back').addEventListener('click', () => {
+            if (callbacks.onExitToMenu) callbacks.onExitToMenu();
+        });
+    }
+
+    if (resolutionSelect) {
+        resolutionSelect.replaceWith(resolutionSelect.cloneNode(true));
+        document.getElementById('resolution-select').addEventListener('change', (e) => {
+            const [width, height] = e.target.value.split('x').map(Number);
+
+            if (globalGameReference && typeof globalGameReference.setResolution === 'function') {
+                globalGameReference.setResolution(width, height);
+            }
+        });
+    }
+}
+export function setPauseGameReference(game) {
+    globalGameReference = game;
 }
 
 export function togglePauseUI(isPaused) {

@@ -1,6 +1,6 @@
 import { AssetManager } from "../../utils/AssetManager.js";
 import { Game} from "../../core/Game.js";
-import {initPause, togglePauseUI} from "../../ui/Pause.js";
+import {initPause, setPauseGameReference, togglePauseUI} from "../../ui/Pause.js";
 import { Network } from "../../utils/Network.js";
 import {MultiplayerTestMode} from "../../multiplayer/MultiplayerTestMode.js";
 
@@ -142,6 +142,8 @@ network.on('start-game',  async(payload) => {
     if (!game) {
         game = new Game(canvas, assets, togglePauseUI);
     }
+    setPauseGameReference(game);
+
     canvas.focus();
 
     game.start(MultiplayerTestMode, network);

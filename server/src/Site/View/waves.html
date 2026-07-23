@@ -1,26 +1,40 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>DeadZone</title>
-  <link rel="stylesheet" href="/styles/menu.css">
-  <link rel="stylesheet" href="/styles/multiplayer.css">
-  <link rel="stylesheet" href="/styles/create-room.css">
-  <script type="module" src="/scripts/main.js" defer></script>
-  <link href="/styles/fonts-styles.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DeadZone</title>
+    <link rel="stylesheet" href="/styles/menu.css">
+    <link rel="stylesheet" href="/styles/multiplayer.css">
+    <link rel="stylesheet" href="/styles/create-room.css">
+    <script type="module" src="/scripts/main.js" defer></script>
+    <link href="/styles/fonts-styles.css" rel="stylesheet">
 </head>
 <body>
 <canvas id="gameCanvas" width="1280" height="720" data-target="waves"></canvas>
 <div id="screen-pause" class="pause-overlay">
-  <div class="menu-screen menu-choose">
-    <h2 class="menu-title">ПАУЗА</h2>
-    <div class="menu-buttons">
-      <button id="btn-continue" class="btn">ПРОДОЛЖИТЬ</button>
-      <button id="btn-new-game" class="btn">ПЕРЕЗАГРУЗКА</button>
-      <button class="pause-btn-back btn">ВЫЙТИ</button>
+    <div class="menu-screen menu-choose">
+        <h2 class="menu-title">ПАУЗА</h2>
+        <div class="room-settings">
+            <h3 class="room-settings__title">КАЧЕСТВО ГРАФИКИ</h3>
+            <div class="room-settings__list">
+                <div class="room-settings__select-wrapper">
+                    <select id="resolution-select" class="room-settings__select">
+                        <option value="3840x2160">4K (УЛЬТРА)</option>
+                        <option value="2560x1440">1440p (ВЫСОКОЕ)</option>
+                        <option value="1920x1080" selected>1080p (СТАНДАРТ)</option>
+                        <option value="1280x720">720p (БЫСТРО)</option>
+                        <option value="854x480">480p (КАРТОШКА)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="menu-buttons">
+            <button id="btn-continue" class="btn">ПРОДОЛЖИТЬ</button>
+            <button id="btn-new-game" class="btn">ПЕРЕЗАГРУЗКА</button>
+            <button class="pause-btn-back btn">ВЫЙТИ</button>
+        </div>
     </div>
-  </div>
 </div>
 </body>
 </html>

@@ -75,6 +75,22 @@
             <div id="screen-pause" class="pause-overlay">
                 <div class="menu-screen menu-choose">
                     <h2 class="menu-title">ПАУЗА</h2>
+
+                    <div class="room-settings">
+                        <h3 class="room-settings__title">КАЧЕСТВО ГРАФИКИ</h3>
+                        <div class="room-settings__list">
+                            <div class="room-settings__select-wrapper">
+                                <select id="resolution-select" class="room-settings__select">
+                                    <option value="3840x2160">4K (УЛЬТРА)</option>
+                                    <option value="2560x1440">1440p (ВЫСОКОЕ)</option>
+                                    <option value="1920x1080" selected>1080p (СТАНДАРТ)</option>
+                                    <option value="1280x720">720p (БЫСТРО)</option>
+                                    <option value="854x480">480p (КАРТОШКА)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="menu-buttons">
                         <button id="btn-continue" class="btn">ПРОДОЛЖИТЬ</button>
                         <button id="btn-new-game" class="btn">ПЕРЕЗАГРУЗКА</button>
