@@ -1,5 +1,6 @@
 * {
     box-sizing: border-box;
+    font-family: 'Spielarcade Regular', sans-serif;
 }
 
 body {
@@ -10,7 +11,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    font-family: 'Spielarcade Regular', sans-serif;
+    overflow-x: hidden;
 }
 
 .menu-screen {
@@ -18,29 +19,67 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 30px;
-    margin-top: 0;
+    margin-top: 5vh;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.menu-choose {
+    align-self: center;
+    align-items: center;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.main-menu__logo {
+    width: 90vw;
+    max-width: 946px;
+    height: auto;
+}
+
+.menu-title {
+    font: 45px/18px 'Spielarcade Regular', sans-serif;
+    text-align: center;
 }
 
 .menu-buttons {
-    margin-top: 50px;
+    margin-top: 30px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 50px;
+    gap: 30px;
+    width: 100%;
 }
 
 .btn {
-    width: 1000px;
-    padding: 15px;
+    width: 100%;
+    max-width: 1000px;
+    padding: 15px 10px;
     background-color: #333;
     color: white;
     border: 2px solid #555;
     cursor: pointer;
     transition: 0.2s;
     text-transform: uppercase;
-    font: 45px/18px 'Spielarcade Regular', sans-serif;
+    font: 45px 'Spielarcade Regular', sans-serif;
 }
 
-.btn:hover {
-    background-color: #444;
+.btn:hover { background-color: #444; }
+.btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+.profile-stats {
+    width: 100%;
+    max-width: 800px;
+    text-align: left;
+}
+.stats-text { font: 45px/1.2 'Spielarcade Regular', sans-serif; }
+
+@media (max-width: 768px) {
+    .menu-screen { gap: 15px; margin-top: 2vh; }
+    .menu-title { font-size: 28px; line-height: 1.2; }
+    .menu-buttons { gap: 15px; margin-top: 20px; }
+    .btn { font-size: 24px; padding: 12px 10px; }
+    .profile-stats { margin-left: 0; text-align: center; }
+    .stats-text { font-size: 24px; }
 }
