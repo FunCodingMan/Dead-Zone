@@ -3,6 +3,7 @@ import { Map } from '../core/Map.js';
 import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { CONFIG } from '../core/Config.js';
+import {Sound} from "../core/Sound.js";
 
 const wavesLevelData = `
 ################
@@ -30,6 +31,12 @@ export class WavesMode extends BaseGameTemplate {
 
         this.currentWave = 1;
         this.lastAttackTime = 0;
+
+        this.winSound = new Sound('../../assets/sounds/win.mp3');
+        this.winSound.setVolume(0.8);
+
+        this.defeatSound = new Sound('../../assets/sounds/defeat.mp3');
+        this.defeatSound.setVolume(0.8);
 
         this.spawnWave();
     }
@@ -78,7 +85,6 @@ export class WavesMode extends BaseGameTemplate {
 
         aliveEnemies.forEach(enemy => {
             if (enemy.isAlive) {
-                // Используем статический граф для поиска пути
                 this.enemyPathFind(enemy, this.staticPathGraph, timeScale);
 
                 const distance = Math.sqrt(
@@ -202,11 +208,19 @@ export class WavesMode extends BaseGameTemplate {
     }
 
     endGame(isVictory) {
+        if (this.engine.isGameEnded) return;
+
         const finalDamage = this.engine.player.appliedDamage;
         const finalKills = this.engine.player.kills;
 
         this.engine.stop();
         this.engine.isGameEnded = true;
+
+        if (isVictory) {
+            this.winSound.play();
+        } else {
+            this.defeatSound.play();
+        }
 
         const params = new URLSearchParams({
             result: isVictory ? 'win' : 'lose',
@@ -215,6 +229,8 @@ export class WavesMode extends BaseGameTemplate {
             kills: finalKills
         });
 
-        window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;
+        setTimeout(() => {
+            window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;
+        }, 2000);
     }
 }

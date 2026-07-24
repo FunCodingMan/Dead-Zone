@@ -1,5 +1,6 @@
 import { CONFIG } from '../core/Config.js';
 import { Character } from './Character.js';
+import {Sound} from "../core/Sound.js";
 
 const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
@@ -94,6 +95,7 @@ export class Player extends Character {
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
             this.isReloading = true;
+            this.reloadSound.play();
         }
 
         if (this.isShooting && this.shotsFired > 1) {
@@ -125,13 +127,17 @@ export class Player extends Character {
             dx += 1;
         }
         if (dx !== 0 || dy !== 0) {
+            this.stepsSound.play();
             const length = Math.sqrt(dx * dx + dy * dy);
             dx /= length;
             dy /= length;
 
             nextX += dx * this.speed * timeScale;
             nextY += dy * this.speed * timeScale;
+        } else {
+            this.stepsSound.stop();
         }
+
 
         if (nextX < 0) nextX = 0;
         if (nextY < 0) nextY = 0;
@@ -163,6 +169,7 @@ export class Player extends Character {
             this.shotsFired = 0;
         }
         if (this.input.isMouseDown) {
+            const now = performance.now();
             if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
                 this.createBullet(x, y);
                 this.lastShootTime = now;
@@ -177,6 +184,8 @@ export class Player extends Character {
 
     createBullet() {
         this.shotsAmount--;
+
+        this.playFrequentSound(this.shootSounds);
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
@@ -246,10 +255,13 @@ export class Player extends Character {
             if (this.checkEntityCollision(bulletRect, enemies, CONFIG.ENEMY_SYMBOL)) return true;
             if (this.checkEntityCollision(bulletRect, targets, CONFIG.TARGET_SYMBOL)) return true;
             if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) return true;
-            if (this.map.checkCollision(bulletRect)) return true;
+            if (this.map.checkCollision(bulletRect)) {
+                this.playFrequentSound(this.hitHardSounds);
+                return true;
+            }
         }
 
-        return false; // Пуля летит дальше
+        return false;
     }
 
     checkEntityCollision(bulletRect, entities, symbol) {
@@ -265,6 +277,11 @@ export class Player extends Character {
                 if (!this.isMultiplayer) {
                     this.appliedDamage += this.damage;
                     entity.takeDamage(this.damage, this.map, symbol);
+                }
+
+                if (this.hitPlayerSound) {
+                    this.hitPlayerSound.stop();
+                    this.hitPlayerSound.play();
                 }
 
                 this.lastHitTime = performance.now();

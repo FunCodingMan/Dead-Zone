@@ -81,7 +81,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         const remoteShooter = this.otherPlayers.get(payload.shooterId);
         if (remoteShooter) {
-            remoteShooter.spawnNetworkBullet(payload.startX, payload.startY, payload.angle);
+            remoteShooter.spawnNetworkBullet(payload.startX, payload.startY, payload.angle, this.engine.player);
             remoteShooter.angle = payload.angle;
             remoteShooter.isShooting = true;
             setTimeout(() => { remoteShooter.isShooting = false; }, 100);

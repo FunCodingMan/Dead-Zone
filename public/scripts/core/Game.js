@@ -1,6 +1,10 @@
 import { Input } from '../utils/Input.js';
 import { CONFIG } from './Config.js';
 import { BloodManager } from './BloodManager.js';
+import { Sound } from './Sound.js';
+
+const RANDOM_SOUND_CHANCE = 0.03;
+const MAX_RANDOM_SOUND_INTERVAL = 5000;
 
 const FPS = 60;
 const BASE_WIDTH = 1920;
@@ -45,13 +49,47 @@ export class Game {
 
         window.addEventListener('resize', this.resizeHandler);
         this.resizeHandler();
-        
+
+        this.initSounds();
+
     }
 
     setResolution(width, height) {
         this.renderWidth = width;
         this.renderHeight = height;
         this.resizeHandler();
+    }
+
+    initSounds() {
+        this.randomEnemySounds = [
+            new Sound('../../assets/sounds/zombie-1.mp3'),
+            new Sound('../../assets/sounds/zombie-2.mp3')
+        ];
+
+        this.lastRandomSoundTime = 0;
+        this.randomSoundInterval = MAX_RANDOM_SOUND_INTERVAL;
+    }
+
+    playRandomEnemySound() {
+        const currentTime = performance.now();
+
+        if (currentTime - this.lastRandomSoundTime < this.randomSoundInterval) {
+            return;
+        }
+
+        if (Math.random() < RANDOM_SOUND_CHANCE) {
+            const randomIndex = Math.floor(Math.random() * this.randomEnemySounds.length);
+            const sound = this.randomEnemySounds[randomIndex];
+            const aliveEnemies = this.enemies.filter(e => e.isAlive);
+            if (aliveEnemies.length > 0 && this.player) {
+                const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+
+                sound.stop();
+                sound.playAtDistance(randomEnemy.x, randomEnemy.y, this.player.x, this.player.y);
+
+                this.lastRandomSoundTime = currentTime;
+            }
+        }
     }
 
     resizeHandler = () => {

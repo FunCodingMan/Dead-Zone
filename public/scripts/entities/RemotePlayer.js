@@ -39,9 +39,13 @@ export class RemotePlayer extends Character {
         }
     }
 
-    spawnNetworkBullet(startX, startY, angle) {
+    spawnNetworkBullet(startX, startY, angle, localPlayer = null) {
         const directionX = Math.cos(angle);
         const directionY = Math.sin(angle);
+
+        if (this.shootSounds) {
+            this.playFrequentSound(this.shootSounds, localPlayer);
+        }
 
         this.bullets.push({
             x: startX,
@@ -53,8 +57,26 @@ export class RemotePlayer extends Character {
     }
 
     updateInterpolation(interpolationFactor = 0.2, map = null, localPlayer = null, otherPlayers = null) {
+        const prevX = this.x;
+        const prevY = this.y;
+
         this.x += (this.targetX - this.x) * interpolationFactor;
         this.y += (this.targetY - this.y) * interpolationFactor;
+
+        if (this.stepsSound) {
+            if (Math.abs(this.x - prevX) > 0.1 || Math.abs(this.y - prevY) > 0.1) {
+                if (localPlayer) {
+                    this.stepsSound.updateDistanceVolume(this.x, this.y, localPlayer.x, localPlayer.y);
+                }
+                if (!this.stepsSound.isPlaying) {
+                    this.stepsSound.play();
+                }
+            } else {
+                if (this.stepsSound.isPlaying) {
+                    this.stepsSound.stop();
+                }
+            }
+        }
 
         this.handleNetworkBullets(map, localPlayer, otherPlayers);
     }
@@ -103,6 +125,9 @@ export class RemotePlayer extends Character {
             }
 
             if (map && map.checkCollision(bulletRect)) {
+                if (this.hitHardSounds && localPlayer) {
+                    this.playFrequentSound(this.hitHardSounds, localPlayer, bulletRect.x, bulletRect.y);
+                }
                 return true;
             }
         }
