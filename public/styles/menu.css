@@ -65,7 +65,11 @@ body {
 }
 
 .btn:hover { background-color: #444; }
-.btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 .hidden { display: none !important; }
 
 .profile-stats {
