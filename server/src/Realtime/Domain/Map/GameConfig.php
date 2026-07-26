@@ -13,6 +13,8 @@ class GameConfig
     public const string SYMBOL_WALL = '#';
     public const string SYMBOL_BOX = 'B';
     public const string SYMBOL_PLAYER = 'P';
+    public const string SYMBOL_SPAWN_RED = 'R';
+    public const string SYMBOL_SPAWN_BLUE = 'U';
     public const string SYMBOL_ENEMY = 'E';
     public const string SYMBOL_TARGET = 'T';
     public const int VISIBILITY_RADIUS = 800;
@@ -35,4 +37,15 @@ class GameConfig
     public const int RADIUS_OF_CLOSE_OBSERVE = 200;
     public const int MAX_HEALTH_PLAYER = 100;
     public const float SPREAD_RECOVERY_TIME_S = 0.4;
+    public const int PLAYER_DAMAGE = 20;
+    public const string MODE_DEATHMATCH = 'deathmatch';
+    public const string MODE_ROUND_BASED = 'round_based';
+    public const string MODE_TDM = 'tdm';
+    public const string TEAM_NONE = 'none';
+    public const string TEAM_RED = 'red';
+    public const string TEAM_BLUE = 'blue';
+    public const string WINNER_DRAW = 'DRAW';
+    public const string WINNER_RED = 'RED';
+    public const string WINNER_BLUE = 'BLUE';
+    public const float PAUSE_BETWEEN_ROUNDS_S = 5.0;
 }

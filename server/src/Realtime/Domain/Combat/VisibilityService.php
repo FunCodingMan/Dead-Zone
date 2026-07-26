@@ -39,10 +39,15 @@ class VisibilityService
             if ($player->getHealth() <= 0) {
                 continue;
             }
+            if ($player->getTeam() !== GameConfig::TEAM_NONE && $player->getTeam() === $observer->getTeam()) {
+                $visiblePlayers[] = $player;
+                continue;
+            }
             if (!$this->isFogOfWarEnabled) {
                 $visiblePlayers[] = $player;
                 continue;
             }
+
             $playerState = $player->getPublicState();
 
             $targetX = $playerState['x'] + (GameConfig::PLAYER_WIDTH / 2);
@@ -84,6 +89,9 @@ class VisibilityService
 
     private function hasObstacleInSight(float $startX, float $startY, float $targetX, float $targetY, float $distance): bool
     {
+        if ($distance <= 0.001) {
+            return false;
+        }
         $dx = ($targetX - $startX) / $distance;
         $dy = ($targetY - $startY) / $distance;
 

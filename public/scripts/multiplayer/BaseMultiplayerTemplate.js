@@ -294,7 +294,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
                 );
 
                 const name = enemy.nickname || enemy.id;
-                this.drawPlayerName(ctx, enemy.x, enemy.y, enemy.w, name);
+                this.drawPlayerName(ctx, enemy.x, enemy.y, enemy.w, name, enemy.team);
             } else if (enemy.isDying) {
                 enemy.drawDeath(
                     ctx,
@@ -343,18 +343,18 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
         ctx.fillStyle = 'rgba(150, 0, 0, 0.4)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
         ctx.fillStyle = '#ffffff';
         ctx.font = `bold ${titleSize}px Arial`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText('ВЫ УБИТЫ', canvas.width / 2, canvas.height / 2 - 20);
 
-        const secondsLeft = Math.max(0, 5 - (performance.now() - this.deathTime) / 1000).toFixed(1);
-
-        ctx.font = `${subSize}px Arial`;
-        ctx.fillStyle = '#aaaaaa';
-        ctx.fillText(`Возрождение через ${secondsLeft} сек...`, canvas.width / 2, canvas.height / 2 + 30);
+        if (this.modeType !== 'round_based') {
+            const secondsLeft = Math.max(0, 5 - timeDead / 1000).toFixed(1);
+            ctx.font = `${subSize}px Arial`;
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText(`Возрождение через ${secondsLeft} сек...`, canvas.width / 2, canvas.height / 2 + 30);
+        }
 
         ctx.restore();
     }
@@ -396,17 +396,24 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
         ctx.restore();
     }
-    drawPlayerName(ctx, x, y, width, name) {
+    drawPlayerName(ctx, x, y, width, name, team) {
         if (!name) return;
 
         ctx.save();
 
-        ctx.fillStyle = '#ffffff';
+        let nameColor = '#ffffff';
+        if (team === 'red') {
+            nameColor = '#ff0000';
+        } else if (team === 'blue') {
+            nameColor = '#0063ff';
+        }
+
+        ctx.fillStyle = nameColor;
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+        ctx.shadowColor = 'rgba(0, 0, 0, 1)';
         ctx.shadowOffsetX = 1;
         ctx.shadowOffsetY = 1;
         ctx.shadowBlur = 3;

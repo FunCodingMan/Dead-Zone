@@ -81,6 +81,8 @@ export class Player extends Character {
         this.visualSpread = 5;
         this.lastHitTime = 0;
         this.remoteEnemies = [];
+
+        this.team = 'none';
     }
 
     update(map, canvas, zoom, enemies, targets, dt) {

@@ -20,6 +20,7 @@ class Player
     private array $pressKeys;
     private int $kills;
     private int $deaths;
+    private string $team = GameConfig::TEAM_NONE;
 
     public function __construct(int $fd, string $userId, string $nickname = "Player")
     {
@@ -80,6 +81,7 @@ class Player
             "angle" => $this->angle,
             "health" => $this->health->getValue(),
             "count_bullets" => $this->weapon->getCountBullets(microtime(true)),
+            "team" => $this->team,
         ];
     }
 
@@ -90,6 +92,7 @@ class Player
             "y" => $this->posY,
             "angle" => $this->angle,
             "nickname" => $this->nickname,
+            "team" => $this->team
         ];
     }
 
@@ -110,6 +113,12 @@ class Player
         $this->weapon->reset();
         $this->posX = $x;
         $this->posY = $y;
+    }
+    public function setTeam(string $team): void {
+        $this->team = $team;
+    }
+    public function getTeam(): string {
+        return $this->team;
     }
 
     public function isDead(): bool { return $this->health->isDead(); }

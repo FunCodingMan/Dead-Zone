@@ -21,6 +21,7 @@ export class RemotePlayer extends Character {
         this.hitpoints = 100;
 
         this.bullets = [];
+        this.team = 'none';
     }
 
     updateServerState(state) {
@@ -36,6 +37,9 @@ export class RemotePlayer extends Character {
 
         if (state.nickname !== undefined) {
             this.nickname = state.nickname;
+        }
+        if (state.team !== undefined) {
+            this.team = state.team;
         }
     }
 
