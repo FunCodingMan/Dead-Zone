@@ -14,7 +14,7 @@ const BULLET_REAL_WIDTH = 4;
 const BULLET_REAL_HEIGHT = 4;
 
 const BASE_SPREAD = 5;
-const MAX_SPREAD = 22;
+const MAX_SPREAD = 15;
 const SPREAD_FACTOR = 10;
 const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
@@ -33,10 +33,15 @@ const RELOAD_TEXT_PADDING = 20;
 const RELOAD_TEXT_SIZE = 10;
 const HITBOX = 28;
 
-const CROSSHAIR_LINE_LEN = 8;
+const CROSSHAIR_LINE_LEN = 15;
+const CROSSHAIR_LINE_WIDTH = 6;
+const CROSSHAIR_DOT_RADIUS = 2;
 const CROSSHAIR_HIT_DURATION = 150;
-const CROSSHAIR_HIT_SIZE = 8;
-const CROSSHAIR_HIT_OFFSET = 4;
+const CROSSHAIR_HIT_SIZE = 15;
+const CROSSHAIR_HIT_OFFSET = 10;
+const CROSSHAIR_HIT_WIDTH = 6;
+const SPREAD_COOF_UI = 2;
+
 
 const FPS = 60;
 
@@ -380,15 +385,15 @@ export class Player extends Character {
 
         const uiScale = canvas.height / BASE_HEIGHT;
 
-        const spread = this.visualSpread * uiScale;
+        const spread = this.visualSpread * uiScale * SPREAD_COOF_UI;
         const lineLen = CROSSHAIR_LINE_LEN * uiScale;
-        const lineWidth = Math.max(1, 2 * uiScale);
-        const dotRadius = Math.max(1, 1.5 * uiScale);
+        const lineWidth = Math.max(1, CROSSHAIR_LINE_WIDTH * uiScale);
+        const dotRadius = Math.max(1, CROSSHAIR_DOT_RADIUS* uiScale);
 
         ctx.save();
         ctx.translate(mouseX, mouseY);
 
-        ctx.strokeStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.strokeStyle = 'rgb(255 0 0 / 0.9)';
         ctx.lineWidth = lineWidth;
         ctx.lineCap = 'round';
 
@@ -406,7 +411,7 @@ export class Player extends Character {
 
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(0, 255, 100, 0.9)';
+        ctx.fillStyle = 'rgb(255 0 0 / 0.9)';
         ctx.beginPath();
         ctx.arc(0, 0, dotRadius, 0, Math.PI * 2);
         ctx.fill();
@@ -420,7 +425,7 @@ export class Player extends Character {
             if (timeSinceHit < hitDuration) {
                 const alpha = 1 - (timeSinceHit / hitDuration);
                 ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = CROSSHAIR_HIT_WIDTH;
 
                 const hitSize = CROSSHAIR_HIT_SIZE * uiScale;
                 const offset = spread + (CROSSHAIR_HIT_OFFSET * uiScale);
