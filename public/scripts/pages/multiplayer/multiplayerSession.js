@@ -183,6 +183,7 @@ network.on('game-over', (payload) => {
             <td class="table-title">${s.nickname}</td>
             <td class="table-title">${s.kills}</td>
             <td class="table-title">${s.deaths}</td>
+            <td class="table-title">${s.kd}</td>
         `;
         tbody.appendChild(tr);
     });

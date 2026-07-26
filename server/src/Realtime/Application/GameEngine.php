@@ -65,11 +65,23 @@ class GameEngine
     {
         $player = $this->registry->getPlayerByFd($fd);
 
+        $kills = $player->getKills() ?? 0;
+        $deaths = $player->getDeaths() ?? 0;
+
+        if ($deaths === 0) {
+            $kd = $kills;
+        } else {
+            $kd = $kills / $deaths;
+        }
+
+        $kdFormatted = number_format($kd, 2, '.', '');
+
         if ($player !== null) {
             $this->disconnectedStats[] = [
                 'nickname' => $player->getNickname(),
-                'kills'    => $player->getKills(),
-                'deaths'   => $player->getDeaths()
+                'kills'    => $kills,
+                'deaths'   => $deaths,
+                'kd' => $kdFormatted
             ];
         }
     }
