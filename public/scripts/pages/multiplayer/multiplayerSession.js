@@ -4,6 +4,9 @@ import {initPause, setPauseGameReference, togglePauseUI} from "../../ui/Pause.js
 import { Network } from "../../utils/Network.js";
 import {MultiplayerTestMode} from "../../multiplayer/MultiplayerTestMode.js";
 
+const MIN_MATCH_DURATION_S = 10;
+const MAX_MATCH_DURATION_S = 3600;
+
 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 const host = window.location.host;
 const wsUrl = `${protocol}//${host}/ws/`;
@@ -59,6 +62,8 @@ const joinErrorMessage = document.getElementById('join-error-message');
 const startGameBtn = document.getElementById('start-game-btn');
 const fogToggle = document.getElementById('fog-toggle');
 const labelFogToggle = document.getElementById('label-fog-toggle');
+const durationSelect = document.getElementById('duration-select');
+const durationInput = document.getElementById('duration-input');
 
 let isReady = false;
 let currentRoomId = null;
@@ -92,10 +97,30 @@ network.on('stateRoom', (payload) => {
 
     fogToggle.checked = payload.isFogEnabled;
 
+    if (payload.matchDuration) {
+        const isEditing = document.activeElement === durationInput || document.activeElement === durationSelect;
+
+        if (!isEditing) {
+            const standardValues = ["60", "120", "180", "300"];
+            if (standardValues.includes(payload.matchDuration.toString())) {
+                durationSelect.value = payload.matchDuration.toString();
+                durationInput.classList.add('hidden');
+                durationInput.value = payload.matchDuration;
+            } else {
+                durationSelect.value = 'custom';
+                durationInput.classList.remove('hidden');
+                durationInput.value = payload.matchDuration;
+            }
+        }
+    }
+
     if (payload.amIHost) {
         startGameBtn.classList.remove('hidden');
         fogToggle.disabled = false;
         labelFogToggle.classList.remove('disabled');
+
+        durationSelect.disabled = false;
+        durationInput.disabled = false;
 
         const isEveryoneReady = payload.users.every(u => u.isReady);
 
@@ -110,6 +135,8 @@ network.on('stateRoom', (payload) => {
         startGameBtn.classList.add('hidden');
         fogToggle.disabled = true;
         labelFogToggle.classList.add('disabled');
+        durationSelect.disabled = true;
+        durationInput.disabled = true;
     }
     if (screens.game.classList.contains('hidden')) {
         showScreen('room');
@@ -124,6 +151,28 @@ startGameBtn.addEventListener('click', () => {
 fogToggle.addEventListener('change', (e) => {
     const isFogOn = fogToggle.checked === true;
     network.send('toggle-fog', { isEnabled: isFogOn});
+});
+durationSelect.addEventListener('change', (e) => {
+    if (e.target.value === 'custom') {
+        durationInput.classList.remove('hidden');
+        durationInput.focus();
+    } else {
+        durationInput.classList.add('hidden');
+        const selectedDuration = parseInt(e.target.value, 10);
+        network.send('change-match-duration', { duration: selectedDuration });
+    }
+});
+
+durationInput.addEventListener('change', (e) => {
+    let selectedDuration = parseInt(e.target.value, 10);
+    if (isNaN(selectedDuration) || selectedDuration < MIN_MATCH_DURATION_S) {
+        selectedDuration = MIN_MATCH_DURATION_S;
+        e.target.value = selectedDuration;
+    } else if (selectedDuration > MAX_MATCH_DURATION_S) {
+        selectedDuration = MAX_MATCH_DURATION_S;
+        e.target.value = selectedDuration;
+    }
+    network.send('change-match-duration', { duration: selectedDuration });
 });
 
 network.on('join-error', (payload) => {

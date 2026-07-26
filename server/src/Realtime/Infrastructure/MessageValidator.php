@@ -2,6 +2,8 @@
 
 namespace App\Realtime\Infrastructure;
 
+use App\Realtime\Domain\Map\GameConfig;
+
 class MessageValidator
 {
     public function isValidData(string $type, array $data): bool
@@ -16,6 +18,7 @@ class MessageValidator
             'shot' => $this->isValidShotPlayer($data),
             'reload' => $this->isValidReloadPlayer($data),
             'toggle-fog' => $this->isValidToggleFog($data),
+            'change-match-duration' => $this->isValidChangeMatchDuration($data),
             default => false,
         };
     }
@@ -88,5 +91,12 @@ class MessageValidator
     private function isValidToggleFog(array $data): bool
     {
         return isset($data['isEnabled']);
+    }
+    private function isValidChangeMatchDuration(array $data): bool
+    {
+        return isset($data['duration'])
+            && is_numeric($data['duration'])
+            && $data['duration'] >= GameConfig::MIN_MATCH_DURATION_S
+            && $data['duration'] <= GameConfig::MAX_MATCH_DURATION_S;
     }
 }

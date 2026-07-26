@@ -29,6 +29,8 @@ class GameConfig
     public const int HP_SIZE = 100;
     public const float RESPAWN_TIME_S = 5.0;
     public const float MATCH_DURATION_S = 30;
+    public const float MIN_MATCH_DURATION_S = 10;
+    public const float MAX_MATCH_DURATION_S = 3600;
     public const int MAX_COUNT_USERS = 15;
     public const int RADIUS_OF_CLOSE_OBSERVE = 200;
     public const int MAX_HEALTH_PLAYER = 100;

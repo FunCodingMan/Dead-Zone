@@ -20,6 +20,7 @@ class Room
     private MessageQueue $queue;
     private bool $isStart;
     private bool $isFogEnabled;
+    private int $matchDuration;
 
 
     /** @throws RandomException */
@@ -35,6 +36,7 @@ class Room
         $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map);
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
+        $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
     }
 
     public function addUser(int $fd, User $user): void
@@ -64,6 +66,7 @@ class Room
         $state['countUsers'] = $this->getCountUsers();
         $state["maxCountUsers"] = GameConfig::MAX_COUNT_USERS;
         $state['isFogEnabled'] = $this->isFogEnabled;
+        $state['matchDuration'] = $this->matchDuration;
         return $state;
     }
 
@@ -156,6 +159,11 @@ class Room
     public function isFogEnabled(): bool
     {
         return $this->isFogEnabled;
+    }
+    public function setMatchDuration(int $duration): void
+    {
+        $this->matchDuration = $duration;
+        $this->gameEngine->setMatchDuration((float)$duration);
     }
 
 

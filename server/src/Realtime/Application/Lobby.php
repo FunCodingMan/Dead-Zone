@@ -33,6 +33,7 @@ class Lobby
             'ready' => $this->readyUser($data["fd"], $data["payload"]["isReady"]),
             'start-game' => $this->startGame($data["fd"]),
             'toggle-fog' => $this->toggleFog($data["fd"], isset($payload["isEnabled"]) ? (bool)$payload["isEnabled"] : true),
+            'change-match-duration' => $this->changeMatchDuration($data["fd"], (int)($payload["duration"] ?? GameConfig::MATCH_DURATION_S)),
             'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
@@ -56,6 +57,17 @@ class Lobby
             if ($room->isStarted()) {
                 $room->updateGameState();
             }
+        }
+    }
+    private function changeMatchDuration(int $fd, int $duration): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->isUserHost($fd)) {
+            $room->setMatchDuration($duration);
+            $this->updateStateRoom($room);
         }
     }
 

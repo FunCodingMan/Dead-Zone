@@ -139,3 +139,88 @@ body, html {
     cursor: not-allowed;
     pointer-events: none;
 }
+
+.room-settings__select-wrapper {
+    position: relative;
+    width: 160px;
+}
+
+.room-settings__select {
+    width: 100%;
+    padding: 6px 10px;
+    background-color: #111;
+    color: #fff;
+    border: 2px solid #555;
+    font-family: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    appearance: none;
+}
+
+.room-settings__select-wrapper::after {
+    content: '▼';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #555;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+.room-settings__select:hover,
+.room-settings__select:focus {
+    border-color: #00ff00;
+}
+
+.room-settings__select:focus + .room-settings__select-wrapper::after {
+    color: #00ff00;
+}
+
+.room-settings__select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #444;
+    background-color: #1a1a1a;
+}
+
+.room-settings__duration-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.room-settings__input {
+    width: 70px;
+    padding: 6px 5px;
+    background-color: #111;
+    color: #fff;
+    border: 2px solid #555;
+    font-family: inherit;
+    font-size: 16px;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.room-settings__input:hover,
+.room-settings__input:focus {
+    border-color: #00ff00;
+}
+
+.room-settings__input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #1a1a1a;
+}
+
+.room-settings__input::-webkit-outer-spin-button,
+.room-settings__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.room-settings__input[type=number] {
+    -moz-appearance: textfield;
+}

@@ -60,6 +60,22 @@
                         <input type="checkbox" class="room-settings__checkbox" id="fog-toggle" checked>
                         <span class="room-settings__custom-checkbox"></span>
                     </label>
+                    <div class="room-settings__item" id="label-duration-controls">
+                        <span class="room-settings__label-text">ДЛИТЕЛЬНОСТЬ</span>
+                        <div class="room-settings__duration-controls">
+                            <div class="room-settings__select-wrapper">
+                                <select class="room-settings__select" id="duration-select">
+                                    <option value="60">1 МИНУТА</option>
+                                    <option value="120">2 МИНУТЫ</option>
+                                    <option value="180" selected>3 МИНУТЫ</option>
+                                    <option value="300">5 МИНУТ</option>
+                                    <option value="custom">СВОЁ</option>
+                                </select>
+                            </div>
+
+                            <input type="number" class="room-settings__input hidden" id="duration-input" placeholder="Сек" min="10" max="3600">
+                        </div>
+                    </div>
                 </div>
             </div>
             <button class="room-submit ready-btn btn" id="ready-btn">ГОТОВ</button>

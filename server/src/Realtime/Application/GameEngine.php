@@ -20,7 +20,7 @@ class GameEngine
     private MatchResultNotifier $resultNotifier;
     private array $disconnectedStats = [];
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, float $matchDuration = GameConfig::MATCH_DURATION_S)
     {
         $this->ws = $ws;
         $this->map = $map;
@@ -28,7 +28,7 @@ class GameEngine
         $this->queue = $queue;
         $this->visibility = new VisibilityService($map);
         $this->combat = new CombatService($this->ws, $this->registry, $map);
-        $this->lifecycle = new MatchLifecycle();
+        $this->lifecycle = new MatchLifecycle($matchDuration);
         $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry);
     }
 
@@ -84,6 +84,10 @@ class GameEngine
                 'kd' => $kdFormatted
             ];
         }
+    }
+    public function setMatchDuration(float $duration): void
+    {
+        $this->lifecycle->setDuration($duration);
     }
 
 

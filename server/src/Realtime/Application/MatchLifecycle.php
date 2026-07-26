@@ -8,11 +8,13 @@ class MatchLifecycle
 {
     private float $startTime;
     private bool $isEnded;
+    private float $duration;
 
-    public function __construct()
+    public function __construct(float $duration = 0.0)
     {
         $this->startTime = 0.0;
         $this->isEnded = false;
+        $this->duration = $duration;
     }
 
     public function start(float $now): void
@@ -23,7 +25,7 @@ class MatchLifecycle
 
     public function getTimeLeft(float $now): float
     {
-        return max(0.0, GameConfig::MATCH_DURATION_S - ($now - $this->startTime));
+        return max(0.0, $this->duration - ($now - $this->startTime));
     }
 
     public function isOver(float $now): bool
@@ -32,8 +34,12 @@ class MatchLifecycle
         return $this->getTimeLeft($now) <= 0.0;
     }
 
-        public function markEnded(): void
+    public function markEnded(): void
     {
         $this->isEnded = true;
+    }
+    public function setDuration(float $duration): void
+    {
+        $this->duration = $duration;
     }
 }
