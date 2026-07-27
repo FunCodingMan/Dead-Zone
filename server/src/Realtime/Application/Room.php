@@ -5,6 +5,10 @@ namespace App\Realtime\Application;
 use App\Realtime\Domain\LevelRepository;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
+use App\Realtime\Domain\Mode\DeathMatchMode;
+use App\Realtime\Domain\Mode\GameModeInterface;
+use App\Realtime\Domain\Mode\RoundBasedTeamMode;
+use App\Realtime\Domain\Mode\TeamDeathMatchMode;
 use App\Realtime\Domain\Model\LobbyUser;
 use App\Realtime\Infrastructure\WebSocketTransport;
 use App\Site\app\model\User;
@@ -22,11 +26,20 @@ class Room
     private bool $isStart;
     private bool $isFogEnabled;
     private int $matchDuration;
+    private GameModeInterface $mode;
+    private string $modeType = GameConfig::MODE_DEATHMATCH;
 
 
     /** @throws RandomException */
     public function __construct(WebSocketTransport $ws, IUserRepository $userRepository)
     {
+        if ($this->modeType === GameConfig::MODE_ROUND_BASED) {
+            $this->mode = new RoundBasedTeamMode();
+        } elseif ($this->modeType === GameConfig::MODE_TDM) {
+            $this->mode = new TeamDeathMatchMode();
+        } else {
+            $this->mode = new DeathMatchMode();
+        }
         $this->isStart = false;
         $this->lobbyUsers = [];
         $this->roomId = bin2hex(random_bytes(8));
@@ -34,7 +47,7 @@ class Room
         $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
-        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $userRepository);
+        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $userRepository,  $this->mode);
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
         $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
@@ -48,7 +61,72 @@ class Room
             $lobbyUser->setHost(true);
         }
 
+        if (in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+            $redCount = 0;
+            $blueCount = 0;
+            foreach ($this->lobbyUsers as $existingUser) {
+                if ($existingUser->getTeam() === GameConfig::TEAM_RED) $redCount++;
+                if ($existingUser->getTeam() === GameConfig::TEAM_BLUE) $blueCount++;
+            }
+            $lobbyUser->setTeam($redCount <= $blueCount ? GameConfig::TEAM_RED : GameConfig::TEAM_BLUE);
+        } else {
+            $lobbyUser->setTeam(GameConfig::TEAM_NONE);
+        }
+
         $this->lobbyUsers[$fd] = $lobbyUser;
+    }
+
+    public function changeModeType(string $newMode): bool
+    {
+        if ($this->isStart || !in_array($newMode, [GameConfig::MODE_DEATHMATCH, GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+            return false;
+        }
+
+        if ($this->modeType === $newMode) {
+            return true;
+        }
+
+        $this->modeType = $newMode;
+
+        if ($this->modeType === GameConfig::MODE_ROUND_BASED) {
+            $this->mode = new RoundBasedTeamMode();
+        } elseif ($this->modeType === GameConfig::MODE_TDM) {
+            $this->mode = new TeamDeathMatchMode();
+        } else {
+            $this->mode = new DeathMatchMode();
+        }
+
+        if (in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+            $isRed = true;
+            foreach ($this->lobbyUsers as $user) {
+                $user->setTeam($isRed ? GameConfig::TEAM_RED : GameConfig::TEAM_BLUE);
+                $isRed = !$isRed;
+            }
+        } else {
+            foreach ($this->lobbyUsers as $user) {
+                $user->setTeam(GameConfig::TEAM_NONE);
+            }
+        }
+
+        $this->gameEngine->setGameMode($this->mode);
+
+        return true;
+    }
+
+    public function switchUserTeam(int $fd, string $targetTeam): bool
+    {
+        if (!in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true) || !in_array($targetTeam, [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true)) {
+            return false;
+        }
+
+        $currentUser = $this->lobbyUsers[$fd] ?? null;
+
+        if (!$currentUser || $currentUser->getTeam() === $targetTeam) {
+            return false;
+        }
+
+        $currentUser->setTeam($targetTeam);
+        return true;
     }
 
     public function getStateRoom(): array
@@ -59,7 +137,8 @@ class Room
             $users[] = [
                 "nickname" => $lobbyUser->getNickname(),
                 "isReady" => $lobbyUser->isReady(),
-                "isHost" => $lobbyUser->isHost()
+                "isHost" => $lobbyUser->isHost(),
+                "team" => $lobbyUser->getTeam()
             ];
         }
         $state['roomId'] = $this->roomId;
@@ -68,6 +147,7 @@ class Room
         $state["maxCountUsers"] = GameConfig::MAX_COUNT_USERS;
         $state['isFogEnabled'] = $this->isFogEnabled;
         $state['matchDuration'] = $this->matchDuration;
+        $state['modeType'] = $this->modeType;
         return $state;
     }
 
@@ -132,7 +212,9 @@ class Room
     {
         if ($this->isStart) return;
         foreach ($this->lobbyUsers as $lobbyUser) {
-            $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId(), $lobbyUser->getNickname());
+            $player = $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId(), $lobbyUser->getNickname());
+
+            $player->setTeam($lobbyUser->getTeam());
         }
         $this->gameEngine->spawnPlayers();
         $this->isStart = true;
@@ -140,7 +222,7 @@ class Room
 
     public function isStarted(): bool
     {
-        return $this->isStart;
+        return $this->isStart && !$this->gameEngine->isMatchEnded();
     }
 
     public function updateGameState(): void

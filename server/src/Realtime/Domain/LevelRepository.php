@@ -7,8 +7,8 @@ class LevelRepository
     private const array LEVELS = [
         'classic' => "
         ###########################################################
-        #       #      #                       P                 P#
-        #  P    #      #                     #############        #
+        #       #      #       RRRRRRRRR        P                 P#
+        #  P    #      #       RRRRRRRRR     #############        #
         #       #      #                     #   BB     BB        #
         #  P                                     BB           B   #
         #                                    #BB   ########       #
@@ -29,8 +29,8 @@ class LevelRepository
         # P#    #    P B      B#  #        #      #BB   ##        #
         #  #                          B    #  B B #     ##        #
         #  ##  ###B#####   B   #  #        #  ####     ###B#####  #
-        #  # P    #           B#  #                 B         #   #
-        #         #        B  B#  #                 B   B     # P #
+        #  # P    #           B#  #   UUUUUUUUU     B         #   #
+        #         #        B  B#  #   UUUUUUUUU     B   B     # P #
         #         #  P BBBBBBBB#  #      P #       BBBBB  P   #   #
         ###########################################################",
         'classic_' => "

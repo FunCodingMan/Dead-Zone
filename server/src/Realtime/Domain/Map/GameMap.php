@@ -4,7 +4,7 @@ namespace App\Realtime\Domain\Map;
 
 class GameMap
 {
-    private array $playerSpawns = [];
+    private array $spawns = [];
     private array $grid = [];
     private array $boxMap = [];
     private int $width = 0;
@@ -12,7 +12,13 @@ class GameMap
 
     public function loadLevel(string $levelString): void
     {
-        $this->playerSpawns = [];
+        $this->spawns = [
+            GameConfig::SYMBOL_PLAYER => [],
+            GameConfig::SYMBOL_SPAWN_RED => [],
+            GameConfig::SYMBOL_SPAWN_BLUE => [],
+        ];
+        $this->boxMap = [];
+        $this->grid = [];
 
         $lines = explode("\n", trim($levelString));
 
@@ -39,7 +45,9 @@ class GameMap
     {
         match ($symbol) {
             GameConfig::SYMBOL_BOX => $this->addBox($x, $y, $row, $col),
-            GameConfig::SYMBOL_PLAYER => $this->addPlayerSpawn($x, $y),
+            GameConfig::SYMBOL_PLAYER,
+            GameConfig::SYMBOL_SPAWN_RED,
+            GameConfig::SYMBOL_SPAWN_BLUE => $this->addSpawn($symbol, $x, $y),
             default => null,
         };
     }
@@ -51,11 +59,15 @@ class GameMap
         $this->boxMap["{$row}_{$col}"] = $box;
     }
 
-    private function addPlayerSpawn(float $x, float $y): void
+    private function addSpawn(string $symbol, float $x, float $y): void
     {
         $offsetX = (GameConfig::CELL_SIZE - GameConfig::PLAYER_WIDTH) / 2;
         $offsetY = (GameConfig::CELL_SIZE - GameConfig::PLAYER_HEIGHT) / 2;
-        $this->playerSpawns[] = ['x' => $x + $offsetX, 'y' => $y + $offsetY, 'isFree' => true];
+        $this->spawns[$symbol][] = [
+            'x' => $x + $offsetX,
+            'y' => $y + $offsetY,
+            'isFree' => true
+        ];
     }
 
     public function isSolidPoint(float $x, float $y): bool
@@ -106,30 +118,33 @@ class GameMap
 
     public function findFreeSpawn(string $symbol): array
     {
-        $spawns = &$this->playerSpawns;
+        echo $symbol;
+        if (empty($this->spawns[$symbol])) {
+            $symbol = GameConfig::SYMBOL_PLAYER;
+        }
+        $spawnsGroup = &$this->spawns[$symbol];
 
-        if (empty($spawns)) {
+        if (empty($spawnsGroup)) {
             return ['x' => 100, 'y' => 100];
         }
 
-        $freePlaces = array_filter($spawns, fn($spawn) => $spawn['isFree'] === true);
+        $freePlaces = array_filter($spawnsGroup, fn($spawn) => $spawn['isFree'] === true);
 
         if (empty($freePlaces)) {
-            foreach ($spawns as &$spawn) {
+            foreach ($spawnsGroup as &$spawn) {
                 $spawn['isFree'] = true;
             }
-            $freePlaces = $spawns;
+            $freePlaces = $spawnsGroup;
         }
 
         $randomKey = array_rand($freePlaces);
 
-        $spawns[$randomKey]['isFree'] = false;
+        $spawnsGroup[$randomKey]['isFree'] = false;
 
         return [
-            'x' => $spawns[$randomKey]['x'],
-            'y' => $spawns[$randomKey]['y'],
+            'x' => $spawnsGroup[$randomKey]['x'],
+            'y' => $spawnsGroup[$randomKey]['y'],
         ];
-
     }
 
     public function getWidth(): int

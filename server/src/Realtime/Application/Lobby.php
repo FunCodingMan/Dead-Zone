@@ -37,6 +37,8 @@ class Lobby
             'start-game' => $this->startGame($data["fd"]),
             'toggle-fog' => $this->toggleFog($data["fd"], isset($payload["isEnabled"]) ? (bool)$payload["isEnabled"] : true),
             'change-match-duration' => $this->changeMatchDuration($data["fd"], (int)($payload["duration"] ?? GameConfig::MATCH_DURATION_S)),
+            'change-mode' => $this->changeMode($data["fd"], $payload["mode"] ?? GameConfig::MODE_DEATHMATCH),
+            'switch-team' => $this->switchTeam($data["fd"], $payload["team"] ?? GameConfig::TEAM_NONE),
             'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
@@ -60,6 +62,27 @@ class Lobby
             if ($room->isStarted()) {
                 $room->updateGameState();
             }
+        }
+    }
+    private function changeMode(int $fd, string $modeType): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->isUserHost($fd)) {
+            if ($room->changeModeType($modeType)) {
+                $this->updateStateRoom($room);
+            }
+        }
+    }
+    private function switchTeam(int $fd, string $team): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+        if ($room->switchUserTeam($fd, $team)) {
+            $this->updateStateRoom($room);
         }
     }
     private function changeMatchDuration(int $fd, int $duration): void
