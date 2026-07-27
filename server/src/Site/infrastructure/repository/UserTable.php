@@ -2,6 +2,7 @@
 
 namespace App\Site\infrastructure\repository;
 
+use App\Realtime\Domain\Map\GameConfig;
 use App\Site\app\model\Stats;
 use App\Site\app\model\User;
 use App\Site\app\repository\IConnectionProvider;
@@ -106,15 +107,15 @@ class UserTable implements IUserRepository
         return throw new RuntimeException("Stats not found for user_id: $userId");
     }
 
-    public function updateDataUser(string $userId, int $kills, int $deaths, bool $isDeathmatch, bool $isTeamDeathmatch, bool $elimination): void
+    public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void
     {
-        $deathmatchWins = $isDeathmatch ? 1 : 0;
-        $teamDeathmatchWins = $isTeamDeathmatch ? 1 : 0;
-        $eliminationWins = $elimination ? 1 : 0;
-
-        $deathmatchLose = !$isDeathmatch ? 1 : 0;
-        $teamDeathmatchLose = !$isTeamDeathmatch ? 1 : 0;
-        $eliminationLose = !$elimination ? 1 : 0;
+//        $deathmatchWins = $isDeathmatch ? 1 : 0;
+//        $teamDeathmatchWins = $isTeamDeathmatch ? 1 : 0;
+//        $eliminationWins = $isElimination ? 1 : 0;
+//
+//        $deathmatchLose = !$isDeathmatch ? 1 : 0;
+//        $teamDeathmatchLose = !$isTeamDeathmatch ? 1 : 0;
+//        $eliminationLose = !$isElimination ? 1 : 0;
 
         $query = "UPDATE `stats` SET
             `kills` = `kills` + :kills,

@@ -67,16 +67,7 @@ class MatchResultNotifier
                 $isWinner = $player->getNickname() === $payload['winner'];
             }
 
-            $wins = $isWinner ? 1 : 0;
-            $loses = $isWinner ? 0 : 1;
-
-            $this->userRepository->updateDataUser(
-                $player->getUserId(),
-                $player->getKills() ?? 0,
-                $player->getDeaths() ?? 0,
-                $wins,
-                $loses
-            );
+            $this->userRepository->updateDataUser($player->getUserId(), $payload['kills'], $payload['deaths'], $isWinner, $payload['mode']);
         }
 
         $packet = [
