@@ -8,6 +8,7 @@ use App\Realtime\Domain\Map\GameMap;
 use App\Realtime\Domain\Model\LobbyUser;
 use App\Realtime\Infrastructure\WebSocketTransport;
 use App\Site\app\model\User;
+use App\Site\app\repository\IUserRepository;
 use Random\RandomException;
 
 class Room
@@ -24,7 +25,7 @@ class Room
 
 
     /** @throws RandomException */
-    public function __construct(WebSocketTransport $ws)
+    public function __construct(WebSocketTransport $ws, IUserRepository $userRepository)
     {
         $this->isStart = false;
         $this->lobbyUsers = [];
@@ -33,7 +34,7 @@ class Room
         $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
-        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map);
+        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $userRepository);
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
         $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;

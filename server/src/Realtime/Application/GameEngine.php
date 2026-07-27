@@ -6,6 +6,7 @@ use App\Realtime\Domain\Combat\VisibilityService;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
 use App\Realtime\Infrastructure\WebSocketTransport;
+use App\Site\app\repository\IUserRepository;
 
 class GameEngine
 {
@@ -20,7 +21,7 @@ class GameEngine
     private MatchResultNotifier $resultNotifier;
     private array $disconnectedStats = [];
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, float $matchDuration = GameConfig::MATCH_DURATION_S)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, IUserRepository $userRepository, $matchDuration = GameConfig::MATCH_DURATION_S)
     {
         $this->ws = $ws;
         $this->map = $map;
@@ -29,14 +30,17 @@ class GameEngine
         $this->visibility = new VisibilityService($map);
         $this->combat = new CombatService($this->ws, $this->registry, $map);
         $this->lifecycle = new MatchLifecycle($matchDuration);
-        $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry);
+        $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry, $userRepository);
     }
 
     public function pushData(): void
     {
         $now = microtime(true);
         if ($this->lifecycle->isOver($now)) {
-            $this->endMatch();
+            if (!$this->lifecycle->getSumUp()) {
+                $this->endMatch();
+                $this->lifecycle->setSumUp(true);
+            }
             return;
         }
 

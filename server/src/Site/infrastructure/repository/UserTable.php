@@ -100,4 +100,23 @@ class UserTable implements IUserRepository
         }
         return throw new RuntimeException("Stats not found for user_id: $userId");
     }
+
+    public function updateDataUser(string $userId, int $kills, int $deaths, int $wins, int $loses): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `wins` = `wins` + :wins,
+            `loses` = `loses` + :loses
+        WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'wins' => $wins,
+            'loses' => $loses,
+            'user_id' => $userId,
+        ]);
+    }
 }

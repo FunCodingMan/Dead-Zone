@@ -19,7 +19,7 @@ $connectionUser= new ConnectionRegistry($repository);
 $validator = new MessageValidator();
 $ws = new \App\Realtime\Infrastructure\WebSocketTransport($server, $validator);
 
-$lobby = new Lobby($ws, $connectionUser);
+$lobby = new Lobby($ws, $connectionUser, $repository);
 
 
 $server->on('open', function ($server, $request) use ($connectionUser) {
@@ -35,14 +35,10 @@ $server->on('open', function ($server, $request) use ($connectionUser) {
 $server->on('message', function ($server, $frame) use ($ws, $lobby) {
     echo "Получено от #{$frame->fd}: {$frame->data}\n";
     $data = $ws->parse($frame->fd, $frame->data);
-
     if (empty($data)) {
         return;
     }
-
     $lobby->handleMessage($data);
-
-    echo json_encode($data, JSON_UNESCAPED_UNICODE) . "---------------------------\n\n";
 });
 
 $server->on('close', function ($server, $fd) use ($connectionUser, $lobby) {

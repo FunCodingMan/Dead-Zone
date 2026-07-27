@@ -9,12 +9,14 @@ class MatchLifecycle
     private float $startTime;
     private bool $isEnded;
     private float $duration;
+    private bool $isSumUp;
 
     public function __construct(float $duration = 0.0)
     {
         $this->startTime = 0.0;
         $this->isEnded = false;
         $this->duration = $duration;
+        $this->isSumUp = false;
     }
 
     public function start(float $now): void
@@ -32,6 +34,16 @@ class MatchLifecycle
     {
         if ($this->isEnded) return true;
         return $this->getTimeLeft($now) <= 0.0;
+    }
+
+    public function getSumUp(): bool
+    {
+        return $this->isSumUp;
+    }
+
+    public function setSumUp(bool $isSumUp): void
+    {
+        $this->isSumUp = $isSumUp;
     }
 
     public function markEnded(): void

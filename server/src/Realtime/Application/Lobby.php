@@ -5,6 +5,7 @@ namespace App\Realtime\Application;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Infrastructure\ConnectionRegistry;
 use App\Realtime\Infrastructure\WebSocketTransport;
+use App\Site\app\repository\IUserRepository;
 
 class Lobby
 {
@@ -14,13 +15,15 @@ class Lobby
     private array $fdToRoomId;
     private ConnectionRegistry $connection;
     private WebSocketTransport $ws;
+    private IUserRepository $userRepository;
 
-    public function __construct(WebSocketTransport $ws, ConnectionRegistry $connection)
+    public function __construct(WebSocketTransport $ws, ConnectionRegistry $connection, IUserRepository $userRepository)
     {
         $this->rooms = [];
         $this->fdToRoomId = [];
         $this->ws = $ws;
         $this->connection = $connection;
+        $this->userRepository = $userRepository;
     }
 
     public function handleMessage(array $data): void
@@ -107,7 +110,7 @@ class Lobby
         if (isset($this->fdToRoomId[$fd])) {
             return;
         }
-        $room = new Room($this->ws);
+        $room = new Room($this->ws, $this->userRepository);
         $roomId = $room->getRoomId();
         $user = $this->connection->getUser($fd);
         if ($user === null) {

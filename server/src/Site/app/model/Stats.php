@@ -10,7 +10,7 @@ class Stats
     private int $deaths;
     private int $kd;
 
-    public function __construct(?int $wins = null, ?int $losses = null, ?int $kills = null, ?int $deaths = null, ?int $kd = null)
+    public function __construct(?int $wins = null, ?int $loses = null, ?int $kills = null, ?int $deaths = null, ?int $kd = null)
     {
         $this->wins = $wins ?? 0;
         $this->loses = $loses ?? 0;

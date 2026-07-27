@@ -3,16 +3,19 @@
 namespace App\Realtime\Application;
 
 use App\Realtime\Infrastructure\WebSocketTransport;
+use App\Site\app\repository\IUserRepository;
 
 class MatchResultNotifier
 {
     private WebSocketTransport $ws;
     private PlayerRegistry $registry;
+    private IUserRepository $userRepository;
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, IUserRepository $userRepository)
     {
         $this->ws = $ws;
         $this->registry = $registry;
+        $this->userRepository = $userRepository;
     }
 
     public function notifyGameOver(array $disconnectedStats = []): void
@@ -22,6 +25,7 @@ class MatchResultNotifier
         foreach ($activePlayers as $player) {
             $kills = $player->getKills() ?? 0;
             $deaths = $player->getDeaths() ?? 0;
+            $this->userRepository->updateDataUser($player->getUserId(), $kills, $deaths, 1, 1);
 
             if ($deaths === 0) {
                 $kd = $kills;
@@ -29,6 +33,7 @@ class MatchResultNotifier
                 $kd = $kills / $deaths;
             }
             $kdFormatted = number_format($kd, 2, '.', '');
+
             $stats[] = [
                 'nickname' => $player->getNickname(),
                 'kills' => $kills,
@@ -36,8 +41,6 @@ class MatchResultNotifier
                 'kd' => $kdFormatted,
             ];
         }
-
-        //Сделать сохрание в БД
 
         $finalStats = array_merge($stats, $disconnectedStats);
 
