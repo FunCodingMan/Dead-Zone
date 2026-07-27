@@ -5,6 +5,7 @@ namespace App\Realtime\Application;
 use App\Realtime\Domain\Combat\VisibilityService;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
+use App\Realtime\Domain\Mode\GameModeInterface;
 use App\Realtime\Infrastructure\WebSocketTransport;
 
 class GameEngine
@@ -19,36 +20,63 @@ class GameEngine
     private MatchLifecycle $lifecycle;
     private MatchResultNotifier $resultNotifier;
     private array $disconnectedStats = [];
+    private GameModeInterface $gameMode;
+    private bool $isBetweenRounds = false;
+    private float $nextRoundTime = 0.0;
+    private bool $isMatchEnded = false;
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, float $matchDuration = GameConfig::MATCH_DURATION_S)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, GameModeInterface $gameMode, float $matchDuration = GameConfig::MATCH_DURATION_S)
     {
+        $this->gameMode = $gameMode;
         $this->ws = $ws;
         $this->map = $map;
         $this->registry = $registry;
         $this->queue = $queue;
         $this->visibility = new VisibilityService($map);
-        $this->combat = new CombatService($this->ws, $this->registry, $map);
         $this->lifecycle = new MatchLifecycle($matchDuration);
-        $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry);
+        $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry, $this->gameMode);
+        $this->combat = new CombatService($this->ws, $this->registry, $map, $this->gameMode);
     }
 
     public function pushData(): void
     {
         $now = microtime(true);
-        if ($this->lifecycle->isOver($now)) {
+        if ($this->lifecycle->isOver($now) || $this->gameMode->isMatchOver()) {
             $this->endMatch();
             return;
         }
+        if ($this->isBetweenRounds && $now >= $this->nextRoundTime) {
+            $this->startNewRound();
+        }
+
 
         $this->applyQueuedInput($now);
 
         $players = $this->registry->getPlayers();
-        $this->checkRespawn($players, $now);
+        if ($this->gameMode->isRespawnAllowed()) {
+            $this->checkRespawn($players, $now);
+        }
 
         foreach ($players as $player) {
             $player->applyMovement($this->map);
         }
 
+        if (!$this->isBetweenRounds) {
+            $roundWinner = $this->gameMode->checkRoundState($players);
+            if ($roundWinner !== null) {
+                if ($this->gameMode->isMatchOver()) {
+                    $this->endMatch();
+                } else {
+                    $this->handleRoundEnd($roundWinner, $now);
+                }
+            }
+        }
+
+        $this->broadcastCurrentState($now);
+    }
+    private function broadcastCurrentState(float $now): void
+    {
+        $players = $this->registry->getPlayers();
         foreach ($players as $player) {
             $others = $this->visibility->getVisiblePlayers($player, $players);
             $this->registry->sendVisiblePlayers($player, $others);
@@ -56,6 +84,44 @@ class GameEngine
 
         $visiblePlayers = $this->registry->getVisiblePlayers();
         $this->ws->broadcastGameState($visiblePlayers, $this->lifecycle->getTimeLeft($now));
+    }
+    private function handleRoundEnd(string $winnerTeam, float $now): void
+    {
+        $this->isBetweenRounds = true;
+        $this->nextRoundTime = $now + GameConfig::PAUSE_BETWEEN_ROUNDS_S;
+
+        $payload = [
+            'winnerTeam' => $winnerTeam,
+            'scores' => $this->gameMode->getScores()
+        ];
+
+        foreach ($this->registry->getPlayers() as $player) {
+            $this->ws->send($player->getFd(), [
+                'type' => 'round_end',
+                'payload' => $payload
+            ]);
+        }
+    }
+    public function isMatchEnded(): bool
+    {
+        return $this->isMatchEnded;
+    }
+    private function startNewRound(): void
+    {
+        $this->isBetweenRounds = false;
+        $players = $this->registry->getPlayers();
+
+        foreach ($players as $player) {
+            $spawn = $this->gameMode->getSpawnPoint($player, $this->map);
+            $player->respawn($spawn['x'], $spawn['y']);
+        }
+
+        foreach ($players as $player) {
+            $this->ws->send($player->getFd(), [
+                'type' => 'round_start',
+                'payload' => []
+            ]);
+        }
     }
     public function setFogOfWar(bool $enabled): void
     {
@@ -90,13 +156,23 @@ class GameEngine
         $this->lifecycle->setDuration($duration);
     }
 
+    public function setGameMode(GameModeInterface $mode): void
+    {
+        $this->gameMode = $mode;
+        $this->combat->setMode($this->gameMode);
+        $this->resultNotifier->setMode($this->gameMode);
+    }
+
 
     public function spawnPlayers(): void
     {
         $this->lifecycle->start(microtime(true));
         $players = $this->registry->getPlayers();
+
+        $this->gameMode->assignTeams($players);
+
         foreach ($players as $player) {
-            $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
+            $spawn = $this->gameMode->getSpawnPoint($player, $this->map);
             $player->setPos($spawn['x'], $spawn['y']);
         }
     }
@@ -106,7 +182,7 @@ class GameEngine
         foreach ($players as $player) {
             if ($player->isDead()) {
                 if (($now - $player->getDeathTime()) >= GameConfig::RESPAWN_TIME_S) {
-                    $spawn = $this->map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
+                    $spawn = $this->gameMode->getSpawnPoint($player, $this->map);
                     $player->respawn($spawn['x'], $spawn['y']);
                 }
             }
@@ -133,6 +209,11 @@ class GameEngine
 
     private function endMatch(): void
     {
+        if ($this->isMatchEnded) {
+            return;
+        }
+        echo $this->isMatchEnded;
+        $this->isMatchEnded = true;
         $this->lifecycle->markEnded();
         $this->resultNotifier->notifyGameOver($this->disconnectedStats);
     }

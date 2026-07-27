@@ -5,6 +5,7 @@ namespace App\Realtime\Application;
 use App\Realtime\Domain\Combat\HitscanResolver;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
+use App\Realtime\Domain\Mode\GameModeInterface;
 use App\Realtime\Domain\Model\Player;
 use App\Realtime\Infrastructure\WebSocketTransport;
 
@@ -13,12 +14,14 @@ class CombatService
     private WebSocketTransport $ws;
     private PlayerRegistry $registry;
     private GameMap $map;
+    private GameModeInterface $mode;
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, GameMap $map)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, GameMap $map, GameModeInterface $mode)
     {
         $this->ws = $ws;
         $this->registry = $registry;
         $this->map = $map;
+        $this->mode = $mode;
     }
 
     public function handleShot(Player $player, array $payload, float $now): void
@@ -40,11 +43,21 @@ class CombatService
         $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
 
         if ($hitPlayer !== null) {
-            $hitPlayer->takeDamage(20, $now);
-            $this->reportKillIfDead($player, $hitPlayer);
+            if ($this->mode->canDamage($player, $hitPlayer)) {
+                $hitPlayer->takeDamage(GameConfig::PLAYER_DAMAGE, $now);
+
+                if ($hitPlayer->getHealth() <= 0) {
+                    $this->mode->handleKill($player, $hitPlayer);
+                    $this->reportKillIfDead($player, $hitPlayer);
+                }
+            }
         }
 
         $this->notifyShot($player, $finalAngle);
+    }
+    public function setMode(GameModeInterface $mode): void
+    {
+        $this->mode = $mode;
     }
 
     private function calculateDynamicSpread(int $burstCount): float {
@@ -65,9 +78,6 @@ class CombatService
     private function reportKillIfDead(Player $shooter, Player $hitPlayer): void
     {
         if ($hitPlayer->getHealth() > 0) return;
-
-        $shooter->increaseKills();
-        $hitPlayer->increaseDeaths();
 
         $message = [
             "type" => "kill-feed",

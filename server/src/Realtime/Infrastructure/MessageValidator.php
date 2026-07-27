@@ -19,6 +19,8 @@ class MessageValidator
             'reload' => $this->isValidReloadPlayer($data),
             'toggle-fog' => $this->isValidToggleFog($data),
             'change-match-duration' => $this->isValidChangeMatchDuration($data),
+            'change-mode' => $this->isValidChangeMode($data),
+            'switch-team' => $this->isValidSwitchTeam($data),
             default => false,
         };
     }
@@ -98,5 +100,19 @@ class MessageValidator
             && is_numeric($data['duration'])
             && $data['duration'] >= GameConfig::MIN_MATCH_DURATION_S
             && $data['duration'] <= GameConfig::MAX_MATCH_DURATION_S;
+    }
+    private function isValidChangeMode(array $data): bool
+    {
+        return isset($data['mode'])
+            && in_array($data['mode'], [
+                GameConfig::MODE_DEATHMATCH,
+                GameConfig::MODE_TDM,
+                GameConfig::MODE_ROUND_BASED
+            ], true);
+    }
+    private function isValidSwitchTeam(array $data): bool
+    {
+        return isset($data['team'])
+            && in_array($data['team'], [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true);
     }
 }

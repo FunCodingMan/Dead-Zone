@@ -64,6 +64,13 @@ const fogToggle = document.getElementById('fog-toggle');
 const labelFogToggle = document.getElementById('label-fog-toggle');
 const durationSelect = document.getElementById('duration-select');
 const durationInput = document.getElementById('duration-input');
+const modeSelect = document.getElementById('mode-select');
+const teamSelectionControls = document.getElementById('team-selection-controls');
+const teamButtons = document.querySelectorAll('.btn-team');
+const roundBanner = document.getElementById('round-banner');
+const roundBannerText = document.getElementById('round-banner-text');
+const roundScoreRed = document.getElementById('round-score-red');
+const roundScoreBlue = document.getElementById('round-score-blue');
 
 let isReady = false;
 let currentRoomId = null;
@@ -80,8 +87,9 @@ function renderPlayersList(players) {
         const status = player.isReady ? 'ready' : 'waiting';
         const statusText = player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
         const hostIcon = player.isHost ? ' 👑' : '';
+        const teamClass = player.team ? player.team : 'none';
         playerDiv.innerHTML = `
-            <span class="player-name">${player.nickname}${hostIcon}</span>
+            <span class="player-name ${teamClass}">${player.nickname}${hostIcon}</span>
             <span class="player-status ${status}">${statusText}</span>
         `;
         playerList.appendChild(playerDiv);
@@ -113,6 +121,44 @@ network.on('stateRoom', (payload) => {
             }
         }
     }
+    network.on('round_end', (payload) => {
+        console.log('РАУНД ОКОНЧЕН!', payload);
+
+        let text = 'НИЧЬЯ';
+        roundBannerText.className = 'round-banner__text color-draw';
+
+        if (payload.winnerTeam === 'RED' || payload.winnerTeam === 'red') {
+            text = 'КРАСНЫЕ ВЫИГРАЛИ РАУНД';
+            roundBannerText.className = 'round-banner__text color-red';
+        } else if (payload.winnerTeam === 'BLUE' || payload.winnerTeam === 'blue') {
+            text = 'СИНИЕ ВЫИГРАЛИ РАУНД';
+            roundBannerText.className = 'round-banner__text color-blue';
+        }
+
+        roundBannerText.textContent = text;
+        roundScoreRed.textContent = payload.scores.red || 0;
+        roundScoreBlue.textContent = payload.scores.blue || 0;
+
+        roundBanner.classList.remove('hidden');
+    });
+
+    network.on('round_start', () => {
+        console.log('НОВЫЙ РАУНД НАЧАЛСЯ!');
+
+        roundBanner.classList.add('hidden');
+    });
+
+    if (payload.modeType) {
+        modeSelect.value = payload.modeType;
+
+        if (payload.modeType === 'tdm' || payload.modeType === 'round_based') {
+            teamSelectionControls.classList.remove('hidden');
+        } else {
+            teamSelectionControls.classList.add('hidden');
+        }
+    }
+    renderPlayersList(payload.users);
+
 
     if (payload.amIHost) {
         startGameBtn.classList.remove('hidden');
@@ -121,6 +167,7 @@ network.on('stateRoom', (payload) => {
 
         durationSelect.disabled = false;
         durationInput.disabled = false;
+        modeSelect.disabled = false;
 
         const isEveryoneReady = payload.users.every(u => u.isReady);
 
@@ -137,6 +184,7 @@ network.on('stateRoom', (payload) => {
         labelFogToggle.classList.add('disabled');
         durationSelect.disabled = true;
         durationInput.disabled = true;
+        modeSelect.disabled = true;
     }
     if (screens.game.classList.contains('hidden')) {
         showScreen('room');
@@ -173,6 +221,17 @@ durationInput.addEventListener('change', (e) => {
         e.target.value = selectedDuration;
     }
     network.send('change-match-duration', { duration: selectedDuration });
+});
+
+modeSelect.addEventListener('change', (e) => {
+    network.send('change-mode', { mode: e.target.value });
+});
+
+teamButtons.forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const team = e.target.getAttribute('data-team');
+        network.send('switch-team', { team: team });
+    });
 });
 
 network.on('join-error', (payload) => {
@@ -216,12 +275,34 @@ network.on('game-over', (payload) => {
         togglePauseUI(false);
     }
 
+    const titleElement = document.querySelector('#screen-game-over .menu-title');
+
+
+    if (payload.mode === 'tdm' || payload.mode === 'round_based') {
+        let text = 'НИЧЬЯ';
+        if (payload.winnerTeam === 'RED') text = '<span style="color:#ff4444">ПОБЕДА КРАСНЫХ</span>';
+        if (payload.winnerTeam === 'BLUE') text = '<span style="color:#4444ff">ПОБЕДА СИНИХ</span>';
+        titleElement.innerHTML = `${text}<br><span style="font-size:24px; color:#fff">КРАСНЫЕ ${payload.redScore} : ${payload.blueScore} СИНИЕ</span>`;
+    } else {
+        titleElement.innerHTML = `ПОБЕДИТЕЛЬ:<br><span style="color:#ffd700">${payload.winner}</span>`;
+    }
+
     const tbody = document.getElementById('end-game-stats-body');
     tbody.innerHTML = '';
 
     payload.stats.forEach((s, index) => {
-        const color = index === 0 ? '#ffd700' : '#ffffff';
-        const fontWeight = index === 0 ? 'bold' : 'normal';
+        let color = '#ffffff';
+        let fontWeight = 'normal';
+
+        if (payload.mode === 'tdm' || payload.mode === 'round_based') {
+            if (s.team === 'red') color = '#ff4444';
+            if (s.team === 'blue') color = '#4444ff';
+        } else {
+            if (index === 0) {
+                color = '#ffd700';
+                fontWeight = 'bold';
+            }
+        }
 
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #555';

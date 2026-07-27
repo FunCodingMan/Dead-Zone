@@ -51,10 +51,25 @@
                     <span class="cur-players-count count" id="cur-players-count">0</span>/<span class="max-players-count count" id="max-players-count">0</span>
                 </p>
                 <div class="players-list" id="players-list"></div>
+                <div class="team-selection hidden" id="team-selection-controls">
+                    <button class="btn btn-team red" data-team="red">ЗА КРАСНЫХ</button>
+                    <button class="btn btn-team blue" data-team="blue">ЗА СИНИХ</button>
+                </div>
             </div>
             <div class="room-settings">
                 <h3 class="room-settings__title">НАСТРОЙКИ МАТЧА</h3>
                 <div class="room-settings__list">
+                    <div class="room-settings__item" id="label-mode-controls">
+                        <span class="room-settings__label-text">РЕЖИМ ИГРЫ</span>
+                        <div class="room-settings__select-wrapper">
+                            <select class="room-settings__select" id="mode-select">
+                                <option value="deathmatch" selected>САМ ЗА СЕБЯ</option>
+                                <option value="tdm">КОМАНДНЫЙ БОЙ</option>
+                                <option value="round_based">КОМАНДНЫЙ (РАУНДЫ)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <label class="room-settings__item" id="label-fog-toggle">
                         <span class="room-settings__label-text">ТУМАН ВОЙНЫ</span>
                         <input type="checkbox" class="room-settings__checkbox" id="fog-toggle" checked>
@@ -87,6 +102,14 @@
 
         <div class="menu-screen menu-choose screen hidden" id="screen-game">
             <div id="fade-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:black; opacity:0; pointer-events:none; transition: opacity 0.3s;"></div>
+
+            <div id="round-banner" class="round-banner hidden">
+                <div id="round-banner-text" class="round-banner__text">РАУНД ОКОНЧЕН</div>
+                <div id="round-banner-score" class="round-banner__score">
+                    СЧЕТ: <span id="round-score-red" class="color-red">0</span> : <span id="round-score-blue" class="color-blue">0</span>
+                </div>
+            </div>
+
             <canvas id="gameCanvas" width="1280" height="720" data-target="multiplayer"></canvas>
             <div id="screen-pause" class="pause-overlay">
                 <div class="menu-screen menu-choose">
