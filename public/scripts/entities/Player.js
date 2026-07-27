@@ -194,7 +194,11 @@ export class Player extends Character {
         if (this.input.isMouseDown) {
             const now = performance.now();
 
-            if (now - this.lastShootTime >= this.shotCooldown && this.shotsAmount > 0 && !this.isReloading ) {
+            if (
+                now - this.lastShootTime >= this.shotCooldown && 
+                (this.shotsAmount > 0 || this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) && 
+                !this.isReloading 
+            ) {
                 this.createBullet(x, y, CONFIG.PLAYER_SYMBOL, this.bullets);
 
                 this.lastShootTime = now;

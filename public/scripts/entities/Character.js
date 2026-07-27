@@ -62,6 +62,9 @@ export class Character {
         this.playerClass;
         this.map;
 
+        this.bulletRotation = 0;
+        this.bulletRotationSpeed;
+
         this.initSounds();
     }
 
@@ -94,6 +97,10 @@ export class Character {
 
             if (this.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) {
                 this.createBulletFlamethrower(directionX, directionY, spawnX, spawnY, this.angle, owner, bullets);
+            }
+
+            if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                this.createBulletScientist(directionX, directionY, spawnX, spawnY, this.angle, owner, bullets);
             }
         } else if (owner == CONFIG.BOSS_SYMBOL) {
             this.createBulletBoss(targetX, targetY, spawnX, spawnY, owner, bullets);
@@ -188,6 +195,13 @@ export class Character {
             const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
 
             ctx.rotate(angle);
+
+            if (this.bulletRotationSpeed) {
+                bullet.bulletRotation += this.bulletRotationSpeed
+                ctx.rotate(bullet.bulletRotation);
+            }
+
+            console.log(bullet.bulletRotation)
 
             ctx.drawImage(
                 bulletImg,
@@ -321,6 +335,11 @@ export class Character {
 
     }
 
+    createBulletScientist(directionX, directionY, spawnX, spawnY, angle, owner, bullets) {
+
+    }
+
+
     createBUlletTurret(directionX, directionY, spawnX, spawnY, owner, bullets) {
 
     }
@@ -409,6 +428,7 @@ export class Character {
     animateShots(ctx, shot1Img, shot2Img, player) {
         if (!this.isShooting) return;
         if (player.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) return;
+        if (player.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) return;
 
         const now = performance.now();
 

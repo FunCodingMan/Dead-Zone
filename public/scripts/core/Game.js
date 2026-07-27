@@ -84,6 +84,11 @@ export class Game {
                 this.bulletSprite = this.assets.flame;
                 this.reloadIcon = this.assets.flamethrowerReloadIcon;
                 break;
+            case CONFIG.SCIENTIST_CLASS_NAME:
+                this.playerSprite = this.assets.scientist;
+                this.playerReloadSprite = null;
+                this.bulletSprite = this.assets.poison;
+                this.reloadIcon = null;
         }
     }
 
@@ -97,6 +102,7 @@ export class Game {
             this.player.shotOffsetForward = this.player.playerClass.shotOffsetForward;
             this.player.shotOffsetSide = this.player.playerClass.shotOffsetSide;
             this.player.bulletSpeed = this.player.playerClass.bulletSpeed; 
+            this.player.bulletRotationSpeed = this.player.playerClass.bulletRotationSpeed;
         }
         this.player.speed = this.player.playerClass.speed;
         this.player.damage = this.player.playerClass.damage;
@@ -205,7 +211,9 @@ export class Game {
         this.ctx.restore();
 
         if (this.player && this.player.isAlive) {
-            this.player.drawReloadInterface(this.ctx, this.reloadIcon, this.canvas);
+            if ((this.player.playerClass.className != CONFIG.SCIENTIST_CLASS_NAME)) {
+                this.player.drawReloadInterface(this.ctx, this.reloadIcon, this.canvas);
+            }
             this.player.drawHPInterface(this.ctx, this.assets.heartIcon, this.canvas);
         }
 

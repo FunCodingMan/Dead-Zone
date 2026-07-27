@@ -4,6 +4,7 @@ import { Map } from "../core/Map.js";
 import { CONFIG } from "../core/Config.js";
 import { Soldier } from "../entities/ClassesLogic/Soldier.js";
 import { Flamethrower } from "../entities/ClassesLogic/Flamethrower.js";
+import { Scientist } from "../entities/ClassesLogic/Scientist.js";
 
 export class BaseGameTemplate {
     constructor(engine) {
@@ -24,6 +25,9 @@ export class BaseGameTemplate {
                 break;
             case CONFIG.FLAMETHROWER_CLASS_NAME: 
                 this.engine.player = new Flamethrower(this.engine.map, this.engine.input, this.selectedClass);
+                break;
+            case CONFIG.SCIENTIST_CLASS_NAME:
+                this.engine.player = new Scientist(this.engine.map, this.engine.input, this.selectedClass);
                 break;
         }
         

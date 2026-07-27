@@ -25,7 +25,10 @@ export class AssetManager {
             bossLaserAttack: new Image(),
             bossLaser: new Image(),
             bossLightning: new Image(),
-            turret: new Image()
+            turret: new Image(),
+            scientist: new Image(),
+            poison: new Image(),
+            poisonParticle: new Image()
         };
 
         this.imagePaths = {
@@ -52,7 +55,10 @@ export class AssetManager {
             bossLaserAttack: '/assets/boss_laser_attack.png',
             bossLaser: '/assets/laser.png',
             bossLightning: '/assets/lightning.png',
-            turret: '/assets/turret.png'
+            turret: '/assets/turret.png',
+            scientist: '/assets/scientist.png',
+            poison: '/assets/poison.png',
+            poisonParticle: '/assets/poison_particle.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;

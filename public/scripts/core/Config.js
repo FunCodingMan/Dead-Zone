@@ -10,6 +10,7 @@ export const CONFIG = {
 
     SOLDIER_CLASS_NAME: "soldier",
     FLAMETHROWER_CLASS_NAME: "flamethrower",
+    SCIENTIST_CLASS_NAME: "scientist",
 
     SHOOT_ATTACK_TYPE: "shoot",
 

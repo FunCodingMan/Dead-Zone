@@ -28,7 +28,8 @@ export class Soldier extends Player {
             offset: 0, 
             owner: owner,
             bulletWidth: this.bulletWidth,
-            bulletHeight: this.bulletHeight
+            bulletHeight: this.bulletHeight,
+            bulletRotation: null
         });
     }
 

@@ -20,6 +20,16 @@ const SPEED_FLAMETHROWER = 3;
 const BULLET_SPEED_FLAMETHROWER = 20;
 const DAMAGE_FLAMETHROWER = 10;
 
+const SHOOT_COOLDOWN_SCIENTIST = 500;
+const BULLET_WIDTH_SCIENTIST = 30;
+const BULLET_HEIGHT_SCIENTIST = 30;
+const SHOT_OFFSET_FORWARD_SCIENTIST = 12;
+const SHOT_OFFSET_SIDE_SCIENTIST = 3;
+const SPEED_SCIENTIST = 4;
+const BULLET_SPEED_SCIENTIST = 5;
+const DAMAGE_SCIENTIST = 10;
+const BULLET_ROTATION_SPEED_SCIENTIST = 0.05;
+
 
 export const classes = [
     {
@@ -49,5 +59,19 @@ export const classes = [
         shotOffsetSide: SHOT_OFFSET_SIDE_FLAMETHROWER,
         bulletSpeed: BULLET_HEIGHT_FLAMETHROWER,
         damage: DAMAGE_FLAMETHROWER
+    },
+        {
+        className: CONFIG.SCIENTIST_CLASS_NAME,
+        attackType: CONFIG.SHOOT_ATTACK_TYPE,
+        src: "../../assets/scientist_icon.png",
+        shootCooldown: SHOOT_COOLDOWN_SCIENTIST,
+        bulletWidth: BULLET_WIDTH_SCIENTIST,
+        bulletHeight: BULLET_HEIGHT_SCIENTIST,
+        speed: SPEED_SCIENTIST,
+        shotOffsetForward: SHOT_OFFSET_FORWARD_SCIENTIST,
+        shotOffsetSide: SHOT_OFFSET_SIDE_SCIENTIST,
+        bulletSpeed: BULLET_SPEED_SCIENTIST,
+        damage: DAMAGE_SCIENTIST,
+        bulletRotationSpeed: BULLET_ROTATION_SPEED_SCIENTIST
     }
 ]
