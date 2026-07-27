@@ -71,6 +71,9 @@ const roundBanner = document.getElementById('round-banner');
 const roundBannerText = document.getElementById('round-banner-text');
 const roundScoreRed = document.getElementById('round-score-red');
 const roundScoreBlue = document.getElementById('round-score-blue');
+const classSelectionToggle = document.getElementById('class-selection-toggle');
+const labelClassSelectionToggle = document.getElementById('label-class-selection-toggle');
+const classSelect = document.getElementById('class-select');
 
 let isReady = false;
 let currentRoomId = null;
@@ -81,6 +84,10 @@ function renderPlayersList(players) {
         playerList.innerHTML = '<p>Ожидание сервера...</p>';
         return;
     }
+    const classNames = {
+        'soldier': 'Солдат',
+        'flamethrower': 'Огнеметчик'
+    };
     players.forEach((player) => {
         const playerDiv = document.createElement('div');
         playerDiv.className = 'player-item';
@@ -88,8 +95,11 @@ function renderPlayersList(players) {
         const statusText = player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
         const hostIcon = player.isHost ? ' 👑' : '';
         const teamClass = player.team ? player.team : 'none';
+        const classNameStr = classNames[player.className] || 'Солдат';
         playerDiv.innerHTML = `
-            <span class="player-name ${teamClass}">${player.nickname}${hostIcon}</span>
+            <span class="player-name ${teamClass}">
+                ${player.nickname}${hostIcon} <span style="color:#aaa; font-size:16px;">[${classNameStr}]</span>
+            </span>
             <span class="player-status ${status}">${statusText}</span>
         `;
         playerList.appendChild(playerDiv);
@@ -103,7 +113,12 @@ network.on('stateRoom', (payload) => {
     maxCountPlayers.textContent = payload.maxCountUsers;
     renderPlayersList(payload.users);
 
+    classSelectionToggle.checked = payload.isClassSelectionEnabled;
     fogToggle.checked = payload.isFogEnabled;
+
+    if (!payload.isClassSelectionEnabled && payload.users.length > 0) {
+        classSelect.value = payload.users[0].className;
+    }
 
     if (payload.matchDuration) {
         const isEditing = document.activeElement === durationInput || document.activeElement === durationSelect;
@@ -169,6 +184,10 @@ network.on('stateRoom', (payload) => {
         durationInput.disabled = false;
         modeSelect.disabled = false;
 
+        classSelectionToggle.disabled = false;
+        labelClassSelectionToggle.classList.remove('disabled');
+        classSelect.disabled = false;
+
         const isEveryoneReady = payload.users.every(u => u.isReady);
 
         if (isEveryoneReady) {
@@ -185,6 +204,11 @@ network.on('stateRoom', (payload) => {
         durationSelect.disabled = true;
         durationInput.disabled = true;
         modeSelect.disabled = true;
+
+        classSelectionToggle.disabled = true;
+        labelClassSelectionToggle.classList.add('disabled');
+
+        classSelect.disabled = !payload.isClassSelectionEnabled;
     }
     if (screens.game.classList.contains('hidden')) {
         showScreen('room');
@@ -232,6 +256,12 @@ teamButtons.forEach(btn => {
         const team = e.target.getAttribute('data-team');
         network.send('switch-team', { team: team });
     });
+});
+classSelectionToggle.addEventListener('change', (e) => {
+    network.send('toggle-class-selection', { isEnabled: e.target.checked });
+});
+classSelect.addEventListener('change', (e) => {
+    network.send('change-class', { className: e.target.value });
 });
 
 network.on('join-error', (payload) => {

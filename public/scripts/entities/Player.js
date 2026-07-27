@@ -57,21 +57,19 @@ export class Player extends Character {
         this.shotsFired = 0;
         this.lastShootTime = performance.now();
 
-        const isFlame = this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME;
-
-        this.speed = isFlame ? 3 : SPEED;
-        this.damage = isFlame ? 10 : DAMAGE;
-        this.maxShotsAmount = isFlame ? 5000 : MAX_SHOTS_AMOUNT;
+        this.speed = SPEED;
+        this.damage = DAMAGE;
+        this.maxShotsAmount = MAX_SHOTS_AMOUNT;
         this.shotsAmount = this.maxShotsAmount;
-        this.shotCooldown = isFlame ? 5 : SHOOT_COOLDOWN_MS;
-        this.shotOffsetForward = isFlame ? 12 : DIFF_GUN_FORWARD;
-        this.shotOffsetSide = isFlame ? 3 : DIFF_GUN_SIDE;
-        this.bulletSpeed = isFlame ? 20 : BULLET_SPEED;
+        this.shotCooldown = SHOOT_COOLDOWN_MS;
+        this.shotOffsetForward = DIFF_GUN_FORWARD;
+        this.shotOffsetSide = DIFF_GUN_SIDE;
+        this.bulletSpeed = BULLET_SPEED;
 
-        this.bulletDrawW = isFlame ? 20 : BULLET_WIDTH;
-        this.bulletDrawH = isFlame ? 20 : BULLET_HEIGHT;
-        this.bulletPhysW = isFlame ? 20 : BULLET_REAL_WIDTH;
-        this.bulletPhysH = isFlame ? 20 : BULLET_REAL_HEIGHT;
+        this.bulletDrawW = BULLET_WIDTH;
+        this.bulletDrawH = BULLET_HEIGHT;
+        this.bulletPhysW = BULLET_REAL_WIDTH;
+        this.bulletPhysH = BULLET_REAL_HEIGHT;
 
         this.isReloading = false;
         this.reloadStartTime = undefined;
@@ -113,13 +111,7 @@ export class Player extends Character {
 
         if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < this.maxShotsAmount) {
             this.isReloading = true;
-            if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME && this.reloadSound) {
-                this.reloadSound.play();
-            } else if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME && this.flameReloadSound) {
-                this.flameReloadSound.play();
-            } else if (this.reloadSound) {
-                this.reloadSound.play();
-            }
+            this.playReloadSound();
         }
 
         if (this.isShooting && this.shotsFired > 1) {
@@ -198,11 +190,17 @@ export class Player extends Character {
         }
     }
 
+    playReloadSound() {
+        if (this.reloadSound) {
+            this.reloadSound.play();
+        }
+    }
+
     createBullet(targetX, targetY) {
         this.shotsAmount--;
         this.shotsFired++;
 
-        if (this.shootSounds && this.playerClass.className !== CONFIG.FLAMETHROWER_CLASS_NAME) {
+        if (this.shootSounds) {
             this.playFrequentSound(this.shootSounds);
         }
 
@@ -226,25 +224,6 @@ export class Player extends Character {
         const directionX = Math.cos(finalAngle);
         const directionY = Math.sin(finalAngle);
 
-        if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME || !this.playerClass.className) {
-            this.createBulletSoldier(directionX, directionY, spawnX, spawnY);
-        } else if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
-            this.createBulletFlamethrower(directionX, directionY, spawnX, spawnY, finalAngle);
-        }
-    }
-
-    createBulletSoldier(directionX, directionY, spawnX, spawnY) {
-        this.bullets.push({
-            x: spawnX,
-            y: spawnY,
-            xDirection: directionX,
-            yDirection: directionY,
-            bulletSpeed: this.bulletSpeed,
-            offset: 0
-        });
-    }
-
-    createBulletFlamethrower(directionX, directionY, spawnX, spawnY, angle) {
         this.bullets.push({
             x: spawnX,
             y: spawnY,
@@ -285,7 +264,7 @@ export class Player extends Character {
 
             const isHit = this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
 
-            if (isHit && this.playerClass.className !== CONFIG.FLAMETHROWER_CLASS_NAME) {
+            if (isHit) {
                 return true;
             }
 
@@ -293,14 +272,8 @@ export class Player extends Character {
                 return true;
             }
 
-            if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
-                this.countOffset(bullet, bulletIndex);
-            }
-
             if (this.map.checkCollision(bulletRect)) {
-                if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME || !this.playerClass.className) {
-                    this.playHitHardSounds(bulletRect);
-                }
+                this.playHitHardSounds(bulletRect);
                 return true;
             }
         }
@@ -311,9 +284,6 @@ export class Player extends Character {
         if (this.hitHardSounds) {
             this.playFrequentSound(this.hitHardSounds);
         }
-    }
-
-    countOffset(bullet, index) {
     }
 
     removeBullets() {
@@ -411,6 +381,10 @@ export class Player extends Character {
         ctx.restore();
     }
 
+    getAmmoText() {
+        return this.shotsAmount;
+    }
+
     drawReloadInterface(ctx, reloadImg, canvas) {
         const uiScale = canvas.height / BASE_HEIGHT;
         const scaledSize = Math.floor(RELOAD_SIZE * uiScale);
@@ -429,12 +403,7 @@ export class Player extends Character {
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        let text;
-        if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
-            text = Math.round((this.shotsAmount / this.maxShotsAmount) * 100) + '%';
-        } else {
-            text = this.shotsAmount;
-        }
+        const text = this.getAmmoText(); // Вызываем метод
 
         const textX = imgX - (15 * uiScale);
         const textY = imgY + (scaledSize / 2) + (3 * uiScale);

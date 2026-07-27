@@ -21,6 +21,8 @@ class MessageValidator
             'change-match-duration' => $this->isValidChangeMatchDuration($data),
             'change-mode' => $this->isValidChangeMode($data),
             'switch-team' => $this->isValidSwitchTeam($data),
+            'change-class' => $this->isValidChangeClass($data),
+            'toggle-class-selection' => $this->isValidToggleClassSelection($data),
             default => false,
         };
     }
@@ -114,5 +116,16 @@ class MessageValidator
     {
         return isset($data['team'])
             && in_array($data['team'], [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true);
+    }
+
+    private function isValidChangeClass(array $data): bool
+    {
+        return isset($data['className'])
+            && in_array($data['className'], [GameConfig::SOLDIER_CLASS, GameConfig::FLAME_THROWER_CLASS], true);
+    }
+
+    private function isValidToggleClassSelection(array $data): bool
+    {
+        return isset($data['isEnabled']);
     }
 }

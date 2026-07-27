@@ -1,6 +1,7 @@
 import { BaseGameTemplate } from "../single-player-games/BaseGameTemplate.js";
 import { Network } from "../utils/Network.js";
 import { Player } from "../entities/Player.js";
+import { Flamethrower } from "../entities/ClassesLogic/Flamethrower.js";
 import { RemotePlayer } from "../entities/RemotePlayer.js";
 
 
@@ -69,10 +70,13 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network.on('kill-feed', this.boundOnKillFeed);
     }
     handleSpawn(data) {
-        this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player = this.createPlayerInstance(data.className);
         this.engine.player.x = data.x;
         this.engine.player.y = data.y;
         this.engine.player.isAlive = true;
+
+        this.engine.initializeClassSprites();
+
         this.onPlayerSpawned(data);
     }
 
@@ -166,14 +170,23 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
             }
         }
     }
+    createPlayerInstance(className) {
+        if (className === 'flamethrower') {
+            return new Flamethrower(this.engine.map, this.engine.input, { className });
+        }
+        return new Player(this.engine.map, this.engine.input, { className });
+    }
 
     spawnByFirstState(data) {
-        this.engine.player = new Player(this.engine.map, this.engine.input);
+        this.engine.player = this.createPlayerInstance(data.me.className);
         this.engine.player.x = data.me.x || 100;
         this.engine.player.y = data.me.y || 100;
         this.engine.player.isAlive = true;
         this.engine.player.isMultiplayer = true;
         this.localUserId = data.me.user_id;
+
+        this.engine.initializeClassSprites();
+
         this.onPlayerSpawned(data.me);
     }
 
@@ -210,7 +223,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     }
 
     checkSendShotData(now, input) {
-        if (now - this.lastShotSendTime < SHOOT_COOLDOWN_MS) return;
+        const cooldown = this.engine.player.shotCooldown || SHOOT_COOLDOWN_MS;
+        if (now - this.lastShotSendTime < cooldown) return;
 
         if (input.isMouseDown && !this.engine.player.isReloading && this.engine.player.shotsAmount > 0) {
             this.network.send('shot', {angle: this.engine.player.angle});
@@ -285,10 +299,19 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     draw(ctx) {
         this.otherPlayers.forEach((enemy) => {
             if (enemy.isAlive && enemy.hitpoints > 0) {
+                const isFlame = enemy.className === 'flamethrower';
+                const sprite = isFlame && this.engine.assets.flamethrower
+                    ? this.engine.assets.flamethrower
+                    : this.engine.assets.soldier;
+
+                const bulletSprite = isFlame && this.engine.assets.flame
+                    ? this.engine.assets.flame
+                    : this.engine.assets.bullet;
+
                 enemy.draw(
                     ctx,
-                    this.engine.assets.soldier,
-                    this.engine.assets.bullet,
+                    sprite,
+                    bulletSprite,
                     this.engine.assets.shot1,
                     this.engine.assets.shot2
                 );

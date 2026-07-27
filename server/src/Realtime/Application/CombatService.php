@@ -44,7 +44,11 @@ class CombatService
 
         if ($hitPlayer !== null) {
             if ($this->mode->canDamage($player, $hitPlayer)) {
-                $hitPlayer->takeDamage(GameConfig::PLAYER_DAMAGE, $now);
+                $damage = match ($player->getClassName()) {
+                    GameConfig::SOLDIER_CLASS => GameConfig::SOLDIER_DAMAGE,
+                    GameConfig::FLAME_THROWER_CLASS => GameConfig::FLAME_THROWER_DAMAGE
+                };
+                $hitPlayer->takeDamage($damage, $now);
 
                 if ($hitPlayer->getHealth() <= 0) {
                     $this->mode->handleKill($player, $hitPlayer);

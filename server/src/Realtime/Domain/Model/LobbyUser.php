@@ -12,6 +12,7 @@ class LobbyUser
     private string $nickname;
     private string $isHost;
     private string $team = GameConfig::TEAM_NONE;
+    private string $className = GameConfig::SOLDIER_CLASS;
 
     public function __construct(int $fd, string $userId, string $nickname)
     {
@@ -58,5 +59,14 @@ class LobbyUser
 
     public function getTeam(): string {
         return $this->team;
+    }
+    public function getClassName(): string
+    {
+        return $this->className;
+    }
+
+    public function setClassName(string $className): void
+    {
+        $this->className = $className;
     }
 }

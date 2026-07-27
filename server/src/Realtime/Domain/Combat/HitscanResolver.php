@@ -13,6 +13,9 @@ class HitscanResolver
     {
         $shooterState = $shooter->getPublicState();
 
+        $isFlame = $shooter->getClassName() === GameConfig::FLAME_THROWER_CLASS;
+        $maxRange = GameConfig::FLAME_THROWER_RANGE_ATTACK;
+
         $centerX = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
         $centerY = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
 
@@ -28,11 +31,20 @@ class HitscanResolver
         $mapWidth = $map->getWidth();
         $mapHeight = $map->getHeight();
 
+        $distance = 0;
+
         while ($x >= 0 && $x <= $mapWidth && $y >= 0 && $y <= $mapHeight) {
+
             $x += $dx;
             $y += $dy;
 
-            if ($map->checkCollision(new Rect($x - 2, $y - 2, 4, 4))) {
+            $distance += GameConfig::RAY_STEP;
+
+            if ($isFlame && $distance > $maxRange) {
+                return null;
+            }
+
+            if (!$isFlame && $map->checkCollision(new Rect($x - 2, $y - 2, 4, 4))) {
                 return null;
             }
 

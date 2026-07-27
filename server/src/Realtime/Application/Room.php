@@ -27,6 +27,8 @@ class Room
     private int $matchDuration;
     private GameModeInterface $mode;
     private string $modeType = GameConfig::MODE_DEATHMATCH;
+    private bool $isClassSelectionEnabled = true;
+    private string $globalClassName = GameConfig::SOLDIER_CLASS;
 
 
     /** @throws RandomException */
@@ -55,6 +57,14 @@ class Room
     public function addUser(int $fd, User $user): void
     {
         $lobbyUser = new LobbyUser($fd, $user->getUserId(), $user->getNickname());
+
+        $lobbyUser->setClassName(GameConfig::SOLDIER_CLASS);
+
+        if (!$this->isClassSelectionEnabled) {
+            $lobbyUser->setClassName($this->globalClassName);
+        } else {
+            $lobbyUser->setClassName(GameConfig::SOLDIER_CLASS);
+        }
 
         if (empty($this->lobbyUsers)) {
             $lobbyUser->setHost(true);
@@ -127,6 +137,51 @@ class Room
         $currentUser->setTeam($targetTeam);
         return true;
     }
+    public function changeUserClass(int $fd, string $className): bool
+    {
+        if ($this->isStart || !in_array($className, [GameConfig::SOLDIER_CLASS, GameConfig::FLAME_THROWER_CLASS], true)) {
+            return false;
+        }
+
+        if (!$this->isClassSelectionEnabled) {
+            if ($this->isUserHost($fd)) {
+                $this->globalClassName = $className;
+                foreach ($this->lobbyUsers as $user) {
+                    $user->setClassName($className);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        $currentUser = $this->lobbyUsers[$fd] ?? null;
+
+        if (!$currentUser || $currentUser->getClassName() === $className) {
+            return false;
+        }
+
+        $currentUser->setClassName($className);
+        return true;
+    }
+
+    public function setClassSelectionEnabled(int $fd, bool $isEnabled): bool
+    {
+        if ($this->isStart || !$this->isUserHost($fd)) {
+            return false;
+        }
+
+        $this->isClassSelectionEnabled = $isEnabled;
+
+        if (!$this->isClassSelectionEnabled) {
+            $hostClass = $this->lobbyUsers[$fd]->getClassName();
+            $this->globalClassName = $hostClass;
+
+            foreach ($this->lobbyUsers as $user) {
+                $user->setClassName($this->globalClassName);
+            }
+        }
+        return true;
+    }
 
     public function getStateRoom(): array
     {
@@ -137,7 +192,8 @@ class Room
                 "nickname" => $lobbyUser->getNickname(),
                 "isReady" => $lobbyUser->isReady(),
                 "isHost" => $lobbyUser->isHost(),
-                "team" => $lobbyUser->getTeam()
+                "team" => $lobbyUser->getTeam(),
+                "className" => $lobbyUser->getClassName()
             ];
         }
         $state['roomId'] = $this->roomId;
@@ -147,6 +203,7 @@ class Room
         $state['isFogEnabled'] = $this->isFogEnabled;
         $state['matchDuration'] = $this->matchDuration;
         $state['modeType'] = $this->modeType;
+        $state['isClassSelectionEnabled'] = $this->isClassSelectionEnabled;
         return $state;
     }
 
@@ -214,6 +271,7 @@ class Room
             $player = $this->registry->addPlayer($lobbyUser->getFd(), $lobbyUser->getUserId(), $lobbyUser->getNickname());
 
             $player->setTeam($lobbyUser->getTeam());
+            $player->setClassName($lobbyUser->getClassName());
         }
         $this->gameEngine->spawnPlayers();
         $this->isStart = true;

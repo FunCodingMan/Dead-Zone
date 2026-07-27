@@ -14,10 +14,20 @@ class Weapon
     private float $reloadEndTime;
     private int $burstCount;
 
-    public function __construct()
+    public function __construct(string $className = GameConfig::SOLDIER_CLASS)
     {
-        $this->maxCountBullets = GameConfig::MAX_BULLETS;
-        $this->shootCooldown = GameConfig::SHOOT_COOLDOWN_S;
+        $this->maxCountBullets = GameConfig::MAX_SOLDIER_BULLETS;
+        $this->shootCooldown = GameConfig::PLAYER_SHOOT_COOLDOWN_S;
+        switch ($className) {
+            case GameConfig::SOLDIER_CLASS:
+                $this->maxCountBullets = GameConfig::MAX_SOLDIER_BULLETS;
+                $this->shootCooldown = GameConfig::PLAYER_SHOOT_COOLDOWN_S;
+                break;
+            case GameConfig::FLAME_THROWER_CLASS:
+                $this->maxCountBullets = GameConfig::MAX_FLAME_THROWER_BULLETS;
+                $this->shootCooldown = GameConfig::FLAME_THROWER_SHOOT_COOLDOWN_S;
+                break;
+        }
         $this->reloadTime = GameConfig::RELOAD_TIME_S;
         $this->countBullets = $this->maxCountBullets;
         $this->lastShootTime = 0.0;

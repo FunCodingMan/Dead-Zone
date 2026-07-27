@@ -36,6 +36,8 @@ class Lobby
             'change-match-duration' => $this->changeMatchDuration($data["fd"], (int)($payload["duration"] ?? GameConfig::MATCH_DURATION_S)),
             'change-mode' => $this->changeMode($data["fd"], $payload["mode"] ?? GameConfig::MODE_DEATHMATCH),
             'switch-team' => $this->switchTeam($data["fd"], $payload["team"] ?? GameConfig::TEAM_NONE),
+            'change-class' => $this->changeClass($data["fd"], $payload["className"] ?? GameConfig::SOLDIER_CLASS),
+            'toggle-class-selection' => $this->toggleClassSelection($data["fd"], isset($payload["isEnabled"]) ? (bool)$payload["isEnabled"] : true),
             'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
             default => null,
         };
@@ -90,6 +92,15 @@ class Lobby
 
         if ($room->isUserHost($fd)) {
             $room->setMatchDuration($duration);
+            $this->updateStateRoom($room);
+        }
+    }
+    private function changeClass(int $fd, string $className): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+        if ($room->changeUserClass($fd, $className)) {
             $this->updateStateRoom($room);
         }
     }
@@ -191,13 +202,22 @@ class Lobby
 
     private function toggleFog(int $fd, bool $isEnabled): void
     {
-        echo 'TOGGLEFOG123';
         $roomId = $this->fdToRoomId[$fd] ?? null;
         if ($roomId === null) return;
         $room = $this->rooms[$roomId];
 
         if ($room->isUserHost($fd)) {
             $room->setFogEnabled($isEnabled);
+            $this->updateStateRoom($room);
+        }
+    }
+    private function toggleClassSelection(int $fd, bool $isEnabled): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->setClassSelectionEnabled($fd, $isEnabled)) {
             $this->updateStateRoom($room);
         }
     }

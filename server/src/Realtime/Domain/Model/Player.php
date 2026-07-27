@@ -21,6 +21,7 @@ class Player
     private int $kills;
     private int $deaths;
     private string $team = GameConfig::TEAM_NONE;
+    private string $className = GameConfig::SOLDIER_CLASS;
 
     public function __construct(int $fd, string $userId, string $nickname = "Player")
     {
@@ -33,7 +34,7 @@ class Player
         $this->posY = 0.0;
         $this->angle = 90;
         $this->pressKeys = [];
-        $this->speed = GameConfig::PLAYER_SPEED;
+        $this->speed = GameConfig::SOLDIER_SPEED;
         $this->kills = 0;
         $this->deaths = 0;
     }
@@ -82,6 +83,7 @@ class Player
             "health" => $this->health->getValue(),
             "count_bullets" => $this->weapon->getCountBullets(microtime(true)),
             "team" => $this->team,
+            'className' => $this->className
         ];
     }
 
@@ -92,7 +94,8 @@ class Player
             "y" => $this->posY,
             "angle" => $this->angle,
             "nickname" => $this->nickname,
-            "team" => $this->team
+            "team" => $this->team,
+            'className' => $this->className,
         ];
     }
 
@@ -119,6 +122,23 @@ class Player
     }
     public function getTeam(): string {
         return $this->team;
+    }
+    public function getClassName(): string
+    {
+        return $this->className;
+    }
+
+    public function setClassName(string $className): void
+    {
+        $this->className = $className;
+
+        $this->weapon = new Weapon($className);
+
+        if ($className === GameConfig::FLAME_THROWER_CLASS) {
+            $this->speed = GameConfig::FLAME_THROWER_SPEED;
+        } else if ($className === GameConfig::SOLDIER_CLASS) {
+            $this->speed = GameConfig::SOLDIER_SPEED;
+        }
     }
 
     public function isDead(): bool { return $this->health->isDead(); }

@@ -45,31 +45,49 @@ export class RemotePlayer extends Character {
         }
     }
 
+    spawnFlameThrowerNetworkBullet(startX, startY, angle, localPlayer = null) {
+        if (this.flameSounds) {
+            this.playFrequentSound(this.flameSounds, localPlayer);
+        }
+
+        // Тот же трюк: 1 пакет от сервера = 4 визуальные искры на клиенте
+        for (let i = 0; i < 4; i++) {
+            setTimeout(() => {
+                const spreadAngle = angle + (Math.random() - 0.5) * 0.25; // 0.25 = SPREAD
+                this.bullets.push({
+                    x: startX,
+                    y: startY,
+                    xDirection: Math.cos(spreadAngle),
+                    yDirection: Math.sin(spreadAngle),
+                    bulletSpeed: 20,
+                    offset: 0
+                });
+            }, i * 30);
+        }
+    }
+    spawnSoldierNetworkBullet(startX, startY, angle, localPlayer = null) {
+        if (this.shootSounds) {
+            this.playFrequentSound(this.shootSounds, localPlayer);
+        }
+        this.bullets.push({
+            x: startX,
+            y: startY,
+            xDirection: Math.cos(angle),
+            yDirection: Math.sin(angle),
+            bulletSpeed: 55,
+            offset: 0
+        });
+    }
+
     spawnNetworkBullet(startX, startY, angle, localPlayer = null) {
-        const directionX = Math.cos(angle);
-        const directionY = Math.sin(angle);
 
         const isFlame = this.className === CONFIG.FLAMETHROWER_CLASS_NAME;
 
         if (isFlame) {
-            if (this.flameSounds) {
-                this.playFrequentSound(this.flameSounds, localPlayer);
-            }
+            this.spawnFlameThrowerNetworkBullet(startX, startY, angle, localPlayer);
         } else {
-            if (this.shootSounds) {
-                this.playFrequentSound(this.shootSounds, localPlayer);
-            }
+            this.spawnSoldierNetworkBullet(startX, startY, angle, localPlayer);
         }
-
-        const bSpeed = isFlame ? 20 : 55;
-
-        this.bullets.push({
-            x: startX,
-            y: startY,
-            xDirection: directionX,
-            yDirection: directionY,
-            bulletSpeed: bSpeed
-        });
     }
 
     updateInterpolation(interpolationFactor = 0.2, map = null, localPlayer = null, otherPlayers = null) {
@@ -121,9 +139,18 @@ export class RemotePlayer extends Character {
         const stepX = (bullet.xDirection * bullet.bulletSpeed) / steps;
         const stepY = (bullet.yDirection * bullet.bulletSpeed) / steps;
 
+        const stepDistance = Math.sqrt(stepX * stepX + stepY * stepY);
+
         for (let s = 0; s < steps; s++) {
             bullet.x += stepX;
             bullet.y += stepY;
+
+            if (isFlame) {
+                bullet.offset = (bullet.offset || 0) + stepDistance;
+                if (bullet.offset > 250) {
+                    return true;
+                }
+            }
 
             const bulletRect = {
                 x: bullet.x - bRW / 2,
@@ -132,23 +159,32 @@ export class RemotePlayer extends Character {
                 h: bRH
             };
 
+            let hitEnemy = false;
+
             if (localPlayer && localPlayer.isAlive && map && map.isIntersecting(bulletRect, localPlayer)) {
-                return true;
+                hitEnemy = true;
             }
 
-            if (otherPlayers && map) {
+            if (!hitEnemy && otherPlayers && map) {
                 for (const [id, rp] of otherPlayers) {
                     if (id !== this.id && rp.hitpoints > 0 && map.isIntersecting(bulletRect, rp)) {
-                        return true;
+                        hitEnemy = true;
+                        break;
                     }
                 }
             }
 
-            if (map && map.checkCollision(bulletRect)) {
-                if (!isFlame && this.hitHardSounds && localPlayer) {
-                    this.playFrequentSound(this.hitHardSounds, localPlayer, bulletRect.x, bulletRect.y);
-                }
+            if (hitEnemy && !isFlame) {
                 return true;
+            }
+
+            if (map && map.checkCollision(bulletRect)) {
+                if (!isFlame) {
+                    if (this.hitHardSounds && localPlayer) {
+                        this.playFrequentSound(this.hitHardSounds, localPlayer, bulletRect.x, bulletRect.y);
+                    }
+                    return true;
+                }
             }
         }
 
