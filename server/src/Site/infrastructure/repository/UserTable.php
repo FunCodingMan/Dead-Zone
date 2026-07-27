@@ -35,12 +35,14 @@ class UserTable implements IUserRepository
                 'token' => $token,
             ]);
 
-            $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`) VALUES (:user_id, :wins, :loses);";
+            $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`, `kills`, `deaths`) VALUES (:user_id, :wins, :loses, :kills, :deaths);";
             $stmt = $this->connection->prepare($queryStats);
             $stmt->execute([
                 'user_id' => $userId,
                 'wins' => $user->getStats()->getWins(),
                 'loses' => $user->getStats()->getLoses(),
+                'kills' => $user->getStats()->getKills(),
+                'deaths' => $user->getStats()->getDeaths(),
             ]);
             $this->connection->commit();
         }catch (\PDOException $error) {
@@ -94,7 +96,7 @@ class UserTable implements IUserRepository
         ]);
         $arrayStats = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($arrayStats) {
-            return new Stats($arrayStats['wins'], $arrayStats['loses']);
+            return new Stats($arrayStats['wins'], $arrayStats['loses'], $arrayStats['kills'], $arrayStats['deaths'], $arrayStats['kd']);
         }
         return throw new RuntimeException("Stats not found for user_id: $userId");
     }

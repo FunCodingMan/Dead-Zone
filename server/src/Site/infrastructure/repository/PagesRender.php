@@ -2,6 +2,7 @@
 
 namespace App\Site\infrastructure\repository;
 
+use App\Site\app\model\User;
 use App\Site\app\repository\IPagesRender;
 
 class PagesRender implements IPagesRender
@@ -17,9 +18,9 @@ class PagesRender implements IPagesRender
         include_once __DIR__ . "/../../View/menu.html";
     }
 
-    public function showProfile(): void
+    public function showProfile(User $user): void
     {
-        include_once __DIR__ . "/../../View/profile.html";
+        include_once __DIR__ . "/../../View/profile.php";
     }
 
     public function showModeSelection(): void

@@ -44,10 +44,15 @@ class UserService
             return (bool) $user;
         }
         return false;
-
     }
 
-
+    public function getUser(): ?User
+    {
+        if (isset($_COOKIE["token"])) {
+            return $this->userRepository->getUserByToken($_COOKIE["token"]);
+        }
+        return null;
+    }
 
 
 }

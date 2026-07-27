@@ -1,3 +1,6 @@
+CREATE DATABASE game_server;
+USE game_server;
+
 CREATE TABLE user
 (
     `user_id` VARCHAR(255) NOT NULL,
@@ -13,8 +16,13 @@ CREATE TABLE user
 CREATE TABLE stats
 (
     `user_id` VARCHAR(255) NOT NULL,
-    `wins` INT NOT NULL,
-    `loses` INT NOT NULL,
+    `wins` INT NOT NULL ,
+    `loses` INT NOT NULL DEFAULT 0,
+    `kills` INT NOT NULL DEFAULT 0,
+    `deaths` INT NOT NULL DEFAULT 0,
+    `kd` DECIMAL(5, 2) GENERATED ALWAYS AS (
+        IF (`deaths` = 0, `kills`, ROUND(`kills` / `deaths`, 2))
+    ),
     PRIMARY KEY(`user_id`),
     FOREIGN KEY(`user_id`) REFERENCES user(`user_id`)
 );

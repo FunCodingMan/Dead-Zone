@@ -1,3 +1,6 @@
+<?php
+/** @var \App\Site\app\model\User $user */
+?>
 <!DOCTYPE html>
 <html lang="ru">
     <head>
@@ -12,10 +15,17 @@
         <div class="menu-screen">
             <h2 class="menu-title">ПРОФИЛЬ</h2>
             <div class="profile-stats">
-                <p class="stats-text">Имя: <span id="stats-name">—</span></p>
-                <p class="stats-text">Убийств: <span id="stats-kills">—</span></p>
-                <p class="stats-text">Победы: <span id="stats-wins">—</span></p>
-                <p class="stats-text">Проигрыши: <span id="stats-defeats">—</span></p>
+                <p class="stats-text">Имя: <span id="stats-name"><?php echo htmlspecialchars($user->getNickname()) ?></span></p>
+                <p class="stats-text">Логин: <span id="stats-kills"><?php echo htmlspecialchars($user->getUsername()) ?></span></p>
+                <p class="stats-text">Победы: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getWins()) ?></span></p>
+                <p class="stats-text">Поражения: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getLoses()) ?></span></p>
+                <p class="stats-text">Убийств: <span id="stats-kills"></span><?php echo htmlspecialchars($user->getStats()->getKills()) ?></p>
+                <p class="stats-text">Смертей: <span id="stats-kills"></span><?php echo htmlspecialchars($user->getStats()->getDeaths()) ?></p>
+                <p class="stats-text">КД: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getKd()) ?></span></p>
+                <p class="stats-text">Победы в 1: <span id="stats-kills">-</span></p>
+                <p class="stats-text">Победы в 2: <span id="stats-kills">-</span></p>
+                <p class="stats-text">Победы в 3: <span id="stats-kills">-</span></p>
+                <p class="stats-text">Дата регистрации: <span id="stats-kills">-</span></p>
             </div>
             <button class="btn" data-target="show">НАЗАД</button>
         </div>
