@@ -339,6 +339,10 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const titleSize = Math.floor(DEATH_FONT_SIZE * uiScale);
         const subSize = Math.floor(DEATH_FONT_SUB_SIZE * uiScale);
 
+        const now = performance.now()
+
+        const timeDead = now - this.deathTime;
+
         ctx.save();
 
         ctx.fillStyle = 'rgba(150, 0, 0, 0.4)';

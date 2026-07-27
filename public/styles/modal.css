@@ -1,0 +1,30 @@
+.class-selector-modal {
+    background-color: #000;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+.class-selector-button {
+    padding: 0;
+    border-radius: 10px;
+    border: 2px solid #fff;
+}
+
+.class-selector-icon {
+    width: 250px;
+    height: 250px;
+    display: block;
+    border-radius: 10px;
+}
+
+.class-selector-button:hover {
+    cursor: pointer;
+    filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.9));
+}

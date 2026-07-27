@@ -1,9 +1,7 @@
 import { BaseGameTemplate } from './BaseGameTemplate.js';
-import { Map } from '../core/Map.js';
-import { Player } from '../entities/Player.js';
 import { Enemy } from '../entities/Enemy.js';
 import { CONFIG } from '../core/Config.js';
-import {Sound} from "../core/Sound.js";
+import { Sound } from "../core/Sound.js";
 
 const wavesLevelData = `
 ################
@@ -17,16 +15,15 @@ const wavesLevelData = `
 ################
 `;
 
-const MAX_WAVES = 10;
+const MAX_WAVES = 20;
 const FPS = 60;
 
 export class WavesMode extends BaseGameTemplate {
-    init() {
-        this.engine.map = new Map();
-        this.engine.map.loadLevel(wavesLevelData);
-        this.engine.player = new Player(this.engine.map, this.engine.input, this.engine.resetPauseTime);
-        this.engine.player.bloodManager = this.engine.bloodManager;
+    getLevelData() {
+        return wavesLevelData;
+    }
 
+    setupMode() {
         this.staticPathGraph = this.engine.map.buildPathGraph();
 
         this.currentWave = 1;
@@ -39,6 +36,8 @@ export class WavesMode extends BaseGameTemplate {
         this.defeatSound.setVolume(0.8);
 
         this.spawnWave();
+
+        this.isInitializationReady = true;
     }
 
     spawnWave() {
@@ -62,6 +61,8 @@ export class WavesMode extends BaseGameTemplate {
     }
 
     update(dt) {
+        if (!this.isInitializationReady) return;
+
         const currentTime = performance.now();
 
         if (!this.engine.player.isAlive) {
@@ -79,6 +80,8 @@ export class WavesMode extends BaseGameTemplate {
             this.currentWave++;
             this.spawnWave();
             return;
+        } else {
+            this.engine.playRandomEnemySound();
         }
 
         const timeScale = dt * FPS;
@@ -193,6 +196,8 @@ export class WavesMode extends BaseGameTemplate {
     }
 
     drawUI(ctx, canvas) {
+        if (!this.isInitializationReady) return;
+
         const uiScale = canvas.height / 1080;
         const fontSize = Math.floor(50 * uiScale);
 

@@ -22,7 +22,6 @@ export class Game {
         this.fpsInterval = 1000 / this.fps;
         this.then = 0;
 
-
         this.isPaused = false;
         this.animationId = null;
         this.zoom = 1.5;
@@ -36,7 +35,7 @@ export class Game {
 
         this.loop = this.loop.bind(this);
 
-        this.isGameEnded;
+        this.isGameEnded = false;
 
         this.bloodManager = new BloodManager();
 
@@ -47,11 +46,15 @@ export class Game {
 
         this.lastFrameTime = 0;
 
+        this.playerSprite = null;
+        this.playerReloadSprite = null;
+        this.bulletSprite = null;
+        this.reloadIcon = null;
+
         window.addEventListener('resize', this.resizeHandler);
         this.resizeHandler();
 
         this.initSounds();
-
     }
 
     setResolution(width, height) {
@@ -92,29 +95,66 @@ export class Game {
         }
     }
 
+    initializeClassSprites() {
+        if (!this.player || !this.player.playerClass) {
+            this.playerSprite = this.assets.soldier;
+            this.playerReloadSprite = this.assets.reloadSoldier;
+            this.bulletSprite = this.assets.bullet;
+            this.reloadIcon = this.assets.reloadIcon;
+            return;
+        }
+
+        switch (this.player.playerClass.className) {
+            case CONFIG.SOLDIER_CLASS_NAME:
+                this.playerSprite = this.assets.soldier;
+                this.playerReloadSprite = this.assets.reloadSoldier;
+                this.bulletSprite = this.assets.bullet;
+                this.reloadIcon = this.assets.reloadIcon;
+                break;
+            case CONFIG.FLAMETHROWER_CLASS_NAME:
+                this.playerSprite = this.assets.flamethrower;
+                this.playerReloadSprite = this.assets.flamethrowerReload;
+                this.bulletSprite = this.assets.flame;
+                this.reloadIcon = this.assets.flamethrowerReloadIcon;
+                break;
+            default:
+                this.playerSprite = this.assets.soldier;
+                this.playerReloadSprite = this.assets.reloadSoldier;
+                this.bulletSprite = this.assets.bullet;
+                this.reloadIcon = this.assets.reloadIcon;
+                break;
+        }
+    }
+
     resizeHandler = () => {
         this.canvas.width = this.renderWidth;
         this.canvas.height = this.renderHeight;
-
         this.zoom = (this.renderHeight / BASE_HEIGHT) * BASE_ZOOM;
     };
 
-    start(ModeClass, ...args) {
+    async start(ModeClass, ...args) {
         this.stop();
 
         this.isGameEnded = false;
 
         this.input = new Input(this.canvas, {
             onEscape: () => {
-                this.togglePause();
+                if (!this.player || this.player.isAlive) {
+                    this.togglePause();
+                }
             }
         });
 
         this.currentMode = new ModeClass(this, ...args);
-        this.currentMode.init();
+
+        const initResult = this.currentMode.init();
+        if (initResult instanceof Promise) {
+            await initResult;
+        }
+
+        this.initializeClassSprites();
 
         this.isPaused = false;
-
         this.lastFrameTime = performance.now();
         this.loop(this.lastFrameTime);
     }
@@ -133,7 +173,6 @@ export class Game {
         }
         this.enemies = [];
         this.targets = [];
-
         this.player = null;
         this.map = null;
     }
@@ -167,7 +206,6 @@ export class Game {
     }
 
     update(dt) {
-
         if (this.player) {
             this.player.updateReload(this.isPaused, this.totalPauseTime);
         }
@@ -190,7 +228,6 @@ export class Game {
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-
         this.ctx.save();
         if (this.player) {
             this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
@@ -209,7 +246,7 @@ export class Game {
         }
 
         if (this.bloodManager) {
-             this.bloodManager.drawBlood(this.ctx, this.assets.blood);
+            this.bloodManager.drawBlood(this.ctx, this.assets.blood);
         }
 
         this.drawEntities();
@@ -217,7 +254,7 @@ export class Game {
         this.ctx.restore();
 
         if (this.player && this.player.isAlive) {
-            this.player.drawReloadInterface(this.ctx, this.assets.reloadIcon, this.canvas);
+            this.player.drawReloadInterface(this.ctx, this.reloadIcon || this.assets.reloadIcon, this.canvas);
             this.player.drawHPInterface(this.ctx, this.assets.heartIcon, this.canvas);
         }
 
@@ -245,7 +282,7 @@ export class Game {
             } else if (target.isDying) {
                 target.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
-        })
+        });
 
         if (this.currentMode && typeof this.currentMode.draw === 'function') {
             this.currentMode.draw(this.ctx);
@@ -254,16 +291,15 @@ export class Game {
         if (this.player) {
             if (this.player.isAlive) {
                 if (!this.player.isReloading) {
-                    this.player.draw(this.ctx, this.assets.soldier);
+                    this.player.draw(this.ctx, this.playerSprite || this.assets.soldier);
                     if (!this.isPaused) this.player.animateShots(this.ctx, this.assets.shot1, this.assets.shot2, this.player);
                 } else {
-                    this.player.draw(this.ctx, this.assets.reloadSoldier);
+                    this.player.draw(this.ctx, this.playerReloadSprite || this.assets.reloadSoldier);
                 }
-                this.player.drawBullets(this.ctx, this.assets.bullet);
+                this.player.drawBullets(this.ctx, this.bulletSprite || this.assets.bullet);
             } else if (this.player.isDying) {
                 this.player.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
         }
-
     }
 }

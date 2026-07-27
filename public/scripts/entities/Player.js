@@ -1,6 +1,5 @@
 import { CONFIG } from '../core/Config.js';
 import { Character } from './Character.js';
-import {Sound} from "../core/Sound.js";
 
 const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
@@ -18,7 +17,7 @@ const MAX_SPREAD = 15;
 const SPREAD_FACTOR = 10;
 const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
-const DAMAGE = 40;
+const DAMAGE = 20;
 const DIFF_GUN_FORWARD = 1;
 const DIFF_GUN_SIDE = 5;
 const MAX_SHOTS_AMOUNT = 50;
@@ -29,8 +28,7 @@ const RELOAD_PADDING = 40;
 const RELOAD_SIZE = 80;
 const HP_PADDING = 25;
 const HP_SIZE = 120;
-const RELOAD_TEXT_PADDING = 20;
-const RELOAD_TEXT_SIZE = 10;
+const AMMUNITION_SIZE = 40;
 const HITBOX = 28;
 
 const CROSSHAIR_LINE_LEN = 15;
@@ -42,26 +40,39 @@ const CROSSHAIR_HIT_OFFSET = 10;
 const CROSSHAIR_HIT_WIDTH = 6;
 const SPREAD_COOF_UI = 2;
 
-
 const FPS = 60;
-
 const BASE_HEIGHT = 1080;
-const AMMUNITION_SIZE = 40;
 
 export class Player extends Character {
-    constructor(map, input, resetPauseTimeCallback) {
+    constructor(map, input, playerClass) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
-        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
+        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null);
 
-        this.speed = SPEED;
         this.input = input;
+        this.map = map;
+        this.playerClass = playerClass || { className: CONFIG.SOLDIER_CLASS_NAME };
 
         this.bullets = [];
         this.shotsFired = 0;
         this.lastShootTime = performance.now();
-        this.damage = DAMAGE;
-        this.shotsAmount = MAX_SHOTS_AMOUNT;
+
+        const isFlame = this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME;
+
+        this.speed = isFlame ? 3 : SPEED;
+        this.damage = isFlame ? 10 : DAMAGE;
+        this.maxShotsAmount = isFlame ? 5000 : MAX_SHOTS_AMOUNT;
+        this.shotsAmount = this.maxShotsAmount;
+        this.shotCooldown = isFlame ? 5 : SHOOT_COOLDOWN_MS;
+        this.shotOffsetForward = isFlame ? 12 : DIFF_GUN_FORWARD;
+        this.shotOffsetSide = isFlame ? 3 : DIFF_GUN_SIDE;
+        this.bulletSpeed = isFlame ? 20 : BULLET_SPEED;
+
+        this.bulletDrawW = isFlame ? 20 : BULLET_WIDTH;
+        this.bulletDrawH = isFlame ? 20 : BULLET_HEIGHT;
+        this.bulletPhysW = isFlame ? 20 : BULLET_REAL_WIDTH;
+        this.bulletPhysH = isFlame ? 20 : BULLET_REAL_HEIGHT;
+
         this.isReloading = false;
         this.reloadStartTime = undefined;
 
@@ -72,25 +83,22 @@ export class Player extends Character {
 
         this.appliedDamage = 0;
         this.kills = 0;
-
-        this.map = map;
+        this.bulletsToRemove = [];
 
         this.isMultiplayer = false;
         this.hitpoints = MAX_HITPOINTS;
-
-        this.visualSpread = 5;
+        this.visualSpread = BASE_SPREAD;
         this.lastHitTime = 0;
         this.remoteEnemies = [];
-
         this.team = 'none';
     }
 
     update(map, canvas, zoom, enemies, targets, dt) {
         if (!this.isAlive) return;
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
 
         const timeScale = (dt || 0.0166) * FPS;
+        const centerX = this.x + this.w / 2;
+        const centerY = this.y + this.h / 2;
 
         const worldMouseX = (this.input.mouseX - canvas.width / 2) / zoom + centerX;
         const worldMouseY = (this.input.mouseY - canvas.height / 2) / zoom + centerY;
@@ -98,11 +106,20 @@ export class Player extends Character {
         this.angle = Math.atan2(worldMouseY - centerY, worldMouseX - centerX);
 
         this.move(map, enemies, targets, timeScale);
-        this.shoot(worldMouseX, worldMouseY);
 
-        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
+        if (this.playerClass.attackType === CONFIG.SHOOT_ATTACK_TYPE || !this.playerClass.attackType) {
+            this.shoot(worldMouseX, worldMouseY);
+        }
+
+        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < this.maxShotsAmount) {
             this.isReloading = true;
-            this.reloadSound.play();
+            if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME && this.reloadSound) {
+                this.reloadSound.play();
+            } else if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME && this.flameReloadSound) {
+                this.flameReloadSound.play();
+            } else if (this.reloadSound) {
+                this.reloadSound.play();
+            }
         }
 
         if (this.isShooting && this.shotsFired > 1) {
@@ -112,29 +129,22 @@ export class Player extends Character {
         }
 
         this.handleBullets(map, enemies, targets, timeScale);
+        this.removeBullets();
     }
 
     move(map, enemies, targets, timeScale) {
         let nextX = this.x;
         let nextY = this.y;
-
         let dx = 0;
         let dy = 0;
 
-        if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
-            dy -= 1;
-        }
-        if (this.input.isPressed('KeyS') || this.input.isPressed('ArrowDown')) {
-            dy += 1;
-        }
-        if (this.input.isPressed('KeyA') || this.input.isPressed('ArrowLeft')) {
-            dx -= 1;
-        }
-        if (this.input.isPressed('KeyD') || this.input.isPressed('ArrowRight')) {
-            dx += 1;
-        }
+        if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) dx -= 0, dy -= 1;
+        if (this.input.isPressed('KeyS') || this.input.isPressed('ArrowDown')) dx -= 0, dy += 1;
+        if (this.input.isPressed('KeyA') || this.input.isPressed('ArrowLeft')) dx -= 1, dy -= 0;
+        if (this.input.isPressed('KeyD') || this.input.isPressed('ArrowRight')) dx += 1, dy -= 0;
+
         if (dx !== 0 || dy !== 0) {
-            this.stepsSound.play();
+            if (this.stepsSound) this.stepsSound.play();
             const length = Math.sqrt(dx * dx + dy * dy);
             dx /= length;
             dy /= length;
@@ -142,9 +152,8 @@ export class Player extends Character {
             nextX += dx * this.speed * timeScale;
             nextY += dy * this.speed * timeScale;
         } else {
-            this.stepsSound.stop();
+            if (this.stepsSound) this.stepsSound.stop();
         }
-
 
         if (nextX < 0) nextX = 0;
         if (nextY < 0) nextY = 0;
@@ -175,9 +184,9 @@ export class Player extends Character {
         if (now - this.lastShootTime >= SPREAD_RECOVERY_TIME_MS) {
             this.shotsFired = 0;
         }
+
         if (this.input.isMouseDown) {
-            const now = performance.now();
-            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
+            if (now - this.lastShootTime >= this.shotCooldown && this.shotsAmount > 0 && !this.isReloading) {
                 this.createBullet(x, y);
                 this.lastShootTime = now;
                 this.isShooting = true;
@@ -189,61 +198,76 @@ export class Player extends Character {
         }
     }
 
-    createBullet() {
+    createBullet(targetX, targetY) {
         this.shotsAmount--;
+        this.shotsFired++;
 
-        this.playFrequentSound(this.shootSounds);
+        if (this.shootSounds && this.playerClass.className !== CONFIG.FLAMETHROWER_CLASS_NAME) {
+            this.playFrequentSound(this.shootSounds);
+        }
 
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
-        let spawnX = centerX + Math.cos(this.angle) * DIFF_GUN_FORWARD;
-        let spawnY = centerY + Math.sin(this.angle) * DIFF_GUN_FORWARD;
+        let spawnX = centerX + Math.cos(this.angle) * this.shotOffsetForward;
+        let spawnY = centerY + Math.sin(this.angle) * this.shotOffsetForward;
 
-        spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
-        spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
-
-        this.shotsFired++;
+        spawnX += Math.cos(this.angle + Math.PI / 2) * this.shotOffsetSide;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * this.shotOffsetSide;
 
         let finalAngle = this.angle;
 
         if (this.shotsFired > 1) {
             const spreadMultiplier = Math.min(1.0, (this.shotsFired - 1) / 5.0);
             const baseSpread = (Math.random() - 0.5) / SPREAD_FACTOR;
-
             finalAngle += baseSpread * spreadMultiplier;
         }
 
-        let directionX = Math.cos(finalAngle);
-        let directionY = Math.sin(finalAngle);
+        const directionX = Math.cos(finalAngle);
+        const directionY = Math.sin(finalAngle);
 
+        if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME || !this.playerClass.className) {
+            this.createBulletSoldier(directionX, directionY, spawnX, spawnY);
+        } else if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
+            this.createBulletFlamethrower(directionX, directionY, spawnX, spawnY, finalAngle);
+        }
+    }
+
+    createBulletSoldier(directionX, directionY, spawnX, spawnY) {
         this.bullets.push({
             x: spawnX,
             y: spawnY,
             xDirection: directionX,
             yDirection: directionY,
-            bulletSpeed: BULLET_SPEED
+            bulletSpeed: this.bulletSpeed,
+            offset: 0
+        });
+    }
+
+    createBulletFlamethrower(directionX, directionY, spawnX, spawnY, angle) {
+        this.bullets.push({
+            x: spawnX,
+            y: spawnY,
+            xDirection: directionX,
+            yDirection: directionY,
+            bulletSpeed: this.bulletSpeed,
+            offset: 0
         });
     }
 
     handleBullets(map, enemies, targets, timeScale) {
-        const toRemove = [];
+        this.bulletsToRemove = [];
 
-        for (let i = 0; i < this.bullets.length; i++) {
-            const isHit = this.processBulletPhysics(this.bullets[i], enemies, targets, timeScale);
-            if (isHit) {
-                toRemove.push(i);
+        this.bullets.forEach((bullet, index) => {
+            const isHit = this.processBulletPhysics(bullet, enemies, targets, timeScale, index);
+            if (isHit && !this.bulletsToRemove.includes(index)) {
+                this.bulletsToRemove.push(index);
             }
-        }
-
-        for (let i = toRemove.length - 1; i >= 0; i--) {
-            this.bullets.splice(toRemove[i], 1);
-        }
+        });
     }
 
-    processBulletPhysics(bullet, enemies, targets, timeScale) {
+    processBulletPhysics(bullet, enemies, targets, timeScale, bulletIndex) {
         const actualSpeed = bullet.bulletSpeed * timeScale;
-
         const steps = Math.max(1, Math.ceil(actualSpeed / 10));
         const stepX = (bullet.xDirection * actualSpeed) / steps;
         const stepY = (bullet.yDirection * actualSpeed) / steps;
@@ -253,31 +277,106 @@ export class Player extends Character {
             bullet.y += stepY;
 
             const bulletRect = {
-                x: bullet.x - BULLET_REAL_WIDTH / 2,
-                y: bullet.y - BULLET_REAL_HEIGHT / 2,
-                w: BULLET_REAL_WIDTH,
-                h: BULLET_REAL_HEIGHT
+                x: bullet.x - this.bulletPhysW / 2,
+                y: bullet.y - this.bulletPhysH / 2,
+                w: this.bulletPhysW,
+                h: this.bulletPhysH
             };
 
-            if (this.checkEntityCollision(bulletRect, enemies, CONFIG.ENEMY_SYMBOL)) return true;
-            if (this.checkEntityCollision(bulletRect, targets, CONFIG.TARGET_SYMBOL)) return true;
-            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) return true;
+            const isHit = this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
+
+            if (isHit && this.playerClass.className !== CONFIG.FLAMETHROWER_CLASS_NAME) {
+                return true;
+            }
+
+            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) {
+                return true;
+            }
+
+            if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
+                this.countOffset(bullet, bulletIndex);
+            }
+
             if (this.map.checkCollision(bulletRect)) {
-                this.playFrequentSound(this.hitHardSounds);
+                if (this.playerClass.className === CONFIG.SOLDIER_CLASS_NAME || !this.playerClass.className) {
+                    this.playHitHardSounds(bulletRect);
+                }
                 return true;
             }
         }
-
         return false;
+    }
+
+    playHitHardSounds(bulletRect) {
+        if (this.hitHardSounds) {
+            this.playFrequentSound(this.hitHardSounds);
+        }
+    }
+
+    countOffset(bullet, index) {
+    }
+
+    removeBullets() {
+        this.bulletsToRemove.sort((a, b) => b - a);
+        for (let i = 0; i < this.bulletsToRemove.length; i++) {
+            this.bullets.splice(this.bulletsToRemove[i], 1);
+        }
+        this.bulletsToRemove = [];
+    }
+
+    handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex) {
+        let hasHit = false;
+
+        enemies.forEach((enemy) => {
+            if (enemy.isAlive) {
+                const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    if (!this.isMultiplayer) {
+                        this.appliedDamage += this.damage;
+                        enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                    }
+                    if (this.hitPlayerSound) {
+                        this.hitPlayerSound.stop();
+                        this.hitPlayerSound.play();
+                    }
+                    this.lastHitTime = performance.now();
+                    if (!this.bulletsToRemove.includes(bulletIndex)) {
+                        this.bulletsToRemove.push(bulletIndex);
+                    }
+                    hasHit = true;
+                }
+            }
+        });
+
+        targets.forEach((target) => {
+            if (target.isAlive) {
+                const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    if (!this.isMultiplayer) {
+                        this.appliedDamage += this.damage;
+                        target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
+                    }
+                    if (this.hitPlayerSound) {
+                        this.hitPlayerSound.stop();
+                        this.hitPlayerSound.play();
+                    }
+                    this.lastHitTime = performance.now();
+                    if (!this.bulletsToRemove.includes(bulletIndex)) {
+                        this.bulletsToRemove.push(bulletIndex);
+                    }
+                    hasHit = true;
+                }
+            }
+        });
+
+        return hasHit;
     }
 
     checkEntityCollision(bulletRect, entities, symbol) {
         if (!entities) return false;
         for (let i = 0; i < entities.length; i++) {
             const entity = entities[i];
-
             if (!entity.isAlive || (entity.hitpoints !== undefined && entity.hitpoints <= 0)) continue;
-
             const entityRect = {x: entity.x, y: entity.y, w: entity.w, h: entity.h};
 
             if (this.map.isIntersecting(bulletRect, entityRect)) {
@@ -285,14 +384,11 @@ export class Player extends Character {
                     this.appliedDamage += this.damage;
                     entity.takeDamage(this.damage, this.map, symbol);
                 }
-
                 if (this.hitPlayerSound) {
                     this.hitPlayerSound.stop();
                     this.hitPlayerSound.play();
                 }
-
                 this.lastHitTime = performance.now();
-
                 return true;
             }
         }
@@ -301,7 +397,6 @@ export class Player extends Character {
 
     drawBullets(ctx, bulletImg) {
         ctx.save();
-
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ffaa00';
 
@@ -310,7 +405,7 @@ export class Player extends Character {
             ctx.translate(bullet.x, bullet.y);
             const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
-            ctx.drawImage(bulletImg, -BULLET_WIDTH / 2, -BULLET_HEIGHT / 2, BULLET_WIDTH, BULLET_HEIGHT);
+            ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
             ctx.restore();
         });
         ctx.restore();
@@ -318,58 +413,65 @@ export class Player extends Character {
 
     drawReloadInterface(ctx, reloadImg, canvas) {
         const uiScale = canvas.height / BASE_HEIGHT;
-        const reloadSize = Math.floor(RELOAD_SIZE * uiScale);
-        const reloadPadding = Math.floor(RELOAD_PADDING * uiScale);
-        const fontSize = Math.floor(AMMUNITION_SIZE * uiScale);
+        const scaledSize = Math.floor(RELOAD_SIZE * uiScale);
+        const scaledPadding = Math.floor(RELOAD_PADDING * uiScale);
+        const scaledFontSize = Math.floor(AMMUNITION_SIZE * uiScale);
+
         ctx.save();
-        ctx.drawImage(
-            reloadImg,
-            canvas.width - reloadPadding - reloadSize,
-            canvas.height - reloadPadding - reloadSize,
-            reloadSize, reloadSize
-        );
+
+        const imgX = canvas.width - scaledPadding - scaledSize;
+        const imgY = canvas.height - scaledPadding - scaledSize;
+
+        ctx.drawImage(reloadImg, imgX, imgY, scaledSize, scaledSize);
+
         ctx.fillStyle = 'white';
-        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.font = `bold ${scaledFontSize}px Arial`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        ctx.fillText(
-            this.shotsAmount,
-            canvas.width - reloadPadding - reloadSize - (15 * uiScale),
-            canvas.height - reloadPadding - (reloadSize / 2) + (3 * uiScale)
-        );
+        let text;
+        if (this.playerClass.className === CONFIG.FLAMETHROWER_CLASS_NAME) {
+            text = Math.round((this.shotsAmount / this.maxShotsAmount) * 100) + '%';
+        } else {
+            text = this.shotsAmount;
+        }
+
+        const textX = imgX - (15 * uiScale);
+        const textY = imgY + (scaledSize / 2) + (3 * uiScale);
+
+        ctx.fillText(text, textX, textY);
+
         ctx.restore();
     }
 
     drawHPInterface(ctx, hearthImg, canvas) {
         const uiScale = canvas.height / BASE_HEIGHT;
-        const hpSize = Math.floor(HP_SIZE * uiScale);
-        const hpPadding = Math.floor(HP_PADDING * uiScale);
+        const scaledHpSize = Math.floor(HP_SIZE * uiScale);
+        const scaledHpPadding = Math.floor(HP_PADDING * uiScale);
 
-        if (this.hpCanvas.width !== hpSize) {
-            this.hpCanvas.width = hpSize;
-            this.hpCanvas.height = hpSize;
+        if (this.hpCanvas.width !== scaledHpSize) {
+            this.hpCanvas.width = scaledHpSize;
+            this.hpCanvas.height = scaledHpSize;
         }
 
-
-        this.hpCtx.clearRect(0, 0, hpSize, hpSize);
-        this.hpCtx.drawImage(hearthImg, 0, 0, hpSize, hpSize);
+        this.hpCtx.clearRect(0, 0, scaledHpSize, scaledHpSize);
+        this.hpCtx.drawImage(hearthImg, 0, 0, scaledHpSize, scaledHpSize);
 
         this.hpCtx.globalCompositeOperation = 'source-in';
 
         const percent = Math.max(0, this.hitpoints / MAX_HITPOINTS);
-        const height = hpSize * percent;
+        const height = scaledHpSize * percent;
 
         this.hpCtx.fillStyle = '#ff0000';
-        this.hpCtx.fillRect(0, hpSize - height, hpSize, height);
+        this.hpCtx.fillRect(0, scaledHpSize - height, scaledHpSize, height);
         this.hpCtx.globalCompositeOperation = 'source-over';
 
         ctx.save();
         ctx.globalAlpha = 0.3;
-        ctx.drawImage(hearthImg, hpPadding, canvas.height - hpSize - hpPadding, hpSize, hpSize);
+        ctx.drawImage(hearthImg, scaledHpPadding, canvas.height - scaledHpSize - scaledHpPadding, scaledHpSize, scaledHpSize);
         ctx.restore();
 
-        ctx.drawImage(this.hpCanvas, hpPadding, canvas.height - hpSize - hpPadding);
+        ctx.drawImage(this.hpCanvas, scaledHpPadding, canvas.height - scaledHpSize - scaledHpPadding);
     }
 
     drawCrosshair(ctx, canvas, isPaused) {
@@ -390,7 +492,7 @@ export class Player extends Character {
         const spread = this.visualSpread * uiScale * SPREAD_COOF_UI;
         const lineLen = CROSSHAIR_LINE_LEN * uiScale;
         const lineWidth = Math.max(1, CROSSHAIR_LINE_WIDTH * uiScale);
-        const dotRadius = Math.max(1, CROSSHAIR_DOT_RADIUS* uiScale);
+        const dotRadius = Math.max(1, CROSSHAIR_DOT_RADIUS * uiScale);
 
         ctx.save();
         ctx.translate(mouseX, mouseY);
@@ -421,7 +523,6 @@ export class Player extends Character {
         if (this.lastHitTime) {
             const now = performance.now();
             const timeSinceHit = now - this.lastHitTime;
-
             const hitDuration = CROSSHAIR_HIT_DURATION;
 
             if (timeSinceHit < hitDuration) {
@@ -443,7 +544,6 @@ export class Player extends Character {
                 ctx.moveTo(offset, offset);
                 ctx.lineTo(offset + hitSize, offset + hitSize);
                 ctx.stroke();
-
             }
         }
         ctx.restore();
@@ -463,11 +563,9 @@ export class Player extends Character {
         }
 
         if (now - this.reloadStartTime >= RELOAD_TIME) {
-            this.shotsAmount = MAX_SHOTS_AMOUNT;
+            this.shotsAmount = this.maxShotsAmount;
             this.isReloading = false;
             this.reloadStartTime = undefined;
         }
     }
-
-
 }

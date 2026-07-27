@@ -1,19 +1,17 @@
 import { Character } from "./Character.js";
+import { CONFIG } from '../core/Config.js';
 
 const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
-const BULLET_SPEED = 55;
-const BULLET_WIDTH = 3;
-const BULLET_HEIGHT = 45;
-const BULLET_REAL_WIDTH = 4;
-const BULLET_REAL_HEIGHT = 4;
 
 export class RemotePlayer extends Character {
     constructor(id, initialX, initialY) {
-        super({x: initialX, y: initialY}, PLAYER_WIDTH, PLAYER_HEIGHT,  -1);
+        super({x: initialX, y: initialY}, PLAYER_WIDTH, PLAYER_HEIGHT, -1);
 
         this.id = id;
         this.nickname = "Player";
+        this.className = CONFIG.SOLDIER_CLASS_NAME;
+        this.playerClass = { className: CONFIG.SOLDIER_CLASS_NAME };
 
         this.targetX = initialX;
         this.targetY = initialY;
@@ -41,22 +39,36 @@ export class RemotePlayer extends Character {
         if (state.team !== undefined) {
             this.team = state.team;
         }
+        if (state.className !== undefined) {
+            this.className = state.className;
+            this.playerClass.className = state.className;
+        }
     }
 
     spawnNetworkBullet(startX, startY, angle, localPlayer = null) {
         const directionX = Math.cos(angle);
         const directionY = Math.sin(angle);
 
-        if (this.shootSounds) {
-            this.playFrequentSound(this.shootSounds, localPlayer);
+        const isFlame = this.className === CONFIG.FLAMETHROWER_CLASS_NAME;
+
+        if (isFlame) {
+            if (this.flameSounds) {
+                this.playFrequentSound(this.flameSounds, localPlayer);
+            }
+        } else {
+            if (this.shootSounds) {
+                this.playFrequentSound(this.shootSounds, localPlayer);
+            }
         }
+
+        const bSpeed = isFlame ? 20 : 55;
 
         this.bullets.push({
             x: startX,
             y: startY,
             xDirection: directionX,
             yDirection: directionY,
-            bulletSpeed: BULLET_SPEED
+            bulletSpeed: bSpeed
         });
     }
 
@@ -101,6 +113,10 @@ export class RemotePlayer extends Character {
     }
 
     processBulletPhysics(bullet, map, localPlayer, otherPlayers) {
+        const isFlame = this.className === CONFIG.FLAMETHROWER_CLASS_NAME;
+        const bRW = isFlame ? 20 : 4;
+        const bRH = isFlame ? 20 : 4;
+
         const steps = Math.ceil(bullet.bulletSpeed / 10);
         const stepX = (bullet.xDirection * bullet.bulletSpeed) / steps;
         const stepY = (bullet.yDirection * bullet.bulletSpeed) / steps;
@@ -110,10 +126,10 @@ export class RemotePlayer extends Character {
             bullet.y += stepY;
 
             const bulletRect = {
-                x: bullet.x - BULLET_REAL_WIDTH / 2,
-                y: bullet.y - BULLET_REAL_HEIGHT / 2,
-                w: BULLET_REAL_HEIGHT,
-                h: BULLET_REAL_WIDTH
+                x: bullet.x - bRW / 2,
+                y: bullet.y - bRH / 2,
+                w: bRW,
+                h: bRH
             };
 
             if (localPlayer && localPlayer.isAlive && map && map.isIntersecting(bulletRect, localPlayer)) {
@@ -129,7 +145,7 @@ export class RemotePlayer extends Character {
             }
 
             if (map && map.checkCollision(bulletRect)) {
-                if (this.hitHardSounds && localPlayer) {
+                if (!isFlame && this.hitHardSounds && localPlayer) {
                     this.playFrequentSound(this.hitHardSounds, localPlayer, bulletRect.x, bulletRect.y);
                 }
                 return true;
@@ -140,20 +156,24 @@ export class RemotePlayer extends Character {
     }
 
     takeDamage(damage, map, symbol) {
-
     }
+
     drawBullets(ctx, bulletImg) {
         ctx.save();
 
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ffaa00';
 
+        const isFlame = this.className === CONFIG.FLAMETHROWER_CLASS_NAME;
+        const bW = isFlame ? 20 : 3;
+        const bH = isFlame ? 20 : 45;
+
         this.bullets.forEach(bullet => {
             ctx.save();
             ctx.translate(bullet.x, bullet.y);
             const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
-            ctx.drawImage(bulletImg, -BULLET_WIDTH / 2, -BULLET_HEIGHT / 2, BULLET_WIDTH, BULLET_HEIGHT);
+            ctx.drawImage(bulletImg, -bW / 2, -bH / 2, bW, bH);
             ctx.restore();
         });
 
@@ -165,7 +185,7 @@ export class RemotePlayer extends Character {
         this.drawBullets(ctx, bulletImg);
 
         if (this.isShooting && shot1Img && shot2Img) {
-            this.animateShots(ctx, shot1Img, shot2Img);
+            this.animateShots(ctx, shot1Img, shot2Img, this);
         }
     }
 }
