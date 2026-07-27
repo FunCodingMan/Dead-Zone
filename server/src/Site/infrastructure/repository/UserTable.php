@@ -109,23 +109,20 @@ class UserTable implements IUserRepository
 
     public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void
     {
-//        $deathmatchWins = $isDeathmatch ? 1 : 0;
-//        $teamDeathmatchWins = $isTeamDeathmatch ? 1 : 0;
-//        $eliminationWins = $isElimination ? 1 : 0;
-//
-//        $deathmatchLose = !$isDeathmatch ? 1 : 0;
-//        $teamDeathmatchLose = !$isTeamDeathmatch ? 1 : 0;
-//        $eliminationLose = !$isElimination ? 1 : 0;
+        match ($mode) {
+            GameConfig::MODE_DEATHMATCH => $this->saveStatsForDeathmatch($userId, $kills, $deaths, $isWin),
+            GameConfig::MODE_TEAM_DEATHMATCH => $this->saveStatsForTeamDeathmatch($userId, $kills, $deaths, $isWin),
+            GameConfig::MODE_ELIMINATION => $this->saveStatsForElimination($userId, $kills, $deaths, $isWin),
+        };
+    }
 
+    private function saveStatsForDeathmatch(string $userId, int $kills, int $deaths, bool $isWin): void
+    {
         $query = "UPDATE `stats` SET
             `kills` = `kills` + :kills,
             `deaths` = `deaths` + :deaths,
             `deathmatchWins` = `deathmatchWins` + :deathmatchWins,
-            `teamDeathmatchWins` = `teamDeathmatchWins` + :teamDeathmatchWins,
-            `eliminationWins` = `eliminationWins` + :eliminationWins,
-            `deathmatchLose` = `deathmatchLose` + :deathmatchLose,
-            `teamDeathmatchLose` = `teamDeathmatchLose` + :teamDeathmatchLose,
-            `eliminationLose` = `eliminationLose` + :eliminationLose,
+            `deathmatchLose` = `deathmatchLose` + :deathmatchLose
         WHERE `user_id` = :user_id";
 
         $stmt = $this->connection->prepare($query);
@@ -133,12 +130,46 @@ class UserTable implements IUserRepository
             'kills' => $kills,
             'deaths' => $deaths,
             'user_id' => $userId,
-            'deathmatchWins' => $deathmatchWins,
-            'teamDeathmatchWins' => $teamDeathmatchWins,
-            'eliminationWins' => $eliminationWins,
-            'deathmatchLose' => $deathmatchLose,
-            'teamDeathmatchLose' => $teamDeathmatchLose,
-            'eliminationLose' => $eliminationLose,
+            'deathmatchWins' => $isWin,
+            'deathmatchLose' => !$isWin,
+        ]);
+    }
+
+    private function saveStatsForTeamDeathmatch(string $userId, int $kills, int $deaths, bool $isWin,): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `teamDeathmatchWins` = `teamDeathmatchWins` + :teamDeathmatchWins,
+            `teamDeathmatchLose` = `teamDeathmatchLose` + :teamDeathmatchLose
+        WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'user_id' => $userId,
+            'deathmatchWins' => $isWin,
+            'deathmatchLose' => !$isWin,
+        ]);
+    }
+
+    private function saveStatsForElimination(string $userId, int $kills, int $deaths, bool $isWin,): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `eliminationWins` = `eliminationWins` + :eliminationWins,
+            `eliminationLose` = `eliminationLose` + :eliminationLose
+            WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'user_id' => $userId,
+            'deathmatchWins' => $isWin,
+            'deathmatchLose' => !$isWin,
         ]);
     }
 }

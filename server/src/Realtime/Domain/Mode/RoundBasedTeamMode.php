@@ -94,7 +94,7 @@ class RoundBasedTeamMode implements GameModeInterface
         if ($this->blueRoundWins > $this->redRoundWins) $winnerTeam = GameConfig::TEAM_BLUE;
 
         return [
-            'mode' => GameConfig::MODE_ROUND_BASED,
+            'mode' => GameConfig::MODE_TEAM_DEATHMATCH,
             'winnerTeam' => $winnerTeam,
             'redScore' => $this->redRoundWins,
             'blueScore' => $this->blueRoundWins,

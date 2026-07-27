@@ -60,14 +60,12 @@ class MatchResultNotifier
 
         foreach ($activePlayers as $player) {
             $isWinner = false;
-
             if (isset($payload['winnerTeam']) && $payload['winnerTeam'] !== GameConfig::TEAM_NONE) {
                 $isWinner = $player->getTeam() === $payload['winnerTeam'];
             } elseif (isset($payload['winner'])) {
                 $isWinner = $player->getNickname() === $payload['winner'];
             }
-
-            $this->userRepository->updateDataUser($player->getUserId(), $payload['kills'], $payload['deaths'], $isWinner, $payload['mode']);
+            $this->userRepository->updateDataUser($player->getUserId(), $player->getKills(),$player->getDeaths(), $isWinner, $payload['mode']);
         }
 
         $packet = [

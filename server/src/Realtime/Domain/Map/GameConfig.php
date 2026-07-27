@@ -39,8 +39,8 @@ class GameConfig
     public const float SPREAD_RECOVERY_TIME_S = 0.4;
     public const int PLAYER_DAMAGE = 20;
     public const string MODE_DEATHMATCH = 'deathmatch';
-    public const string MODE_ROUND_BASED = 'round_based';
-    public const string MODE_TDM = 'tdm';
+    public const string MODE_TEAM_DEATHMATCH = 'round_based';
+    public const string MODE_ELIMINATION = 'elimination';
     public const string TEAM_NONE = 'none';
     public const string TEAM_RED = 'red';
     public const string TEAM_BLUE = 'blue';

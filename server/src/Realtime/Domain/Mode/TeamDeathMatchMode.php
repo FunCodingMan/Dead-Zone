@@ -77,7 +77,7 @@ class TeamDeathMatchMode implements GameModeInterface
         if ($this->blueScore > $this->redScore) $winnerTeam = GameConfig::TEAM_BLUE;
 
         return [
-            'mode' => GameConfig::MODE_TDM,
+            'mode' => GameConfig::MODE_ELIMINATION,
             'winnerTeam' => $winnerTeam,
             'redScore' => $this->redScore,
             'blueScore' => $this->blueScore,

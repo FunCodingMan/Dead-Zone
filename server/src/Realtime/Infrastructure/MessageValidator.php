@@ -106,8 +106,8 @@ class MessageValidator
         return isset($data['mode'])
             && in_array($data['mode'], [
                 GameConfig::MODE_DEATHMATCH,
-                GameConfig::MODE_TDM,
-                GameConfig::MODE_ROUND_BASED
+                GameConfig::MODE_ELIMINATION,
+                GameConfig::MODE_TEAM_DEATHMATCH
             ], true);
     }
     private function isValidSwitchTeam(array $data): bool
