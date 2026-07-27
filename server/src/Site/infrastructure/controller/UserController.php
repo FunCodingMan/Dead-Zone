@@ -37,6 +37,7 @@ class UserController implements IExecuteAction
             'waves' => $this->pagesRender->showSecondGame(),
             'waves-final' => $this->pagesRender->showSecondGameFinal(),
             'multiplayer' => $this->pagesRender->showMultiplayer(),
+            'global-stats' => $this->showGlobalStats(),
             default => $this->pagesRender->showForm(),
         };
     }
@@ -96,6 +97,14 @@ class UserController implements IExecuteAction
         $user = $this->userService->getUser();
         if ($user !== null) {
             $this->pagesRender->showProfile($user);
+        }
+    }
+
+    private function showGlobalStats(): void
+    {
+        $stats = $this->userService->getGlobalStats();
+        if ($stats !== null) {
+            $this->pagesRender->showGlobalStats($stats);
         }
     }
 }

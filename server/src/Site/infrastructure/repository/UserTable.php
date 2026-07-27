@@ -107,6 +107,19 @@ class UserTable implements IUserRepository
         return throw new RuntimeException("Stats not found for user_id: $userId");
     }
 
+    public function getLeaderboard(): array
+    {
+        $query = "SELECT `user`.`nickname`, `stats`.`kd` 
+                FROM `user`
+                JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
+                ORDER BY `stats`.`kd` DESC
+                LIMIT :limit";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bindValue(':limit', GameConfig::LIMIT_LEADER_BOARD, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void
     {
         match ($mode) {

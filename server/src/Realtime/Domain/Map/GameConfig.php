@@ -48,4 +48,5 @@ class GameConfig
     public const string WINNER_RED = 'RED';
     public const string WINNER_BLUE = 'BLUE';
     public const float PAUSE_BETWEEN_ROUNDS_S = 5.0;
+    public const float LIMIT_LEADER_BOARD = 10;
 }

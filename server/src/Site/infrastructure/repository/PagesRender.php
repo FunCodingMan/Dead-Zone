@@ -52,4 +52,12 @@ class PagesRender implements IPagesRender
     {
         include_once __DIR__ . "/../../View/multiplayer.html";
     }
+
+    public function showGlobalStats(array $stats): void
+    {
+        foreach ($stats as $stat) {
+            echo $stat['nickname'] . " " . $stat['kd'] . "<br>";
+        }
+        include_once __DIR__ . "/../../View/global-stats.html";
+    }
 }

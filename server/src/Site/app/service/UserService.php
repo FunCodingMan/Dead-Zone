@@ -54,5 +54,11 @@ class UserService
         return null;
     }
 
-
+    public function getGlobalStats(): ?array
+    {
+        if (isset($_COOKIE["token"])) {
+            return $this->userRepository->getLeaderboard();
+        }
+        return null;
+    }
 }
