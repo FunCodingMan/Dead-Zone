@@ -35,14 +35,19 @@ class UserTable implements IUserRepository
                 'token' => $token,
             ]);
 
-            $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`, `kills`, `deaths`) VALUES (:user_id, :wins, :loses, :kills, :deaths);";
+            $queryStats = "INSERT INTO `stats` (`user_id`, `kills`, `deaths`, `deathmatchWins`, `teamDeathmatchWins`, `eliminationWins`, `deathmatchLose`, `teamDeathmatchLose`, `eliminationLose`) 
+                            VALUES (:user_id, :kills, :deaths, :deathmatchWins, :teamDeathmatchWins, :eliminationWins, :deathmatchLose, :teamDeathmatchLose, :eliminationLose);";
             $stmt = $this->connection->prepare($queryStats);
             $stmt->execute([
                 'user_id' => $userId,
-                'wins' => $user->getStats()->getWins(),
-                'loses' => $user->getStats()->getLoses(),
                 'kills' => $user->getStats()->getKills(),
                 'deaths' => $user->getStats()->getDeaths(),
+                'deathmatchWins' => $user->getStats()->getDeathMatchWins(),
+                'teamDeathmatchWins' => $user->getStats()->getTeamDeathMatchWins(),
+                'eliminationWins' => $user->getStats()->getEliminationWins(),
+                'deathmatchLose' => $user->getStats()->getDeathMatchLose(),
+                'teamDeathmatchLose' => $user->getStats()->getTeamDeathMatchLose(),
+                'eliminationLose' => $user->getStats()->getEliminationLose(),
             ]);
             $this->connection->commit();
         }catch (\PDOException $error) {
@@ -96,27 +101,43 @@ class UserTable implements IUserRepository
         ]);
         $arrayStats = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($arrayStats) {
-            return new Stats($arrayStats['wins'], $arrayStats['loses'], $arrayStats['kills'], $arrayStats['deaths'], $arrayStats['kd']);
+            return new Stats($arrayStats['kills'], $arrayStats['deaths'], $arrayStats['kd'], $arrayStats['deathmatchWins'], $arrayStats['teamDeathmatchWins'], $arrayStats['eliminationWins'], $arrayStats['deathmatchLose'], $arrayStats['teamDeathmatchLose'], $arrayStats['eliminationLose']);
         }
         return throw new RuntimeException("Stats not found for user_id: $userId");
     }
 
-    public function updateDataUser(string $userId, int $kills, int $deaths, int $wins, int $loses): void
+    public function updateDataUser(string $userId, int $kills, int $deaths, bool $isDeathmatch, bool $isTeamDeathmatch, bool $elimination): void
     {
+        $deathmatchWins = $isDeathmatch ? 1 : 0;
+        $teamDeathmatchWins = $isTeamDeathmatch ? 1 : 0;
+        $eliminationWins = $elimination ? 1 : 0;
+
+        $deathmatchLose = !$isDeathmatch ? 1 : 0;
+        $teamDeathmatchLose = !$isTeamDeathmatch ? 1 : 0;
+        $eliminationLose = !$elimination ? 1 : 0;
+
         $query = "UPDATE `stats` SET
             `kills` = `kills` + :kills,
             `deaths` = `deaths` + :deaths,
-            `wins` = `wins` + :wins,
-            `loses` = `loses` + :loses
+            `deathmatchWins` = `deathmatchWins` + :deathmatchWins,
+            `teamDeathmatchWins` = `teamDeathmatchWins` + :teamDeathmatchWins,
+            `eliminationWins` = `eliminationWins` + :eliminationWins,
+            `deathmatchLose` = `deathmatchLose` + :deathmatchLose,
+            `teamDeathmatchLose` = `teamDeathmatchLose` + :teamDeathmatchLose,
+            `eliminationLose` = `eliminationLose` + :eliminationLose,
         WHERE `user_id` = :user_id";
 
         $stmt = $this->connection->prepare($query);
         $stmt->execute([
             'kills' => $kills,
             'deaths' => $deaths,
-            'wins' => $wins,
-            'loses' => $loses,
             'user_id' => $userId,
+            'deathmatchWins' => $deathmatchWins,
+            'teamDeathmatchWins' => $teamDeathmatchWins,
+            'eliminationWins' => $eliminationWins,
+            'deathmatchLose' => $deathmatchLose,
+            'teamDeathmatchLose' => $teamDeathmatchLose,
+            'eliminationLose' => $eliminationLose,
         ]);
     }
 }

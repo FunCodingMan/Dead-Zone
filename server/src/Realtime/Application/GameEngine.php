@@ -19,7 +19,6 @@ class GameEngine
     private VisibilityService $visibility;
     private MatchLifecycle $lifecycle;
     private MatchResultNotifier $resultNotifier;
-    private IUserRepository $userRepository;
     private array $disconnectedStats = [];
     private GameModeInterface $gameMode;
     private bool $isBetweenRounds = false;
@@ -33,7 +32,6 @@ class GameEngine
         $this->map = $map;
         $this->registry = $registry;
         $this->queue = $queue;
-        $this->userRepository = $userRepository;
         $this->visibility = new VisibilityService($map);
         $this->lifecycle = new MatchLifecycle($matchDuration);
         $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry, $userRepository, $this->gameMode);
@@ -143,8 +141,6 @@ class GameEngine
         if ($player !== null) {
             $kills = $player->getKills() ?? 0;
             $deaths = $player->getDeaths() ?? 0;
-
-            $this->userRepository->updateDataUser($player->getUserId(), $kills, $deaths, 0, 1);
 
             if ($deaths === 0) {
                 $kd = $kills;

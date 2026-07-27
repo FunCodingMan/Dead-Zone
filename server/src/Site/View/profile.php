@@ -17,15 +17,15 @@
             <div class="profile-stats">
                 <p class="stats-text">Имя: <span id="stats-name"><?php echo htmlspecialchars($user->getNickname()) ?></span></p>
                 <p class="stats-text">Логин: <span id="stats-kills"><?php echo htmlspecialchars($user->getUsername()) ?></span></p>
-                <p class="stats-text">Победы: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getWins()) ?></span></p>
-                <p class="stats-text">Поражения: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getLoses()) ?></span></p>
                 <p class="stats-text">Убийств: <span id="stats-kills"></span><?php echo htmlspecialchars($user->getStats()->getKills()) ?></p>
                 <p class="stats-text">Смертей: <span id="stats-kills"></span><?php echo htmlspecialchars($user->getStats()->getDeaths()) ?></p>
                 <p class="stats-text">КД: <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getKd()) ?></span></p>
-                <p class="stats-text">Победы в 1: <span id="stats-kills">-</span></p>
-                <p class="stats-text">Победы в 2: <span id="stats-kills">-</span></p>
-                <p class="stats-text">Победы в 3: <span id="stats-kills">-</span></p>
-                <p class="stats-text">Дата регистрации: <span id="stats-kills">-</span></p>
+                <p class="stats-text">Победы в "Сам за себя": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getDeathMatchWins()) ?></span></p>
+                <p class="stats-text">Победы в "Командный бой": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getTeamDeathmatchWins()) ?></span></p>
+                <p class="stats-text">Победы в "Командный бой (раунды)": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getEliminationWins()) ?></span></p>
+                <p class="stats-text">Поражения в "Сам за себя": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getDeathMatchLose()) ?></span></p>
+                <p class="stats-text">Поражения в "Командный бой": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getTeamDeathmatchLose()) ?></span></p>
+                <p class="stats-text">Поражения в "Командный бой (раунды)": <span id="stats-kills"><?php echo htmlspecialchars($user->getStats()->getEliminationLose()) ?></span></p>
             </div>
             <button class="btn" data-target="show">НАЗАД</button>
         </div>

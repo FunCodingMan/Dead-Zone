@@ -16,13 +16,17 @@ CREATE TABLE user
 CREATE TABLE stats
 (
     `user_id` VARCHAR(255) NOT NULL,
-    `wins` INT NOT NULL ,
-    `loses` INT NOT NULL DEFAULT 0,
     `kills` INT NOT NULL DEFAULT 0,
     `deaths` INT NOT NULL DEFAULT 0,
     `kd` DECIMAL(5, 2) GENERATED ALWAYS AS (
         IF (`deaths` = 0, `kills`, ROUND(`kills` / `deaths`, 2))
-    ),
+        ),
+    `deathmatchWins` INT NOT NULL DEFAULT 0,
+    `teamDeathmatchWins` INT NOT NULL DEFAULT 0,
+    `eliminationWins` INT NOT NULL DEFAULT 0,
+    `deathmatchLose` INT NOT NULL DEFAULT 0,
+    `teamDeathmatchLose` INT NOT NULL DEFAULT 0,
+    `eliminationLose` INT NOT NULL DEFAULT 0,
     PRIMARY KEY(`user_id`),
     FOREIGN KEY(`user_id`) REFERENCES user(`user_id`)
 );
