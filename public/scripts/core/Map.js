@@ -2,7 +2,7 @@ import { CONFIG } from "./Config.js";
 
 const RESPAWN_INTERVAL = 2000;
 const AVAILABLE_CELL = 1;
-const UNAVAILABLE_CELL = 0;
+const UNAVAILBALE_CELL = 0;
 const BOSS_SIZE_ON_GRID = 3;
 
 export class Map {
@@ -18,10 +18,12 @@ export class Map {
         this.enemySpawns = [];
         this.targetSpawns = [];
         this.bossSpawns = [];
+        this.turretSpawns = [];
 
         this.grid = [];
 
         this.diedTargets = [];
+        this.diedTurrets = [];
     }
 
     getCharacterPositionOnGrid(coordX, coordY, width, height) {
@@ -41,20 +43,20 @@ export class Map {
             graph[row] = [];
             for (let col = 0; col < cols; col++) {
                 const cell = mapData[row][col];
-                graph[row][col] = (cell === CONFIG.SPACE_SYMBOL) ? 1 : 0;
+                graph[row][col] = (cell === CONFIG.SPACE_SYMBOL) ? AVAILABLE_CELL : UNAVAILBALE_CELL;
             }
         }
 
         const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
         aliveEnemies.forEach(enemy => {
             const pos = this.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
-            graph[pos.row][pos.col] = 0;
+            graph[pos.row][pos.col] = UNAVAILBALE_CELL;
         });
 
         const pos = this.getCharacterPositionOnGrid(
             player.x, player.y, player.w, player.h
         );
-        graph[pos.row][pos.col] = 1;
+        graph[pos.row][pos.col] = AVAILABLE_CELL;
 
         return graph;
     }
@@ -125,6 +127,10 @@ export class Map {
             spawns = this.enemySpawns;
         } else if (symbol == CONFIG.BOSS_SYMBOL) {
             spawns = this.bossSpawns;
+        } else if (symbol == CONFIG.TURRET_SYMBOL) {
+            const now = performance.now();
+            this.diedTurrets = this.diedTurrets.filter(d => now - d.time < RESPAWN_INTERVAL);
+            spawns = this.turretSpawns;
         }
 
         if (symbol != CONFIG.PLAYER_SYMBOL) {
@@ -182,16 +188,23 @@ export class Map {
 
         let freePlaces;
 
-        if (symbol === CONFIG.TARGET_SYMBOL) {
-            freePlaces = spawns.filter((place, index) => 
-                place.isFree && !this.diedTargets.some(d => d.index === index)
+        if (symbol == CONFIG.TARGET_SYMBOL) {
+            freePlaces = spawns.filter(place =>
+                place.isFree &&
+                !this.diedTargets.some(d => d.spawn == place)
+            );
+        } else if (symbol == CONFIG.TURRET_SYMBOL) {
+            freePlaces = spawns.filter(place =>
+                place.isFree &&
+                !this.diedTurrets.some(d => d.spawn == place)
             );
         } else {
             freePlaces = spawns.filter((place) => place.isFree);
         }
 
-        if (freePlaces.length === 0 && this.diedTargets.length > 0) {
-            this.diedTargets = [];
+        if (freePlaces.length == 0) {
+            if (this.diedTargets.length > 0) this.diedTargets = [];
+            if (this.diedTurrets.length > 0) this.diedTurrets = [];
             freePlaces = spawns.filter(place => place.isFree);
         }
         
@@ -216,6 +229,7 @@ export class Map {
         this.playerSpawns = [];
         this.targetSpawns = [];
         this.enemySpawns = [];
+        this.turretSpawns = [];
 
         this.grid = [];
 
@@ -261,6 +275,13 @@ export class Map {
                             isFree: true
                         }); 
                         break;
+                    case CONFIG.TURRET_SYMBOL:
+                        this.turretSpawns.push({
+                            x: x + (this.cellSize - this.playerSize) / 2,
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        }); 
+                        break;
                     case CONFIG.ENEMY_SYMBOL:
                         this.enemySpawns.push({
                             x: x + (this.cellSize - this.playerSize) / 2,
@@ -293,7 +314,7 @@ export class Map {
         }
     }
 
-    checkCollision(rect, enemies = [], targets = [], boss) {
+    checkCollision(rect, enemies = [], targets = [], turrets = [], boss) {
         for (let wall of this.walls) {
             if (this.isIntersecting(rect, wall)) {
                 return true;
@@ -306,6 +327,11 @@ export class Map {
         }
         for (let target of targets) {
             if (this.isIntersecting(rect, target)) {
+                return true;
+            }
+        }
+        for (let turret of turrets) {
+            if (this.isIntersecting(rect, turret)) {
                 return true;
             }
         }

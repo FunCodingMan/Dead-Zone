@@ -7,12 +7,12 @@ import { Boss } from '../entities/Boss.js';
     const wavesLevelData = `
     ################
     #P       B    E#
-    # Q         R     #
+    # Q            #
     #        B     #
-    #  R           #
+    #              #
     #           Q  #
     #   B          #
-    #E        R   E#
+    #E            E#
     ################
     `;
 

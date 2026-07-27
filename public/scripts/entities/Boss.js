@@ -78,10 +78,10 @@ export class Boss extends Character {
     }
 
     update(player) {
-        this.handleBullets(this.map, [], [], this, this.bossBulletsLightning, player);
+        this.handleBullets(this.map, [], [], [], this, this.bossBulletsLightning, player);
         this.removeBullets(this.bossBulletsLightning);
 
-        this.handleBullets(this.map, [], [], this, this.bossBulletsLaser, player);
+        this.handleBullets(this.map, [], [], [], this, this.bossBulletsLaser, player);
         this.removeBullets(this.bossBulletsLaser);
     }
 
@@ -114,6 +114,11 @@ export class Boss extends Character {
 
     laserAttack() {
         this.isLaser = true;
+        this.bulletWidth = LASER_WIDTH;
+        this.bulletHeight = LASER_HEIGHT;
+        this.bulletSpeed = LASER_SPEED;
+        this.damage = LASER_DAMAGE;
+
         const targetX = this.playerStartPosInWindow.x;
         const targetY = this.playerStartPosInWindow.y;
         
@@ -124,17 +129,16 @@ export class Boss extends Character {
 
             this.laserSound.play();
 
-            this.bulletWidth = LASER_WIDTH;
-            this.bulletHeight = LASER_HEIGHT;
-            this.bulletSpeed = LASER_SPEED;
-            this.damage = LASER_DAMAGE;
-
             this.createBullet(targetX, targetY, CONFIG.BOSS_SYMBOL, this.bossBulletsLaser);
         }
     }
 
     lightningAttack(player) {
         this.isLightning = true;
+        this.bulletWidth = LIGHTNING_WIDTH;
+        this.bulletHeight = LIGHNING_HEIGHT;
+        this.bulletSpeed = LIGHTNING_SPEED;
+        this.damage = LIGHTNING_DAMAGE;
 
         const targetX = player.x + player.w / 2;
         const targetY = player.y + player.h / 2;
@@ -144,23 +148,7 @@ export class Boss extends Character {
         if (current - this.lastLightningShotTIme > LIGHTNING_COOLDOWN) {
             this.lastLightningShotTIme = current;
 
-            this.bulletWidth = LIGHTNING_WIDTH;
-            this.bulletHeight = LIGHNING_HEIGHT;
-            this.bulletSpeed = LIGHTNING_SPEED;
-            this.damage = LIGHTNING_DAMAGE;
-
             this.createBullet(targetX, targetY, CONFIG.BOSS_SYMBOL, this.bossBulletsLightning);
-        }
-    }
-
-    handlebossBulletsIntersecting(player, bulletRect, bulletIndex) {
-        if (player) {
-            if (player.isAlive) {
-                if (this.map.isIntersecting(bulletRect, player)) {
-                    player.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
-                    this.handleBulletsIntersectingCommon(bulletIndex, null);
-                }
-            }
         }
     }
 
@@ -198,11 +186,11 @@ export class Boss extends Character {
                 xDirection: dx / length,
                 yDirection: dy / length,
                 bulletSpeed: this.bulletSpeed,
-                owner: CONFIG.BOSS_SYMBOL
+                owner: CONFIG.BOSS_SYMBOL,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             });
         });
-    
-        
     }
 
     createLighningBullet(targetX, targetY, spawnX, spawnY, owner, bullets = []) {
@@ -232,7 +220,9 @@ export class Boss extends Character {
                 xDirection: dx / length,
                 yDirection: dy / length,
                 bulletSpeed: this.bulletSpeed,
-                owner: CONFIG.BOSS_SYMBOL
+                owner: CONFIG.BOSS_SYMBOL,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             });
 
         });

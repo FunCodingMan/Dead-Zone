@@ -63,7 +63,7 @@ export class Player extends Character {
         this.hitpoints = HITPOINTS;
     }
 
-    update(map, canvas, zoom, enemies, targets, boss) {
+    update(map, canvas, zoom, enemies, targets, turrets, boss) {
         if (!this.isAlive) return;
 
         const centerX = this.x + this.w / 2;
@@ -80,7 +80,7 @@ export class Player extends Character {
             worldMouseX - centerX
         );
 
-        this.move(map, enemies, targets, boss);
+        this.move(map, enemies, targets, turrets, boss);
 
         if (this.playerClass.attackType = CONFIG.SHOOT_ATTACK_TYPE) {
             this.shoot(worldMouseX, worldMouseY);
@@ -98,12 +98,12 @@ export class Player extends Character {
             }
         }
 
-        this.handleBullets(map, enemies, targets, boss, this.bullets, this);
+        this.handleBullets(map, enemies, targets, turrets, boss, this.bullets, this);
 
         this.removeBullets(this.bullets);
     }
 
-    move(map, enemies, targets, boss) {
+    move(map, enemies, targets, turrets, boss) {
         let nextX = this.x;
         let nextY = this.y;
 
@@ -161,15 +161,17 @@ export class Player extends Character {
             t => t.isAlive
         );
 
+        const aliveTurrets = turrets.filter(
+            t => t.isAlive
+        );
+
         if (!map.checkCollision({
                     x: nextX + (this.w - HITBOX) / 2,
                     y: this.y + (this.w - HITBOX) / 2,
                     w: this.w,
                     h: this.h
                 },
-                aliveEnemies,
-                aliveTargets,
-                boss
+                aliveEnemies,  aliveTargets, aliveTurrets, boss
             )
         ) {
             this.x = nextX;
@@ -181,9 +183,7 @@ export class Player extends Character {
                     w: this.w, 
                     h: this.h
                 },
-                aliveEnemies,
-                aliveTargets,
-                boss
+                aliveEnemies, aliveTargets, aliveTurrets, boss
             )
         ) {
             this.y = nextY;
@@ -296,7 +296,7 @@ export class Player extends Character {
         }
     }
 
-    handlePlayerBulletsIntersecting(enemies, targets, boss, bulletRect, bulletIndex) {
+    handlePlayerBulletsIntersecting(enemies, targets, turrets, boss, bulletRect, bulletIndex) {
         enemies.forEach((enemy) => {
             if (enemy.isAlive) {
                 const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
@@ -314,6 +314,17 @@ export class Player extends Character {
 
                 if (this.map.isIntersecting(bulletRect, entityRect)) {
                     target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
+                    this.handleBulletsIntersectingCommon(bulletIndex, this);
+                }
+            }
+        });
+
+        turrets.forEach((turret) => {
+            if (turret.isAlive) {
+                const entityRect = {x: turret.x, y: turret.y, w: turret.w, h: turret.h};
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    turret.takeDamage(this.damage, this.map, CONFIG.TURRET_SYMBOL);
                     this.handleBulletsIntersectingCommon(bulletIndex, this);
                 }
             }

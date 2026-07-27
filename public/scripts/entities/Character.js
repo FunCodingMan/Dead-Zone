@@ -97,10 +97,12 @@ export class Character {
             }
         } else if (owner == CONFIG.BOSS_SYMBOL) {
             this.createBulletBoss(targetX, targetY, spawnX, spawnY, owner, bullets);
+        } else if (owner == CONFIG.TURRET_SYMBOL) {
+            this.createBulletTurret(directionX, directionY, spawnX, spawnY, owner, bullets);
         }
     }
 
-    handleBullets(map, enemies, targets, boss, bullets, player) {
+    handleBullets(map, enemies, targets, turrets, boss, bullets, player) {
         this.bulletsToRemove = [];
 
         bullets.forEach((bullet, index) => {
@@ -116,7 +118,7 @@ export class Character {
 
             if (bullet.owner == CONFIG.PLAYER_SYMBOL) {
 
-                this.handlePlayerBulletsIntersecting(enemies, targets, boss, bulletRect, index);
+                this.handlePlayerBulletsIntersecting(enemies, targets, turrets, boss, bulletRect, index);
                 if (this.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) {
                     this.countOffset(bullet, index);
                 }
@@ -126,8 +128,8 @@ export class Character {
                 }
             }
 
-            if (bullet.owner == CONFIG.BOSS_SYMBOL) {
-                this.handlebossBulletsIntersecting(player, bulletRect, index);
+            if (bullet.owner == CONFIG.BOSS_SYMBOL || bullet.owner == CONFIG.TURRET_SYMBOL) {
+                this.handleEnemyBulletsIntersecting(player, bulletRect, index);
 
                 if (this.isLaser) map.laserCollision(bulletRect);
             }
@@ -138,11 +140,18 @@ export class Character {
         });
     }
 
-    handlebossBulletsIntersecting(player, bulletRect, index) {
-
+    handleEnemyBulletsIntersecting(player, bulletRect, index) {
+        if (player) {
+            if (player.isAlive) {
+                if (this.map.isIntersecting(bulletRect, player)) {
+                    player.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                    this.handleBulletsIntersectingCommon(index, null);
+                }
+            }
+        }
     }
 
-    handlePlayerBulletsIntersecting(enemies, targets, boss, bulletRect, index) {
+    handlePlayerBulletsIntersecting(enemies, targets, turrets, boss, bulletRect, index) {
 
     }
 
@@ -182,10 +191,10 @@ export class Character {
 
             ctx.drawImage(
                 bulletImg,
-                -this.bulletWidth / 2,
-                -this.bulletHeight / 2,
-                this.bulletWidth,
-                this.bulletHeight
+                -bullet.bulletWidth / 2,
+                -bullet.bulletHeight / 2,
+                bullet.bulletWidth,
+                bullet.bulletHeight
             );
 
             ctx.restore();
@@ -260,7 +269,7 @@ export class Character {
 
         this.hitpoints -= damage;
 
-        if (symbol == CONFIG.TARGET_SYMBOL || symbol == CONFIG.BOSS_SYMBOL) {
+        if (symbol == CONFIG.TARGET_SYMBOL || symbol == CONFIG.BOSS_SYMBOL || symbol == CONFIG.TURRET_SYMBOL) {
             this.startPulse();
             this.playFrequentSound(this.hitTargetSounds);
         } else {
@@ -281,15 +290,21 @@ export class Character {
 
             if (this.spawnPoint) {
                 this.spawnPoint.isFree = true;
-                if (
-                    this.spawnIndex !== -1 &&
-                    !map.diedTargets.includes(this.spawnIndex)
-                ) {
-                    map.diedTargets.push({
-                        index: this.spawnIndex,
-                        time: performance.now()
-                    });
+                if (this.spawnIndex !== -1) {
+                    if (!map.diedTargets.some(d => d.index === this.spawnIndex)) {
+                        map.diedTargets.push({
+                            spawn: this.spawnPoint,
+                            time: performance.now()
+                        });
+                    }
+                    if (!map.diedTurrets.some(d => d.index === this.spawnIndex)) {
+                        map.diedTurrets.push({
+                            spawn: this.spawnPoint,
+                            time: performance.now()
+                        });
+                    }
                 }
+
             }
         }
     }
@@ -303,6 +318,10 @@ export class Character {
     }
 
     createBulletFlamethrower(directionX, directionY, spawnX, spawnY, angle, owner, bullets) {
+
+    }
+
+    createBUlletTurret(directionX, directionY, spawnX, spawnY, owner, bullets) {
 
     }
 

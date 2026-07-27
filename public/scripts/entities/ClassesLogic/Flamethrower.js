@@ -33,7 +33,10 @@ export class Flamethrower extends Player {
                 yDirection: center.y,
                 bulletSpeed: this.bulletSpeed,
                 offset: 0,
-                owner: owner
+                owner: owner,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
+
             },
             {
                 x: spawnX,
@@ -42,7 +45,9 @@ export class Flamethrower extends Player {
                 yDirection: left.y,
                 bulletSpeed: this.bulletSpeed,
                 offset: 0,
-                owner: owner
+                owner: owner,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             },
             {
                 x: spawnX,
@@ -51,7 +56,9 @@ export class Flamethrower extends Player {
                 yDirection: right.y,
                 bulletSpeed: this.bulletSpeed,
                 offset: 0,
-                owner: owner
+                owner: owner,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             },
             {
                 x: spawnX,
@@ -60,7 +67,9 @@ export class Flamethrower extends Player {
                 yDirection: farLeft.y,
                 bulletSpeed: this.bulletSpeed,
                 offset: 0,
-                owner: owner
+                owner: owner,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             },
             {
                 x: spawnX,
@@ -69,7 +78,9 @@ export class Flamethrower extends Player {
                 yDirection: farRight.y,
                 bulletSpeed: this.bulletSpeed,
                 offset: 0,
-                owner: owner
+                owner: owner,
+                bulletWidth: this.bulletWidth,
+                bulletHeight: this.bulletHeight
             }
         );
     }

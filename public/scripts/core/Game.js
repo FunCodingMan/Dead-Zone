@@ -22,6 +22,7 @@ export class Game {
         this.boss = null;
         this.enemies = [];
         this.targets = [];
+        this.turrets = [];
         this.input = null;
         this.currentMode = null;
 
@@ -166,7 +167,15 @@ export class Game {
         }
 
         if (this.isPaused) return;
-        if (this.player) this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets, this.boss);
+        if (this.player) this.player.update(
+            this.map, 
+            this.canvas, 
+            this.zoom, 
+            this.enemies, 
+            this.targets, 
+            this.turrets, 
+            this.boss
+        );
         if (this.boss) this.boss.update(this.player);
 
         if (this.currentMode) this.currentMode.update();
@@ -219,6 +228,15 @@ export class Game {
                 target.draw(this.ctx, this.assets.target);
             } else if (target.isDying) {
                 target.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
+            }
+        })
+
+        this.turrets.forEach(turret => {
+            if (turret.isAlive) {
+                turret.draw(this.ctx, this.assets.turret);
+                turret.drawBullets(this.ctx, this.assets.bullet, turret.bullets);
+            } else if (turret.isDying) {
+                turret.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime);
             }
         })
 
