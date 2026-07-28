@@ -95,6 +95,35 @@ export class Game {
         }
     }
 
+    downloadMapPreview() {
+        if (!this.map) {
+            console.warn("Карта еще не загружена!");
+            return;
+        }
+
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.map.width;
+        tempCanvas.height = this.map.height;
+        const tempCtx = tempCanvas.getContext('2d');
+
+        this.map.draw(
+            tempCtx,
+            this.assets,
+            this.map.width / 2,
+            this.map.height / 2,
+            this.map.width * 2,
+            this.map.height * 2,
+            1
+        );
+
+        const link = document.createElement('a');
+        link.download = 'map_preview.png';
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+
+        console.log("Превью карты успешно скачано!");
+    }
+
     initializeClassSprites() {
         if (!this.player || !this.player.playerClass) {
             this.playerSprite = this.assets.soldier;
@@ -151,6 +180,12 @@ export class Game {
         if (initResult instanceof Promise) {
             await initResult;
         }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '0') {
+                this.downloadMapPreview();
+            }
+        });
 
         this.initializeClassSprites();
 

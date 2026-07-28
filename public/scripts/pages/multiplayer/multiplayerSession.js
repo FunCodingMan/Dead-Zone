@@ -82,10 +82,11 @@ const startErrorMessage = document.getElementById('start-error-message');
 const mapSelect = document.getElementById('map-select');
 const mapPreviewImg = document.getElementById('map-preview-img');
 const mapImages = {
-    'classic': '../../assets/images/maps/classic.png',
-    'dust2': '../../assets/images/maps/dust2.png',
-    'dust2_mini' : '../../assets/images/maps/dust2_mini.png',
-    'open-field': '../../assets/images/maps/open-field.png'
+    'classic': '../../assets/maps-preview/classic.png',
+    'classic_mini': '../../assets/maps-preview/classic_mini.png',
+    'dust2': '../../assets/maps-preview/dust2.png',
+    'dust2_mini' : '../../assets/maps-preview/dust2_mini.png',
+    'open-field': '../../assets/maps-preview/open-field.png'
 };
 
 let isReady = false;
