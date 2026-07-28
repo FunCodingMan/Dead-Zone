@@ -43,13 +43,18 @@ const testMapData_ = `
 
 export class MultiplayerTestMode extends BaseMultiplayerTemplate {
 
-    constructor(engine, network) {
+    constructor(engine, network, mapLayout) {
         super(engine, network);
+        this.mapLayout = mapLayout;
     }
 
     init() {
         this.engine.map = new Map();
-        this.engine.map.loadLevel(testMapData);
+        if (this.mapLayout) {
+            this.engine.map.loadLevel(this.mapLayout);
+        } else {
+            this.engine.map.loadLevel(testMapData);
+        }
 
         super.init();
     }

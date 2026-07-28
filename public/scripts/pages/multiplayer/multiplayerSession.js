@@ -79,6 +79,13 @@ const gameOverSubtitle = document.getElementById('game-over-subtitle');
 const stayInRoomBtn = document.getElementById('btn-stay-in-room');
 const leaveRoomBtn = document.getElementById('btn-leave-room');
 const startErrorMessage = document.getElementById('start-error-message');
+const mapSelect = document.getElementById('map-select');
+const mapPreviewImg = document.getElementById('map-preview-img');
+const mapImages = {
+    'classic': '../../assets/images/maps/classic.png',
+    'classic_': '../../assets/images/maps/classic_.png',
+    'open-field': '../../assets/images/maps/open-field.png'
+};
 
 let isReady = false;
 let currentRoomId = null;
@@ -180,6 +187,10 @@ network.on('stateRoom', (payload) => {
     }
     renderPlayersList(payload.users);
 
+    if (payload.mapId) {
+        mapSelect.value = payload.mapId;
+        mapPreviewImg.src = mapImages[payload.mapId] || mapImages['classic'];
+    }
 
     if (payload.amIHost) {
         startGameBtn.classList.remove('hidden');
@@ -189,6 +200,7 @@ network.on('stateRoom', (payload) => {
         durationSelect.disabled = false;
         durationInput.disabled = false;
         modeSelect.disabled = false;
+        mapSelect.disabled = false;
 
         classSelectionToggle.disabled = false;
         labelClassSelectionToggle.classList.remove('disabled');
@@ -210,6 +222,7 @@ network.on('stateRoom', (payload) => {
         durationSelect.disabled = true;
         durationInput.disabled = true;
         modeSelect.disabled = true;
+        mapSelect.disabled = true;
 
         classSelectionToggle.disabled = true;
         labelClassSelectionToggle.classList.add('disabled');
@@ -269,6 +282,9 @@ classSelectionToggle.addEventListener('change', (e) => {
 classSelect.addEventListener('change', (e) => {
     network.send('change-class', { className: e.target.value });
 });
+mapSelect.addEventListener('change', (e) => {
+    network.send('change-map', { mapId: e.target.value });
+});
 stayInRoomBtn.addEventListener('click', () => {
     isReady = false;
     readyBtn.textContent = 'ГОТОВ';
@@ -307,7 +323,7 @@ network.on('start-game',  async(payload) => {
 
     canvas.focus();
 
-    game.start(MultiplayerTestMode, network);
+    game.start(MultiplayerTestMode, network, payload.mapLayout);
 
     if (game.currentMode) {
         game.currentMode.isFogOfWarEnabled = payload.isFogEnabled;

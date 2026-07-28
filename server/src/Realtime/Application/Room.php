@@ -32,6 +32,7 @@ class Room
     private string $globalClassName = GameConfig::SOLDIER_CLASS;
     private WebSocketTransport $ws;
     private IUserRepository $userRepository;
+    private string $mapId = 'classic';
 
 
     /** @throws RandomException */
@@ -59,13 +60,27 @@ class Room
         }
 
         $map = new GameMap();
-        $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
+        $map->loadLevel(LevelRepository::get($this->mapId));
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
 
         $this->gameEngine = new GameEngine($this->ws, $this->registry, $this->queue, $map, $this->userRepository, $this->mode);
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
         $this->gameEngine->setMatchDuration((float)$this->matchDuration);
+    }
+
+    public function changeMap(int $fd, string $mapId): bool
+    {
+        if ($this->isStart || !$this->isUserHost($fd)) return false;
+
+        $validMaps = ['classic', 'classic_', 'open-field'];
+        if (!in_array($mapId, $validMaps, true)) return false;
+
+        if ($this->mapId === $mapId) return true;
+
+        $this->mapId = $mapId;
+        $this->initEngine();
+        return true;
     }
 
     public function resetRoom(): void
@@ -236,6 +251,7 @@ class Room
         $state['isFogEnabled'] = $this->isFogEnabled;
         $state['matchDuration'] = $this->matchDuration;
         $state['modeType'] = $this->modeType;
+        $state['mapId'] = $this->mapId;
         $state['isClassSelectionEnabled'] = $this->isClassSelectionEnabled;
         return $state;
     }
@@ -243,6 +259,11 @@ class Room
     public function getRoomId(): string
     {
         return $this->roomId;
+    }
+
+    public function getMapLayout(): string
+    {
+        return LevelRepository::get($this->mapId);
     }
 
     public function deleteUser(int $fd): void

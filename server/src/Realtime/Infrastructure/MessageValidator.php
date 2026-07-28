@@ -22,6 +22,7 @@ class MessageValidator
             'change-mode' => $this->isValidChangeMode($data),
             'switch-team' => $this->isValidSwitchTeam($data),
             'change-class' => $this->isValidChangeClass($data),
+            'change-map' => $this->isValidChangeMap($data),
             'toggle-class-selection' => $this->isValidToggleClassSelection($data),
             default => false,
         };
@@ -127,5 +128,10 @@ class MessageValidator
     private function isValidToggleClassSelection(array $data): bool
     {
         return isset($data['isEnabled']);
+    }
+
+    private function isValidChangeMap(array $data): bool
+    {
+        return isset($data['mapId']);
     }
 }
