@@ -203,6 +203,10 @@ class Lobby
         if ($user === null) {
             return;
         }
+        if ($room->hasUserId($user->getUserId())) {
+            $this->ws->send($fd, ["type" => "join-error", "payload" => ["message" => "Вы уже в этой комнате"]]);
+            return;
+        }
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
         $this->updateStateRoom($room);
