@@ -121,6 +121,15 @@ class Room
 
         $this->lobbyUsers[$fd] = $lobbyUser;
     }
+
+    public function hasUserId(string $userId): bool
+    {
+        foreach ($this->lobbyUsers as $user) {
+            if ($userId === $user->getUserId()) return true;
+        }
+        return false;
+    }
+
     public function canStartTeamGame(): bool
     {
         if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {

@@ -55,6 +55,6 @@ class PagesRender implements IPagesRender
 
     public function showGlobalStats(array $stats): void
     {
-        include __DIR__ . "/../../View/global-stats.php";
+        include_once __DIR__ . "/../../View/global-stats.php";
     }
 }

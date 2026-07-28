@@ -109,7 +109,7 @@ class UserTable implements IUserRepository
 
     public function getLeaderboard(): array
     {
-        $query = "SELECT `user`.`nickname`, `stats`.`kd`, `stats`.`kills`, `stats`.`deaths` 
+        $query = "SELECT `user`.`nickname` 
                 FROM `user`
                 JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
                 ORDER BY 
