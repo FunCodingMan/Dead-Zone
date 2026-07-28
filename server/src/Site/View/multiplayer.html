@@ -16,7 +16,7 @@
             <div class="menu-buttons">
                 <button class="btn btn-createRoom">СОЗДАТЬ КОМНАТУ</button>
                 <button class="btn btn-joinRoom">ПРИСОЕДИНИТЬСЯ К КОМНАТЕ</button>
-                <button class="btn btn-serversList disabled" title="В РАЗРАБОТКЕ ...">СПИСОК СЕРВЕРОВ</button>
+                <button class="btn btn-serversList">СПИСОК СЕРВЕРОВ</button>
                 <button class="btn btn-exit-to-mode-selection">НАЗАД</button>
             </div>
         </div>
@@ -43,6 +43,16 @@
             </div>
         </div>
 
+        <div class="menu-screen menu-choose screen hidden" id="screen-servers-list">
+            <h2 class="menu-title">СПИСОК СЕРВЕРОВ</h2>
+            <div class="servers-list-container" id="servers-list-container">
+            </div>
+            <div class="menu-buttons main-menu-buttons">
+                <button class="btn btn-main-menu btn-refresh-servers">ОБНОВИТЬ</button>
+                <button class="btn btn-main-menu btn-back-to-lobby">НАЗАД</button>
+            </div>
+        </div>
+
         <div class="menu-screen menu-choose screen hidden" id="screen-room">
             <h2 class="menu-title">КОМНАТА</h2>
             <div class="room-stats">
@@ -59,6 +69,15 @@
             <div class="room-settings">
                 <h3 class="room-settings__title">НАСТРОЙКИ МАТЧА</h3>
                 <div class="room-settings__list">
+                    <div class="room-settings__item" id="label-room-name" style="grid-column: 1 / -1;">
+                        <span class="room-settings__label-text">НАЗВАНИЕ КОМНАТЫ</span>
+                        <input type="text" class="room-settings__input-text" id="room-name-input" maxlength="25" placeholder="Название...">
+                    </div>
+                    <label class="room-settings__item" id="label-open-toggle">
+                        <span class="room-settings__label-text">ОТКРЫТАЯ КОМНАТА</span>
+                        <input type="checkbox" class="room-settings__checkbox" id="open-toggle">
+                        <span class="room-settings__custom-checkbox"></span>
+                    </label>
                     <div class="room-settings__item" id="label-mode-controls">
                         <span class="room-settings__label-text">РЕЖИМ ИГРЫ</span>
                         <div class="room-settings__select-wrapper">

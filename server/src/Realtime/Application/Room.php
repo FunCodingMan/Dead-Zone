@@ -33,6 +33,8 @@ class Room
     private WebSocketTransport $ws;
     private IUserRepository $userRepository;
     private string $mapId = 'classic';
+    private bool $isOpen = false;
+    private string $roomName;
 
 
     /** @throws RandomException */
@@ -43,6 +45,7 @@ class Room
         $this->isStart = false;
         $this->lobbyUsers = [];
         $this->roomId = bin2hex(random_bytes(3));
+        $this->roomName = $this->roomId;
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
 
@@ -147,6 +150,15 @@ class Room
         }
 
         return true;
+    }
+    public function setOpen(bool $isOpen): void
+    {
+        $this->isOpen = $isOpen;
+    }
+
+    public function isOpen(): bool
+    {
+        return $this->isOpen;
     }
 
     public function changeModeType(string $newMode): bool
@@ -261,7 +273,9 @@ class Room
         $state['matchDuration'] = $this->matchDuration;
         $state['modeType'] = $this->modeType;
         $state['mapId'] = $this->mapId;
+        $state['isOpen'] = $this->isOpen;
         $state['isClassSelectionEnabled'] = $this->isClassSelectionEnabled;
+        $state['roomName'] = $this->roomName;
         return $state;
     }
 
@@ -273,6 +287,16 @@ class Room
     public function getMapLayout(): string
     {
         return LevelRepository::get($this->mapId);
+    }
+    public function getRoomName(): string
+    {
+        return $this->roomName;
+    }
+
+    public function setRoomName(string $name): void
+    {
+        $name = trim($name);
+        $this->roomName = empty($name) ? $this->roomId : substr($name, 0, 50);
     }
 
     public function deleteUser(int $fd): void

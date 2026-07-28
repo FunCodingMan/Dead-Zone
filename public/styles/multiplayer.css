@@ -397,6 +397,82 @@ body, html {
     object-fit: cover;
 }
 
+.servers-list-container {
+    width: 100%;
+    max-width: 800px;
+    height: 350px;
+    overflow-y: auto;
+    background-color: #1a1a1a;
+    border: 2px solid #555;
+    padding: 15px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.server-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #222;
+    padding: 10px 15px;
+    border: 2px solid #444;
+}
+
+.server-item__info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: #ccc;
+    font-size: 14px;
+    text-align: left;
+}
+
+.server-message {
+    text-align: center;
+    color: #aaa;
+    margin-top: 20px;
+}
+
+.server-item__name {
+    color: #fff;
+    font-size: 18px;
+    text-transform: uppercase;
+}
+
+.btn-join-server {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 0;
+}
+
+.room-settings__input-text {
+    width: 200px;
+    padding: 6px 10px;
+    background-color: #111;
+    color: #fff;
+    border: 2px solid #555;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: center;
+}
+
+.room-settings__input-text:hover,
+.room-settings__input-text:focus {
+    border-color: #00ff00;
+}
+
+.room-settings__input-text:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #1a1a1a;
+    border-color: #444;
+}
+
 @media (max-width: 768px) {
     .room-settings { max-width: 500px; }
     .room-settings__list { grid-template-columns: 1fr; }
