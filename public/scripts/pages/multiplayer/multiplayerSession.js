@@ -17,6 +17,7 @@ const screens = {
     lobbyMenu: document.getElementById('screen-lobby-menu'),
     createRoom: document.getElementById('screen-create-room'),
     joinRoom: document.getElementById('screen-join-room'),
+    serversList: document.getElementById('screen-servers-list'),
     room: document.getElementById('screen-room'),
     game: document.getElementById('screen-game'),
     gameOver: document.getElementById('screen-game-over')
@@ -81,12 +82,30 @@ const leaveRoomBtn = document.getElementById('btn-leave-room');
 const startErrorMessage = document.getElementById('start-error-message');
 const mapSelect = document.getElementById('map-select');
 const mapPreviewImg = document.getElementById('map-preview-img');
+const openToggle = document.getElementById('open-toggle');
+const labelOpenToggle = document.getElementById('label-open-toggle');
+const serversListContainer = document.getElementById('servers-list-container');
+const roomNameInput = document.getElementById('room-name-input');
+
 const mapImages = {
     'classic': '../../assets/maps-preview/classic.png',
     'classic_mini': '../../assets/maps-preview/classic_mini.png',
     'dust2': '../../assets/maps-preview/dust2.png',
     'dust2_mini' : '../../assets/maps-preview/dust2_mini.png',
     'open-field': '../../assets/maps-preview/open-field.png'
+};
+const modeNames = {
+    'deathmatch': 'Сам за себя',
+    'team_deathmatch': 'Командный бой',
+    'elimination': 'Раунды'
+};
+
+const mapNames = {
+    'classic': 'Классика',
+    'classic_mini': 'Классика (Мини)',
+    'dust2': 'Dust 2',
+    'dust2_mini': 'Dust 2 (Мини)',
+    'open-field': 'Открытое поле'
 };
 
 let isReady = false;
@@ -121,6 +140,9 @@ function renderPlayersList(players) {
 }
 
 network.on('stateRoom', (payload) => {
+    if (document.activeElement !== roomNameInput) {
+        roomNameInput.value = payload.roomName;
+    }
     currentRoomId = payload.roomId;
     startErrorMessage.classList.add('hidden');
     roomIdSpan.textContent = currentRoomId;
@@ -130,6 +152,7 @@ network.on('stateRoom', (payload) => {
 
     classSelectionToggle.checked = payload.isClassSelectionEnabled;
     fogToggle.checked = payload.isFogEnabled;
+    openToggle.checked = payload.isOpen;
 
     if (!payload.isClassSelectionEnabled && payload.users.length > 0) {
         classSelect.value = payload.users[0].className;
@@ -203,6 +226,7 @@ network.on('stateRoom', (payload) => {
         durationInput.disabled = false;
         modeSelect.disabled = false;
         mapSelect.disabled = false;
+        roomNameInput.disabled = false;
 
         classSelectionToggle.disabled = false;
         labelClassSelectionToggle.classList.remove('disabled');
@@ -225,6 +249,7 @@ network.on('stateRoom', (payload) => {
         durationInput.disabled = true;
         modeSelect.disabled = true;
         mapSelect.disabled = true;
+        roomNameInput.disabled = true;
 
         classSelectionToggle.disabled = true;
         labelClassSelectionToggle.classList.add('disabled');
@@ -236,6 +261,52 @@ network.on('stateRoom', (payload) => {
     }
 });
 
+network.on('rooms-list', (payload) => {
+    serversListContainer.innerHTML = '';
+
+    if (!payload || payload.length === 0) {
+        serversListContainer.innerHTML = '<p class="server-message">Нет доступных открытых комнат.</p>';
+        showScreen('serversList');
+        return;
+    }
+
+    payload.forEach(room => {
+        const readableMode = modeNames[room.mode] || room.mode;
+        const readableMap = mapNames[room.map] || room.map;
+
+        const div = document.createElement('div');
+        div.className = 'server-item';
+        div.innerHTML = `
+            <div class="server-item__info">
+                <span class="server-item__name">${room.name}</span>
+                <span>ID: ${room.roomId} | Карта: ${readableMap} | Режим: ${readableMode}</span>
+                <span>Игроки: ${room.countUsers} / ${room.maxUsers}</span>
+            </div>
+            <button class="btn btn-join-server" data-id="${room.roomId}">ВОЙТИ</button>
+        `;
+        serversListContainer.appendChild(div);
+    });
+
+    document.querySelectorAll('.btn-join-server').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const roomId = e.target.getAttribute('data-id');
+            isReady = false;
+            readyBtn.textContent = 'ГОТОВ';
+            network.send('join-room', { roomId });
+        });
+    });
+
+    showScreen('serversList');
+});
+
+document.querySelector('.btn-serversList').addEventListener('click', () => {
+    network.send('get-rooms', {});
+});
+document.querySelector('.btn-refresh-servers').addEventListener('click', () => {
+    serversListContainer.innerHTML = '<p class="server-message">Обновление списка...</p>';
+    network.send('get-rooms', {});
+});
+
 startGameBtn.addEventListener('click', () => {
     if (!startGameBtn.disabled) {
         network.send('start-game', {});
@@ -244,6 +315,10 @@ startGameBtn.addEventListener('click', () => {
 fogToggle.addEventListener('change', (e) => {
     const isFogOn = fogToggle.checked === true;
     network.send('toggle-fog', { isEnabled: isFogOn});
+});
+openToggle.addEventListener('change', (e) => {
+    const isOpen = openToggle.checked === true;
+    network.send('toggle-open-room', {isOpen: isOpen});
 });
 durationSelect.addEventListener('change', (e) => {
     if (e.target.value === 'custom') {
@@ -291,6 +366,9 @@ stayInRoomBtn.addEventListener('click', () => {
     isReady = false;
     readyBtn.textContent = 'ГОТОВ';
     showScreen('room');
+});
+roomNameInput.addEventListener('change', (e) => {
+    network.send('change-room-name', { roomName: e.target.value });
 });
 
 leaveRoomBtn.addEventListener('click', () => {

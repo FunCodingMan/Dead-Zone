@@ -24,6 +24,9 @@ class MessageValidator
             'change-class' => $this->isValidChangeClass($data),
             'change-map' => $this->isValidChangeMap($data),
             'toggle-class-selection' => $this->isValidToggleClassSelection($data),
+            'get-rooms' => $this->isValidGetRooms($data),
+            'toggle-open-room' => $this->isValidToggleOpenRoom($data),
+            'change-room-name' => $this->isValidChangeRoomName($data),
             default => false,
         };
     }
@@ -133,5 +136,17 @@ class MessageValidator
     private function isValidChangeMap(array $data): bool
     {
         return isset($data['mapId']);
+    }
+    private function isValidGetRooms(array $data): bool
+    {
+        return empty($data);
+    }
+    private function isValidToggleOpenRoom(array $data): bool
+    {
+        return isset($data['isOpen']) && is_bool($data['isOpen']);
+    }
+    private function isValidChangeRoomName(array $data): bool
+    {
+        return isset($data['roomName']) && is_string($data['roomName']);
     }
 }

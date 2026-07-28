@@ -43,6 +43,9 @@ class Lobby
             'change-map' => $this->changeMap($data["fd"], $payload["mapId"] ?? 'classic'),
             'toggle-class-selection' => $this->toggleClassSelection($data["fd"], isset($payload["isEnabled"]) ? (bool)$payload["isEnabled"] : true),
             'move', 'shot', 'reload' => $this->handleGameData($data["fd"], $data["type"], $data["payload"]),
+            'get-rooms' => $this->getRooms($data["fd"]),
+            'change-room-name' => $this->changeRoomName($data["fd"], $payload["roomName"] ?? ""),
+            'toggle-open-room' => $this->toggleOpenRoom($data["fd"], isset($payload["isOpen"]) ? (bool)$payload["isOpen"] : true),
             default => null,
         };
     }
@@ -120,6 +123,17 @@ class Lobby
         if ($roomId === null) return;
         $room = $this->rooms[$roomId];
         if ($room->changeUserClass($fd, $className)) {
+            $this->updateStateRoom($room);
+        }
+    }
+    private function changeRoomName(int $fd, string $roomName): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->isUserHost($fd)) {
+            $room->setRoomName($roomName);
             $this->updateStateRoom($room);
         }
     }
@@ -210,6 +224,38 @@ class Lobby
         $room->addUser($fd, $user);
         $this->fdToRoomId[$fd] = $roomId;
         $this->updateStateRoom($room);
+    }
+    private function getRooms(int $fd): void
+    {
+        $roomList = [];
+        foreach ($this->rooms as $roomId => $room) {
+            if ($room->isOpen() && !$room->isStarted() && !$room->hasMaxUsers()) {
+                $roomList[] = [
+                    'roomId' => $roomId,
+                    'name' => $room->getRoomName(),
+                    'countUsers' => $room->getCountUsers(),
+                    'maxUsers' => GameConfig::MAX_COUNT_USERS,
+                    'mode' => $room->getStateRoom()['modeType'],
+                    'map' => $room->getStateRoom()['mapId']
+                ];
+            }
+        }
+
+        $this->ws->send($fd, [
+            "type" => "rooms-list",
+            "payload" => $roomList
+        ]);
+    }
+    private function toggleOpenRoom(int $fd, bool $isOpen): void
+    {
+        $roomId = $this->fdToRoomId[$fd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+
+        if ($room->isUserHost($fd)) {
+            $room->setOpen($isOpen);
+            $this->updateStateRoom($room);
+        }
     }
 
     public function exitUser(int $fd): void
