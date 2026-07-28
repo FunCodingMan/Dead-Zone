@@ -1,0 +1,37 @@
+.not-found-icon {
+    font-size: 90px;
+    line-height: 1;
+    color: #afafaf;
+    text-shadow:
+            -3px -3px 0 #444,
+            3px -3px 0 #444,
+            -3px  3px 0 #444,
+            3px  3px 0 #444;
+    animation: flicker 2.4s infinite;
+    user-select: none;
+}
+
+.not-found-text {
+    font: 22px/1.6 'Spielarcade Regular', sans-serif;
+    color: #afafaf;
+    text-align: center;
+    max-width: 600px;
+    padding: 0 20px;
+}
+
+.not-found-id {
+    font: 16px/1.4 monospace;
+    color: #666;
+    text-align: center;
+    word-break: break-all;
+    max-width: 500px;
+    padding: 10px 20px;
+    border: 2px solid #333;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+@keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 22%, 24%, 55% { opacity: 0.4; }
+}

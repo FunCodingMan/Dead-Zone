@@ -14,4 +14,7 @@ interface IPagesRender
     public function showFirstGame(): void;
     public function showSecondGame(): void;
     public function showSecondGameFinal(): void;
+    public function showMultiplayer(): void;
+    public function showGlobalStats(array $stats): void;
+    public function showProfileNotFound(): void;
 }

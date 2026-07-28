@@ -61,4 +61,12 @@ class UserService
         }
         return null;
     }
+
+    public function getGlobalUserById(string $userId): ?User
+    {
+        if (isset($_COOKIE["token"])) {
+            return $this->userRepository->getUserByUserId($userId);
+        }
+        return null;
+    }
 }

@@ -17,6 +17,7 @@ class ActionExtractor implements IActionExtractor
     private const string USER_WAVES_FINAL_URL = '/mode-selection/singleplayer/waves-final';
     private const string USER_MULTIPLAYER_URL = '/mode-selection/multiplayer';
     private const string GLOBAL_STATS_URL = '/global-stats';
+    private const string GLOBAL_PROFILE_URL = '/global-stats/profile';
 
     public function setTokenCookie(string $token): void
     {
@@ -69,6 +70,7 @@ class ActionExtractor implements IActionExtractor
             $method === "GET" && $urlPath === self::USER_WAVES_FINAL_URL && $hasToken => 'waves-final',
             $method === "GET" && $urlPath === self::USER_MULTIPLAYER_URL && $hasToken => 'multiplayer',
             $method === "GET" && $urlPath === self::GLOBAL_STATS_URL && $hasToken => 'global-stats',
+            $method === "GET" && $urlPath === self::GLOBAL_PROFILE_URL && $hasToken && isset($_GET['user_id'])=> 'global-profile',
             $method === "GET" && isset($_COOKIE["token"]) => 'menu',
             default => null
         };

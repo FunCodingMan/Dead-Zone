@@ -57,4 +57,14 @@ class PagesRender implements IPagesRender
     {
         include_once __DIR__ . "/../../View/global-stats.php";
     }
+
+    public function showPublicProfile(User $user): void
+    {
+        include_once __DIR__ . "/../../View/publicProfile.php";
+    }
+
+    public function showProfileNotFound(): void
+    {
+        include_once __DIR__ . "/../../View/profileNotFound.html";
+    }
 }

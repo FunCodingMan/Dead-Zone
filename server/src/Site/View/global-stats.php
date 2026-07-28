@@ -13,7 +13,9 @@
                 <div class="stats">
                     <?php foreach ($stats as $index => $stat): ?>
                         <div class="stats-block <?= $index === 0 ? 'stats-block-first' : ($index === array_key_last($stats) ? 'stats-block-last' : '') ?>">
-                            <p class="stats-text"><?= htmlspecialchars($stat['nickname']) ?></p>
+                            <a href="/global-stats/profile?user_id=<?= $stat['user_id'] ?>">
+                                <p class="stats-text"><?= htmlspecialchars($stat['nickname']) ?></p>
+                            </a>
                         </div>
                     <?php endforeach; ?>
                 </div>

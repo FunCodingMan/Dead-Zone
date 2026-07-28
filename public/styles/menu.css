@@ -114,6 +114,7 @@ body {
 .stats-text { 
     width: 500px;
     margin: 0;
+    text-align: center;
 }
 
 .stats-result {
@@ -121,6 +122,22 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.stats-block a {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+}
+
+.stats-block a:visited {
+    color: inherit;
+}
+
+.stats-block a:hover .stats-text {
+    color: #adadad;
 }
 
 .room-settings__select-wrapper {

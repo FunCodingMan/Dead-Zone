@@ -109,7 +109,7 @@ class UserTable implements IUserRepository
 
     public function getLeaderboard(): array
     {
-        $query = "SELECT `user`.`nickname` 
+        $query = "SELECT `user`.`nickname`, `user`.`user_id`
                 FROM `user`
                 JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
                 ORDER BY 
@@ -187,5 +187,21 @@ class UserTable implements IUserRepository
             'eliminationWins' => $isWin,
             'eliminationLose' => !$isWin,
         ]);
+    }
+
+    public function getUserByUserId(string $userId): ?User
+    {
+        $queryUser = "SELECT * FROM `user` WHERE `user_id` = :user_id";
+        $stmt = $this->connection->prepare($queryUser);
+        $stmt->execute([
+            'user_id' => $userId,
+        ]);
+        $arrayUser = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($arrayUser) {
+            $userId = $arrayUser["user_id"];
+            $stats = $this->getStatsByUserId($userId);
+            return new User($arrayUser['nickname'], $arrayUser['username'], $arrayUser['password'], $arrayUser['user_id'], $arrayUser['token'], $stats);
+        }
+        return null;
     }
 }
