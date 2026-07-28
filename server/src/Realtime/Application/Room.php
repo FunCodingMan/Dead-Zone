@@ -95,6 +95,8 @@ class Room
 
     public function addUser(int $fd, User $user): void
     {
+        if ($this->hasUserId($user->getUserId())) return;
+
         $lobbyUser = new LobbyUser($fd, $user->getUserId(), $user->getNickname());
 
         if (!$this->isClassSelectionEnabled) {
@@ -121,6 +123,15 @@ class Room
 
         $this->lobbyUsers[$fd] = $lobbyUser;
     }
+
+    private function hasUserId(string $userId): bool
+    {
+        foreach ($this->lobbyUsers as $user) {
+            if ($userId === $user->getUserId()) return true;
+        }
+        return false;
+    }
+
     public function canStartTeamGame(): bool
     {
         if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {

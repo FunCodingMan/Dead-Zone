@@ -56,7 +56,7 @@ class PagesRender implements IPagesRender
     public function showGlobalStats(array $stats): void
     {
         foreach ($stats as $stat) {
-            echo $stat['nickname'] . " " . $stat['kd'] . "<br>";
+            echo $stat['nickname'] . "<br>";
         }
         include_once __DIR__ . "/../../View/global-stats.html";
     }
