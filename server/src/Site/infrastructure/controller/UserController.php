@@ -39,6 +39,7 @@ class UserController implements IExecuteAction
             'multiplayer' => $this->pagesRender->showMultiplayer(),
             'global-stats' => $this->showGlobalStats(),
             'global-profile' => $this->showGlobalProfile(),
+            'search-users' => $this->pagesRender->showSearchUsers(),
             default => $this->pagesRender->showForm(),
         };
     }

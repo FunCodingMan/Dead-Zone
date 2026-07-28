@@ -3,8 +3,9 @@
         <head>
             <meta charset="UTF-8">
             <title>Мёртвая зона — Таблица лидеров</title>
-            <link rel="stylesheet" href="/styles/menu.css">
+            <link rel="stylesheet" href="/styles/menu.css">exitLid
             <link href="/styles/fonts-styles.css" rel="stylesheet">
+            <script src="/scripts/pages/lid/openSearchUsers.js" defer></script>
             <script src="/scripts/pages/lid/exitLid.js" defer></script>
         </head>
         <body>
@@ -19,7 +20,7 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
-                <button class="btn">ПОИСК ИГРОКА</button>
+                <button class="btn btn-search-users">ПОИСК ИГРОКА</button>
                 <button class="btn btn-exit">НАЗАД</button>
             </div>
         </body>
