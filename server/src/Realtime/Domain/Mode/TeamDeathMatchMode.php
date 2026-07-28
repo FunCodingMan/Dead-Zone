@@ -26,11 +26,7 @@ class TeamDeathMatchMode implements GameModeInterface
 
     public function getSpawnPoint(Player $player, GameMap $map): array
     {
-        $symbol = $player->getTeam() === GameConfig::TEAM_RED
-            ? GameConfig::SYMBOL_SPAWN_RED
-            : GameConfig::SYMBOL_SPAWN_BLUE;
-
-        return $map->findFreeSpawn($symbol);
+        return $map->findFreeSpawn(GameConfig::SYMBOL_PLAYER);
     }
 
     public function canDamage(Player $attacker, Player $victim): bool
@@ -77,7 +73,7 @@ class TeamDeathMatchMode implements GameModeInterface
         if ($this->blueScore > $this->redScore) $winnerTeam = GameConfig::TEAM_BLUE;
 
         return [
-            'mode' => GameConfig::MODE_ELIMINATION,
+            'mode' => GameConfig::MODE_TEAM_DEATHMATCH,
             'winnerTeam' => $winnerTeam,
             'redScore' => $this->redScore,
             'blueScore' => $this->blueScore,

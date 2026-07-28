@@ -50,11 +50,11 @@ class Room
 
     private function initEngine(): void
     {
-        if ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
+        if ($this->modeType === GameConfig::MODE_ELIMINATION) {
             $this->mode = new RoundBasedTeamMode();
-        } elseif ($this->modeType === GameConfig::MODE_ELIMINATION) {
+        } elseif ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
             $this->mode = new TeamDeathMatchMode();
-        } else {
+        } else if ($this->modeType === GameConfig::MODE_DEATHMATCH){
             $this->mode = new DeathMatchMode();
         }
 

@@ -170,7 +170,7 @@ network.on('stateRoom', (payload) => {
     if (payload.modeType) {
         modeSelect.value = payload.modeType;
 
-        if (payload.modeType === 'tdm' || payload.modeType === 'round_based') {
+        if (payload.modeType === 'team_deathmatch' || payload.modeType === 'elimination') {
             teamSelectionControls.classList.remove('hidden');
         } else {
             teamSelectionControls.classList.add('hidden');
@@ -326,12 +326,12 @@ network.on('game-over', (payload) => {
 
     const titleElement = document.querySelector('#screen-game-over .menu-title');
 
-    if (payload.mode === 'tdm' || payload.mode === 'round_based') {
+    if (payload.mode === 'team_deathmatch' || payload.mode === 'elimination') {
 
-        if (payload.winnerTeam === 'RED') {
+        if (payload.winnerTeam === 'red') {
             gameOverTitle.textContent = 'ПОБЕДА КРАСНЫХ';
             gameOverTitle.classList.add('text-win-red');
-        } else if (payload.winnerTeam === 'BLUE') {
+        } else if (payload.winnerTeam === 'blue') {
             gameOverTitle.textContent = 'ПОБЕДА СИНИХ';
             gameOverTitle.classList.add('text-win-blue');
         } else {
@@ -361,7 +361,7 @@ network.on('game-over', (payload) => {
         const tr = document.createElement('tr');
         tr.className = 'stats-row';
 
-        if (payload.mode === 'tdm' || payload.mode === 'round_based') {
+        if (payload.mode === 'team_deathmatch' || payload.mode === 'elimination') {
             if (s.team === 'red') tr.classList.add('stats-row--red');
             else if (s.team === 'blue') tr.classList.add('stats-row--blue');
             else tr.classList.add('stats-row--default');

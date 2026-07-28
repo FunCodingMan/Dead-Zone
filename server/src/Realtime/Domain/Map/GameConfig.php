@@ -41,7 +41,7 @@ class GameConfig
     public const int SOLDIER_DAMAGE = 20;
     public const int FLAME_THROWER_DAMAGE = 40;
     public const string MODE_DEATHMATCH = 'deathmatch';
-    public const string MODE_TEAM_DEATHMATCH = 'round_based';
+    public const string MODE_TEAM_DEATHMATCH = 'team_deathmatch';
     public const string MODE_ELIMINATION = 'elimination';
     public const string TEAM_NONE = 'none';
     public const string TEAM_RED = 'red';
