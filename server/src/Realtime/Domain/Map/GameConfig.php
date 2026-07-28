@@ -41,8 +41,8 @@ class GameConfig
     public const int SOLDIER_DAMAGE = 20;
     public const int FLAME_THROWER_DAMAGE = 40;
     public const string MODE_DEATHMATCH = 'deathmatch';
-    public const string MODE_ROUND_BASED = 'round_based';
-    public const string MODE_TDM = 'tdm';
+    public const string MODE_TEAM_DEATHMATCH = 'round_based';
+    public const string MODE_ELIMINATION = 'elimination';
     public const string TEAM_NONE = 'none';
     public const string TEAM_RED = 'red';
     public const string TEAM_BLUE = 'blue';
@@ -55,4 +55,5 @@ class GameConfig
     public const int MAX_FLAME_THROWER_BULLETS = 125;
     public const float FLAME_THROWER_SHOOT_COOLDOWN_S = 0.12;
     public const int FLAME_THROWER_RANGE_ATTACK = 250;
+    public const float LIMIT_LEADER_BOARD = 10;
 }

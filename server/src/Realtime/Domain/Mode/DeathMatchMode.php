@@ -35,14 +35,17 @@ class DeathMatchMode implements GameModeInterface
     {
         return true;
     }
+
     public function checkRoundState(array $players): ?string
     {
         return null;
     }
+
     public function isMatchOver(): bool
     {
         return false;
     }
+
     public function getScores(): array
     {
         return [];
@@ -52,7 +55,7 @@ class DeathMatchMode implements GameModeInterface
     {
         return [
             'mode' => GameConfig::MODE_DEATHMATCH,
-            'winner' => $playerStats[0]['nickname'] ?? 'Никто',
+            'winner' => $playerStats[0]['nickname'] ?? null,
             'stats' => $playerStats
         ];
     }

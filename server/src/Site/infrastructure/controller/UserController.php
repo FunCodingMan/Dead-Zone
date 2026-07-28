@@ -31,12 +31,13 @@ class UserController implements IExecuteAction
             'login' => $this->loginUser(),
             'logout' => $this->logoutUser(),
             'mode-selection' => $this->pagesRender->showModeSelection(),
-            'profile' => $this->pagesRender->showProfile(),
+            'profile' => $this->showProfile(),
             'singleplayer' => $this->pagesRender->showSinglePlayer(),
             'training' => $this->pagesRender->showFirstGame(),
             'waves' => $this->pagesRender->showSecondGame(),
             'waves-final' => $this->pagesRender->showSecondGameFinal(),
             'multiplayer' => $this->pagesRender->showMultiplayer(),
+            'global-stats' => $this->showGlobalStats(),
             default => $this->pagesRender->showForm(),
         };
     }
@@ -81,13 +82,29 @@ class UserController implements IExecuteAction
         die();
     }
 
-    private function showMenu(): void  // время токена вышло
+    private function showMenu(): void
     {
         if ($this->userService->hasTokenInCookies()) {
             $this->pagesRender->showMenu();
         } else {
             http_response_code(401);
             $this->pagesRender->showForm();
+        }
+    }
+
+    private function showProfile(): void
+    {
+        $user = $this->userService->getUser();
+        if ($user !== null) {
+            $this->pagesRender->showProfile($user);
+        }
+    }
+
+    private function showGlobalStats(): void
+    {
+        $stats = $this->userService->getGlobalStats();
+        if ($stats !== null) {
+            $this->pagesRender->showGlobalStats($stats);
         }
     }
 }

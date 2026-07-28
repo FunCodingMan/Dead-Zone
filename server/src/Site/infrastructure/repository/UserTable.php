@@ -2,6 +2,7 @@
 
 namespace App\Site\infrastructure\repository;
 
+use App\Realtime\Domain\Map\GameConfig;
 use App\Site\app\model\Stats;
 use App\Site\app\model\User;
 use App\Site\app\repository\IConnectionProvider;
@@ -35,12 +36,19 @@ class UserTable implements IUserRepository
                 'token' => $token,
             ]);
 
-            $queryStats = "INSERT INTO `stats` (`user_id`, `wins`, `loses`) VALUES (:user_id, :wins, :loses);";
+            $queryStats = "INSERT INTO `stats` (`user_id`, `kills`, `deaths`, `deathmatchWins`, `teamDeathmatchWins`, `eliminationWins`, `deathmatchLose`, `teamDeathmatchLose`, `eliminationLose`) 
+                            VALUES (:user_id, :kills, :deaths, :deathmatchWins, :teamDeathmatchWins, :eliminationWins, :deathmatchLose, :teamDeathmatchLose, :eliminationLose);";
             $stmt = $this->connection->prepare($queryStats);
             $stmt->execute([
                 'user_id' => $userId,
-                'wins' => $user->getStats()->getWins(),
-                'loses' => $user->getStats()->getLoses(),
+                'kills' => $user->getStats()->getKills(),
+                'deaths' => $user->getStats()->getDeaths(),
+                'deathmatchWins' => $user->getStats()->getDeathMatchWins(),
+                'teamDeathmatchWins' => $user->getStats()->getTeamDeathMatchWins(),
+                'eliminationWins' => $user->getStats()->getEliminationWins(),
+                'deathmatchLose' => $user->getStats()->getDeathMatchLose(),
+                'teamDeathmatchLose' => $user->getStats()->getTeamDeathMatchLose(),
+                'eliminationLose' => $user->getStats()->getEliminationLose(),
             ]);
             $this->connection->commit();
         }catch (\PDOException $error) {
@@ -94,8 +102,87 @@ class UserTable implements IUserRepository
         ]);
         $arrayStats = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($arrayStats) {
-            return new Stats($arrayStats['wins'], $arrayStats['loses']);
+            return new Stats($arrayStats['kills'], $arrayStats['deaths'], $arrayStats['kd'], $arrayStats['deathmatchWins'], $arrayStats['teamDeathmatchWins'], $arrayStats['eliminationWins'], $arrayStats['deathmatchLose'], $arrayStats['teamDeathmatchLose'], $arrayStats['eliminationLose']);
         }
         return throw new RuntimeException("Stats not found for user_id: $userId");
+    }
+
+    public function getLeaderboard(): array
+    {
+        $query = "SELECT `user`.`nickname`, `stats`.`kd` 
+                FROM `user`
+                JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
+                ORDER BY `stats`.`kd` DESC
+                LIMIT :limit";
+        $stmt = $this->connection->prepare($query);
+        $stmt->bindValue(':limit', GameConfig::LIMIT_LEADER_BOARD, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void
+    {
+        match ($mode) {
+            GameConfig::MODE_DEATHMATCH => $this->saveStatsForDeathmatch($userId, $kills, $deaths, $isWin),
+            GameConfig::MODE_TEAM_DEATHMATCH => $this->saveStatsForTeamDeathmatch($userId, $kills, $deaths, $isWin),
+            GameConfig::MODE_ELIMINATION => $this->saveStatsForElimination($userId, $kills, $deaths, $isWin),
+        };
+    }
+
+    private function saveStatsForDeathmatch(string $userId, int $kills, int $deaths, bool $isWin): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `deathmatchWins` = `deathmatchWins` + :deathmatchWins,
+            `deathmatchLose` = `deathmatchLose` + :deathmatchLose
+        WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'user_id' => $userId,
+            'deathmatchWins' => $isWin,
+            'deathmatchLose' => !$isWin,
+        ]);
+    }
+
+    private function saveStatsForTeamDeathmatch(string $userId, int $kills, int $deaths, bool $isWin,): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `teamDeathmatchWins` = `teamDeathmatchWins` + :teamDeathmatchWins,
+            `teamDeathmatchLose` = `teamDeathmatchLose` + :teamDeathmatchLose
+        WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'user_id' => $userId,
+            'teamDeathmatchWins' => $isWin,
+            'teamDeathmatchLose' => !$isWin,
+        ]);
+    }
+
+    private function saveStatsForElimination(string $userId, int $kills, int $deaths, bool $isWin,): void
+    {
+        $query = "UPDATE `stats` SET
+            `kills` = `kills` + :kills,
+            `deaths` = `deaths` + :deaths,
+            `eliminationWins` = `eliminationWins` + :eliminationWins,
+            `eliminationLose` = `eliminationLose` + :eliminationLose
+            WHERE `user_id` = :user_id";
+
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute([
+            'kills' => $kills,
+            'deaths' => $deaths,
+            'user_id' => $userId,
+            'eliminationWins' => $isWin,
+            'eliminationLose' => !$isWin,
+        ]);
     }
 }

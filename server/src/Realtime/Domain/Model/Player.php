@@ -42,8 +42,6 @@ class Player
     public function getFd(): int { return $this->fd; }
     public function getUserId(): string { return $this->userId; }
     public function getNickname(): string { return $this->nickname; }
-    public function addKill(): void { $this->kills++; }
-    public function addDeath(): void { $this->deaths++; }
     public function getKills(): int { return $this->kills; }
     public function getDeaths(): int { return $this->deaths; }
     public function increaseKills(): void { $this->kills++; }

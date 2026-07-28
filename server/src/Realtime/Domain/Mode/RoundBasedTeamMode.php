@@ -47,6 +47,7 @@ class RoundBasedTeamMode implements GameModeInterface
     {
         return false;
     }
+
     public function isMatchOver(): bool
     {
         return $this->redRoundWins >= $this->roundsToWin || $this->blueRoundWins >= $this->roundsToWin;
@@ -71,16 +72,16 @@ class RoundBasedTeamMode implements GameModeInterface
 
         if ($aliveRed === 0 && $aliveBlue > 0) {
             $this->blueRoundWins++;
-            return GameConfig::WINNER_BLUE;
+            return GameConfig::TEAM_BLUE;
         }
 
         if ($aliveBlue === 0 && $aliveRed > 0) {
             $this->redRoundWins++;
-            return GameConfig::WINNER_RED;
+            return GameConfig::TEAM_RED;
         }
 
         if ($aliveRed === 0 && $aliveBlue === 0 && count($players) > 0) {
-            return GameConfig::WINNER_DRAW;
+            return GameConfig::TEAM_NONE;
         }
 
         return null;
@@ -88,12 +89,12 @@ class RoundBasedTeamMode implements GameModeInterface
 
     public function getGameOverPayload(array $playerStats): array
     {
-        $winnerTeam = GameConfig::WINNER_DRAW;
-        if ($this->redRoundWins > $this->blueRoundWins) $winnerTeam = GameConfig::WINNER_RED;
-        if ($this->blueRoundWins > $this->redRoundWins) $winnerTeam = GameConfig::WINNER_BLUE;
+        $winnerTeam = GameConfig::TEAM_NONE;
+        if ($this->redRoundWins > $this->blueRoundWins) $winnerTeam = GameConfig::TEAM_RED;
+        if ($this->blueRoundWins > $this->redRoundWins) $winnerTeam = GameConfig::TEAM_BLUE;
 
         return [
-            'mode' => GameConfig::MODE_ROUND_BASED,
+            'mode' => GameConfig::MODE_TEAM_DEATHMATCH,
             'winnerTeam' => $winnerTeam,
             'redScore' => $this->redRoundWins,
             'blueScore' => $this->blueRoundWins,

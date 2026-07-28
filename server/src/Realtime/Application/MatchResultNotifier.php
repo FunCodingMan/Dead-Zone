@@ -2,21 +2,26 @@
 
 namespace App\Realtime\Application;
 
+use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Mode\GameModeInterface;
 use App\Realtime\Infrastructure\WebSocketTransport;
+use App\Site\app\repository\IUserRepository;
 
 class MatchResultNotifier
 {
     private WebSocketTransport $ws;
     private PlayerRegistry $registry;
+    private IUserRepository $userRepository;
     private GameModeInterface $mode;
 
-    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, GameModeInterface $mode)
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, IUserRepository $userRepository, GameModeInterface $mode)
     {
         $this->ws = $ws;
         $this->registry = $registry;
+        $this->userRepository = $userRepository;
         $this->mode = $mode;
     }
+
     public function setMode(GameModeInterface $mode): void
     {
         $this->mode = $mode;
@@ -26,6 +31,7 @@ class MatchResultNotifier
     {
         $stats = [];
         $activePlayers = $this->registry->getPlayers();
+
         foreach ($activePlayers as $player) {
             $kills = $player->getKills() ?? 0;
             $deaths = $player->getDeaths() ?? 0;
@@ -35,6 +41,7 @@ class MatchResultNotifier
             } else {
                 $kd = $kills / $deaths;
             }
+
             $kdFormatted = number_format($kd, 2, '.', '');
             $stats[] = [
                 'nickname' => $player->getNickname(),
@@ -45,17 +52,27 @@ class MatchResultNotifier
             ];
         }
 
-        //Сделать сохрание в БД
-
         $finalStats = array_merge($stats, $disconnectedStats);
 
         usort($finalStats, fn($a, $b) => $b['kd'] <=> $a['kd']);
 
         $payload = $this->mode->getGameOverPayload($finalStats);
+
+        foreach ($activePlayers as $player) {
+            $isWinner = false;
+            if (isset($payload['winnerTeam']) && $payload['winnerTeam'] !== GameConfig::TEAM_NONE) {
+                $isWinner = $player->getTeam() === $payload['winnerTeam'];
+            } elseif (isset($payload['winner'])) {
+                $isWinner = $player->getNickname() === $payload['winner'];
+            }
+            $this->userRepository->updateDataUser($player->getUserId(), $player->getKills(),$player->getDeaths(), $isWinner, $payload['mode']);
+        }
+
         $packet = [
             'type' => 'game-over',
             'payload' => $payload,
         ];
+
         foreach ($activePlayers as $fd => $player) {
             $this->ws->send($fd, $packet);
         }

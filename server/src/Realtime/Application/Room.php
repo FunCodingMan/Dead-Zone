@@ -12,6 +12,7 @@ use App\Realtime\Domain\Mode\TeamDeathMatchMode;
 use App\Realtime\Domain\Model\LobbyUser;
 use App\Realtime\Infrastructure\WebSocketTransport;
 use App\Site\app\model\User;
+use App\Site\app\repository\IUserRepository;
 use Random\RandomException;
 
 class Room
@@ -32,11 +33,11 @@ class Room
 
 
     /** @throws RandomException */
-    public function __construct(WebSocketTransport $ws)
+    public function __construct(WebSocketTransport $ws, IUserRepository $userRepository)
     {
-        if ($this->modeType === GameConfig::MODE_ROUND_BASED) {
+        if ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
             $this->mode = new RoundBasedTeamMode();
-        } elseif ($this->modeType === GameConfig::MODE_TDM) {
+        } elseif ($this->modeType === GameConfig::MODE_ELIMINATION) {
             $this->mode = new TeamDeathMatchMode();
         } else {
             $this->mode = new DeathMatchMode();
@@ -48,7 +49,7 @@ class Room
         $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
-        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $this->mode);
+        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $userRepository,  $this->mode);
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
         $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
@@ -70,7 +71,7 @@ class Room
             $lobbyUser->setHost(true);
         }
 
-        if (in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+        if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {
             $redCount = 0;
             $blueCount = 0;
             foreach ($this->lobbyUsers as $existingUser) {
@@ -87,7 +88,7 @@ class Room
 
     public function changeModeType(string $newMode): bool
     {
-        if ($this->isStart || !in_array($newMode, [GameConfig::MODE_DEATHMATCH, GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+        if ($this->isStart || !in_array($newMode, [GameConfig::MODE_DEATHMATCH, GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {
             return false;
         }
 
@@ -97,15 +98,15 @@ class Room
 
         $this->modeType = $newMode;
 
-        if ($this->modeType === GameConfig::MODE_ROUND_BASED) {
+        if ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
             $this->mode = new RoundBasedTeamMode();
-        } elseif ($this->modeType === GameConfig::MODE_TDM) {
+        } elseif ($this->modeType === GameConfig::MODE_ELIMINATION) {
             $this->mode = new TeamDeathMatchMode();
         } else {
             $this->mode = new DeathMatchMode();
         }
 
-        if (in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true)) {
+        if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {
             $isRed = true;
             foreach ($this->lobbyUsers as $user) {
                 $user->setTeam($isRed ? GameConfig::TEAM_RED : GameConfig::TEAM_BLUE);
@@ -124,7 +125,7 @@ class Room
 
     public function switchUserTeam(int $fd, string $targetTeam): bool
     {
-        if (!in_array($this->modeType, [GameConfig::MODE_TDM, GameConfig::MODE_ROUND_BASED], true) || !in_array($targetTeam, [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true)) {
+        if (!in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true) || !in_array($targetTeam, [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true)) {
             return false;
         }
 

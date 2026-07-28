@@ -49,31 +49,35 @@ class TeamDeathMatchMode implements GameModeInterface
             $this->blueScore++;
         }
     }
-    public function isRespawnAllowed(): bool {
+
+    public function isRespawnAllowed(): bool
+    {
         return true;
     }
+
     public function checkRoundState(array $players): ?string
     {
         return null;
     }
+
     public function isMatchOver(): bool
     {
         return false;
     }
+
     public function getScores(): array
     {
         return [];
     }
 
-
     public function getGameOverPayload(array $playerStats): array
     {
-        $winnerTeam = GameConfig::WINNER_DRAW;
-        if ($this->redScore > $this->blueScore) $winnerTeam = GameConfig::WINNER_RED;
-        if ($this->blueScore > $this->redScore) $winnerTeam = GameConfig::WINNER_BLUE;
+        $winnerTeam = GameConfig::TEAM_NONE;
+        if ($this->redScore > $this->blueScore) $winnerTeam = GameConfig::TEAM_RED;
+        if ($this->blueScore > $this->redScore) $winnerTeam = GameConfig::TEAM_BLUE;
 
         return [
-            'mode' => GameConfig::MODE_TDM,
+            'mode' => GameConfig::MODE_ELIMINATION,
             'winnerTeam' => $winnerTeam,
             'redScore' => $this->redScore,
             'blueScore' => $this->blueScore,
