@@ -11,7 +11,7 @@ const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
 export class Character {
-    constructor(spawn, width, height, spawnIndex, bloodManager, resetPauseTimeCallback) {
+    constructor(spawn, width, height, spawnIndex, spotManager, resetPauseTimeCallback) {
         this.spawnPoint = spawn;
         this.spawnIndex = spawnIndex;
         this.x = spawn.x;
@@ -38,7 +38,7 @@ export class Character {
 
         this.onDeathCallBack = null;
 
-        this.bloodManager = bloodManager;
+        this.spotManager = spotManager;
 
         this.resetPauseTime = resetPauseTimeCallback;
 
@@ -119,11 +119,11 @@ export class Character {
 
         this.hitpoints -= damage;
 
-        if (symbol === CONFIG.TARGET_SYMBOL) {
+        if (symbol == CONFIG.TARGET_SYMBOL) {
             this.startPulse();
             this.playFrequentSound(this.hitTargetSounds);
         } else {
-            this.bloodManager.addBloodSpot(this);
+            this.spotManager.addBloodSpot(this);
             this.hitEnemySound.play();
         }
 
@@ -145,6 +145,10 @@ export class Character {
                 }
             }
         }
+    }
+
+    drawPoisonSpot(ctx, spot) {
+
     }
 
     draw(ctx, image) {
@@ -208,6 +212,7 @@ export class Character {
     animateShots(ctx, shot1Img, shot2Img, player) {
         if (!this.isShooting) return;
         if (player.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) return;
+        if (player.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) return;
 
         const now = performance.now();
 

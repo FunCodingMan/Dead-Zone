@@ -43,6 +43,9 @@ const SPREAD_COOF_UI = 2;
 const FPS = 60;
 const BASE_HEIGHT = 1080;
 
+const POISON_SPOT_LIFE_TIME = 5000;
+
+
 export class Player extends Character {
     constructor(map, input, playerClass) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
@@ -109,7 +112,12 @@ export class Player extends Character {
             this.shoot(worldMouseX, worldMouseY);
         }
 
-        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < this.maxShotsAmount) {
+        if (
+            this.input.isJustPressed('KeyR') && 
+            !this.isReloading && 
+            this.shotsAmount < this.maxShotsAmount && 
+            this.playerClass.className != CONFIG.SCIENTIST_CLASS_NAME
+        ) {
             this.isReloading = true;
             this.playReloadSound();
         }
@@ -122,6 +130,47 @@ export class Player extends Character {
 
         this.handleBullets(map, enemies, targets, timeScale);
         this.removeBullets();
+        this.handlePoisonSpots(map, enemies, targets);
+    }
+
+    handlePoisonSpots(map, enemies, targets) {
+        const current = performance.now();
+        this.spotManager.poisonSpots = this.spotManager.poisonSpots.filter(
+            spot => current - spot.spawnTime < POISON_SPOT_LIFE_TIME
+        );
+
+        const poisonSpots = this.spotManager.poisonSpots;
+
+        poisonSpots.forEach(poisonSpot => {
+            enemies.forEach((enemy) => {
+                if (enemy.isAlive) {
+                    const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                    const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size}
+                    if (this.map.isIntersecting(poisonRect, entityRect)) {
+                            this.appliedDamage += this.poisonDamage;
+                            enemy.takeDamage(this.poisonDamage, this.map, CONFIG.ENEMY_SYMBOLks);
+                        if (this.hitPlayerSound) {
+                            this.hitPlayerSound.stop();
+                            this.hitPlayerSound.play();
+                        }
+                    }
+                }
+            });
+            targets.forEach((target) => {
+                if (target.isAlive) {
+                    const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
+                    const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size}
+                    if (this.map.isIntersecting(poisonRect, entityRect)) {
+                            this.appliedDamage += this.poisonDamage;
+                            target.takeDamage(this.poisonDamage, this.map, CONFIG.TARGET_SYMBOL);
+                        if (this.hitPlayerSound) {
+                            this.hitPlayerSound.stop();
+                            this.hitPlayerSound.play();
+                        }
+                    }
+                }
+            });
+        });
     }
 
     move(map, enemies, targets, timeScale) {
@@ -178,7 +227,11 @@ export class Player extends Character {
         }
 
         if (this.input.isMouseDown) {
-            if (now - this.lastShootTime >= this.shotCooldown && this.shotsAmount > 0 && !this.isReloading) {
+            if (
+                now - this.lastShootTime >= this.shotCooldown && 
+                (this.shotsAmount > 0 || this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) &&
+                !this.isReloading
+            ) {
                 this.createBullet(x, y);
                 this.lastShootTime = now;
                 this.isShooting = true;
@@ -240,7 +293,13 @@ export class Player extends Character {
         this.bullets.forEach((bullet, index) => {
             const isHit = this.processBulletPhysics(bullet, enemies, targets, timeScale, index);
             if (isHit && !this.bulletsToRemove.includes(index)) {
-                this.bulletsToRemove.push(index);
+                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                    this.spotManager.addPoisonSpot(bullet.x, bullet.y);
+                }
+                
+                if (!this.bulletsToRemove.includes(index)) {
+                    this.bulletsToRemove.push(index);
+                }
             }
         });
     }
@@ -294,7 +353,7 @@ export class Player extends Character {
         this.bulletsToRemove = [];
     }
 
-    handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex) {
+    handleBulletsIntersecting(enemies, targets, bulletRect) {
         let hasHit = false;
 
         enemies.forEach((enemy) => {
@@ -303,16 +362,13 @@ export class Player extends Character {
                 if (this.map.isIntersecting(bulletRect, entityRect)) {
                     if (!this.isMultiplayer) {
                         this.appliedDamage += this.damage;
-                        enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
+                        enemy.takeDamage(this.damage, this.map, CONFIG.ENEMY_SYMBOL);
                     }
                     if (this.hitPlayerSound) {
                         this.hitPlayerSound.stop();
                         this.hitPlayerSound.play();
                     }
                     this.lastHitTime = performance.now();
-                    if (!this.bulletsToRemove.includes(bulletIndex)) {
-                        this.bulletsToRemove.push(bulletIndex);
-                    }
                     hasHit = true;
                 }
             }
@@ -331,9 +387,6 @@ export class Player extends Character {
                         this.hitPlayerSound.play();
                     }
                     this.lastHitTime = performance.now();
-                    if (!this.bulletsToRemove.includes(bulletIndex)) {
-                        this.bulletsToRemove.push(bulletIndex);
-                    }
                     hasHit = true;
                 }
             }
@@ -375,6 +428,12 @@ export class Player extends Character {
             ctx.translate(bullet.x, bullet.y);
             const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
+
+            if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                bullet.bulletRotation += this.bulletRotationSpeed;
+                ctx.rotate(bullet.bulletRotation);
+            }
+
             ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
             ctx.restore();
         });
@@ -386,6 +445,8 @@ export class Player extends Character {
     }
 
     drawReloadInterface(ctx, reloadImg, canvas) {
+        if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) return;
+
         const uiScale = canvas.height / BASE_HEIGHT;
         const scaledSize = Math.floor(RELOAD_SIZE * uiScale);
         const scaledPadding = Math.floor(RELOAD_PADDING * uiScale);

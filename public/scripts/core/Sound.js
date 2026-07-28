@@ -1,13 +1,21 @@
 export class Sound {
     constructor(src) {
         this.audio = new Audio(src);
-        this.isPlaying = false;
         this.baseVolume = 1;
+        this.lastPlayTime = 0;
+        this.cooldown = 150;
     }
 
     play() {
+        const now = performance.now();
+
+        if (now - this.lastPlayTime < this.cooldown) {
+            return;
+        }
+
+        this.lastPlayTime = now;
+        this.audio.currentTime = 0;
         this.audio.play();
-        this.isPlaying = true;
     }
 
     stop() {

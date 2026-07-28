@@ -52,7 +52,7 @@ export class WavesMode extends BaseGameTemplate {
                 h: this.engine.player.h
             };
             const enemy = new Enemy(this.engine.map, playerPosition);
-            enemy.bloodManager = this.engine.bloodManager;
+            enemy.spotManager = this.engine.spotManager;
             this.engine.enemies.push(enemy);
             enemy.onDeath(() => {
                 this.engine.player.kills++;
