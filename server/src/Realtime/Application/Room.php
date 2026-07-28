@@ -42,7 +42,7 @@ class Room
         $this->userRepository = $userRepository;
         $this->isStart = false;
         $this->lobbyUsers = [];
-        $this->roomId = bin2hex(random_bytes(8));
+        $this->roomId = bin2hex(random_bytes(3));
         $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
         $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
 
