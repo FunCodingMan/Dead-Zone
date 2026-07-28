@@ -26,8 +26,8 @@
     margin-top: 20px;
     margin-bottom: 20px;
     background-color: #111;
-    border: 2px solid #555;
-    color: white;
+    border: 2px solid #afafaf;
+    color: #afafaf;
     font: 22px 'Spielarcade Regular', sans-serif;
     outline: none;
     transition: 0.2s;
@@ -42,8 +42,8 @@
     width: 100%;
     max-width: 500px;
     padding: 15px;
-    border: 2px solid #555;
-    color: white;
+    border: 2px solid #afafaf;
+    color: #afafaf;
     font: 22px 'Spielarcade Regular', sans-serif;
     outline: none;
     transition: 0.2s;
