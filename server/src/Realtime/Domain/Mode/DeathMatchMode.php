@@ -53,9 +53,22 @@ class DeathMatchMode implements GameModeInterface
 
     public function getGameOverPayload(array $playerStats): array
     {
+        $winner = GameConfig::WINNER_DRAW;
+
+        if (count($playerStats) === 1) {
+            $winner = $playerStats[0]['nickname'];
+        } elseif (count($playerStats) > 1) {
+            $p1 = $playerStats[0];
+            $p2 = $playerStats[1];
+
+            if ($p1['kills'] !== $p2['kills'] || $p1['deaths'] !== $p2['deaths']) {
+                $winner = $p1['nickname'];
+            }
+        }
+
         return [
             'mode' => GameConfig::MODE_DEATHMATCH,
-            'winner' => $playerStats[0]['nickname'] ?? null,
+            'winner' => $winner,
             'stats' => $playerStats
         ];
     }

@@ -54,7 +54,15 @@ class MatchResultNotifier
 
         $finalStats = array_merge($stats, $disconnectedStats);
 
-        usort($finalStats, fn($a, $b) => $b['kd'] <=> $a['kd']);
+        usort($finalStats, function($a, $b) {
+            if ($a['kills'] !== $b['kills']) {
+                return $b['kills'] <=> $a['kills'];
+            }
+            if ($a['deaths'] !== $b['deaths']) {
+                return $a['deaths'] <=> $b['deaths'];
+            }
+            return $b['kd'] <=> $a['kd'];
+        });
 
         $payload = $this->mode->getGameOverPayload($finalStats);
 

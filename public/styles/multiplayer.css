@@ -303,3 +303,74 @@ body, html {
     from { opacity: 0; transform: translate(-50%, -60%); }
     to { opacity: 1; transform: translate(-50%, -50%); }
 }
+.fade-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.error-message {
+    color: #ff4444;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.text-win-red {
+    color: #ff4444;
+}
+
+.text-win-blue {
+    color: #4444ff;
+}
+
+.text-win-draw {
+    color: #aaaaaa;
+}
+
+.text-win-gold {
+    color: #ffd700;
+}
+
+.text-score-big {
+    font-size: 24px;
+    color: #fff;
+}
+
+.stats-row {
+    border-bottom: 1px solid #555;
+}
+
+.stats-row--red { color: #ff4444; font-weight: normal; }
+.stats-row--blue { color: #4444ff; font-weight: normal; }
+.stats-row--gold { color: #ffd700; font-weight: bold; }
+.stats-row--default { color: #ffffff; font-weight: normal; }
+
+.player-class-label {
+    color: #aaa;
+    font-size: 16px;
+}
+
+.game-over-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 25px;
+}
+
+.game-over-header .menu-title {
+    margin-bottom: 0;
+}
+
+.text-subtitle {
+    font-size: 40px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}

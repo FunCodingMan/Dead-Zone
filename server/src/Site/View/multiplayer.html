@@ -36,7 +36,7 @@
                     <input type="text" class="input-name input" id="input-room-id">
                 </label>
             </div>
-            <p id="join-error-message" style="color: #ff4444; display: none;"></p>
+            <p id="join-error-message" class="error-message hidden"></p>
             <input type="submit" class="room-submit join-room-submit btn" id="btn-submit-join" value="ПРИСОЕДИНИТЬСЯ">
             <div class="menu-buttons">
                 <button class="btn btn-back-to-lobby">НАЗАД</button>
@@ -115,7 +115,7 @@
         </div>
 
         <div class="menu-screen menu-choose screen hidden" id="screen-game">
-            <div id="fade-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:black; opacity:0; pointer-events:none; transition: opacity 0.3s;"></div>
+            <div id="fade-overlay" class="fade-overlay"></div>
 
             <div id="round-banner" class="round-banner hidden">
                 <div id="round-banner-text" class="round-banner__text">РАУНД ОКОНЧЕН</div>
@@ -154,7 +154,10 @@
         </div>
 
         <div class="menu-screen menu-choose screen hidden" id="screen-game-over">
-            <h2 class="menu-title">МАТЧ ОКОНЧЕН</h2>
+            <div class="game-over-header">
+                <h2 class="menu-title" id="game-over-title">МАТЧ ОКОНЧЕН</h2>
+                <div id="game-over-subtitle"></div>
+            </div>
 
             <div class="room-stats end-game-stats">
                 <table class="end-game-table">

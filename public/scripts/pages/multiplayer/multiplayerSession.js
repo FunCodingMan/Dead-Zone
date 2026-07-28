@@ -74,6 +74,8 @@ const roundScoreBlue = document.getElementById('round-score-blue');
 const classSelectionToggle = document.getElementById('class-selection-toggle');
 const labelClassSelectionToggle = document.getElementById('label-class-selection-toggle');
 const classSelect = document.getElementById('class-select');
+const gameOverTitle = document.getElementById('game-over-title');
+const gameOverSubtitle = document.getElementById('game-over-subtitle');
 
 let isReady = false;
 let currentRoomId = null;
@@ -98,7 +100,7 @@ function renderPlayersList(players) {
         const classNameStr = classNames[player.className] || 'Солдат';
         playerDiv.innerHTML = `
             <span class="player-name ${teamClass}">
-                ${player.nickname}${hostIcon} <span style="color:#aaa; font-size:16px;">[${classNameStr}]</span>
+                ${player.nickname}${hostIcon} <span class="player-class-label">[${classNameStr}]</span>
             </span>
             <span class="player-status ${status}">${statusText}</span>
         `;
@@ -266,7 +268,7 @@ classSelect.addEventListener('change', (e) => {
 
 network.on('join-error', (payload) => {
     joinErrorMessage.textContent = payload.message;
-    joinErrorMessage.style.display = 'block';
+    joinErrorMessage.classList.remove('hidden');
 });
 
 network.on('start-game',  async(payload) => {
@@ -305,39 +307,54 @@ network.on('game-over', (payload) => {
         togglePauseUI(false);
     }
 
+    gameOverTitle.className = 'menu-title';
+    gameOverSubtitle.className = '';
+
     const titleElement = document.querySelector('#screen-game-over .menu-title');
 
-
     if (payload.mode === 'tdm' || payload.mode === 'round_based') {
-        let text = 'НИЧЬЯ';
-        if (payload.winnerTeam === 'RED') text = '<span style="color:#ff4444">ПОБЕДА КРАСНЫХ</span>';
-        if (payload.winnerTeam === 'BLUE') text = '<span style="color:#4444ff">ПОБЕДА СИНИХ</span>';
-        titleElement.innerHTML = `${text}<br><span style="font-size:24px; color:#fff">КРАСНЫЕ ${payload.redScore} : ${payload.blueScore} СИНИЕ</span>`;
+
+        if (payload.winnerTeam === 'RED') {
+            gameOverTitle.textContent = 'ПОБЕДА КРАСНЫХ';
+            gameOverTitle.classList.add('text-win-red');
+        } else if (payload.winnerTeam === 'BLUE') {
+            gameOverTitle.textContent = 'ПОБЕДА СИНИХ';
+            gameOverTitle.classList.add('text-win-blue');
+        } else {
+            gameOverTitle.textContent = 'НИЧЬЯ';
+            gameOverTitle.classList.add('text-win-draw');
+        }
+
+        gameOverSubtitle.textContent = `КРАСНЫЕ ${payload.redScore} : ${payload.blueScore} СИНИЕ`;
+        gameOverSubtitle.classList.add('text-score-big');
+
     } else {
-        titleElement.innerHTML = `ПОБЕДИТЕЛЬ:<br><span style="color:#ffd700">${payload.winner}</span>`;
+        if (payload.winner === 'DRAW') {
+            gameOverTitle.textContent = 'МАТЧ ОКОНЧЕН';
+            gameOverSubtitle.textContent = 'НИЧЬЯ';
+            gameOverSubtitle.classList.add('text-win-draw', 'text-subtitle');
+        } else {
+            gameOverTitle.textContent = 'ПОБЕДИТЕЛЬ:';
+            gameOverSubtitle.textContent = payload.winner;
+            gameOverSubtitle.classList.add('text-win-gold', 'text-subtitle');
+        }
     }
 
     const tbody = document.getElementById('end-game-stats-body');
     tbody.innerHTML = '';
 
     payload.stats.forEach((s, index) => {
-        let color = '#ffffff';
-        let fontWeight = 'normal';
+        const tr = document.createElement('tr');
+        tr.className = 'stats-row';
 
         if (payload.mode === 'tdm' || payload.mode === 'round_based') {
-            if (s.team === 'red') color = '#ff4444';
-            if (s.team === 'blue') color = '#4444ff';
+            if (s.team === 'red') tr.classList.add('stats-row--red');
+            else if (s.team === 'blue') tr.classList.add('stats-row--blue');
+            else tr.classList.add('stats-row--default');
         } else {
-            if (index === 0) {
-                color = '#ffd700';
-                fontWeight = 'bold';
-            }
+            if (index === 0) tr.classList.add('stats-row--gold');
+            else tr.classList.add('stats-row--default');
         }
-
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid #555';
-        tr.style.color = color;
-        tr.style.fontWeight = fontWeight;
 
         tr.innerHTML = `
             <td class="table-title">${s.nickname}</td>
@@ -359,7 +376,7 @@ document.querySelector('.btn-createRoom').addEventListener('click', () => {
 });
 
 document.querySelector('.btn-joinRoom').addEventListener('click', () => {
-    joinErrorMessage.style.display = 'none';
+    joinErrorMessage.classList.add('hidden');
     inputRoomId.value = '';
     showScreen('joinRoom');
 });
