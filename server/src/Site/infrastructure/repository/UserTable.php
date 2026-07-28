@@ -162,8 +162,8 @@ class UserTable implements IUserRepository
             'kills' => $kills,
             'deaths' => $deaths,
             'user_id' => $userId,
-            'deathmatchWins' => $isWin,
-            'deathmatchLose' => !$isWin,
+            'teamDeathmatchWins' => $isWin,
+            'teamDeathmatchLose' => !$isWin,
         ]);
     }
 
@@ -181,8 +181,8 @@ class UserTable implements IUserRepository
             'kills' => $kills,
             'deaths' => $deaths,
             'user_id' => $userId,
-            'deathmatchWins' => $isWin,
-            'deathmatchLose' => !$isWin,
+            'eliminationWins' => $isWin,
+            'eliminationLose' => !$isWin,
         ]);
     }
 }
