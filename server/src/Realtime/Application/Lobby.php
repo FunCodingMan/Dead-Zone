@@ -63,6 +63,11 @@ class Lobby
         foreach ($this->rooms as $room) {
             if ($room->isStarted()) {
                 $room->updateGameState();
+
+                if ($room->isMatchEnded()) {
+                    $room->resetRoom();
+                    $this->updateStateRoom($room);
+                }
             }
         }
     }

@@ -76,6 +76,8 @@ const labelClassSelectionToggle = document.getElementById('label-class-selection
 const classSelect = document.getElementById('class-select');
 const gameOverTitle = document.getElementById('game-over-title');
 const gameOverSubtitle = document.getElementById('game-over-subtitle');
+const stayInRoomBtn = document.getElementById('btn-stay-in-room');
+const leaveRoomBtn = document.getElementById('btn-leave-room');
 
 let isReady = false;
 let currentRoomId = null;
@@ -212,7 +214,7 @@ network.on('stateRoom', (payload) => {
 
         classSelect.disabled = !payload.isClassSelectionEnabled;
     }
-    if (screens.game.classList.contains('hidden')) {
+    if (screens.game.classList.contains('hidden') && screens.gameOver.classList.contains('hidden')) {
         showScreen('room');
     }
 });
@@ -264,6 +266,18 @@ classSelectionToggle.addEventListener('change', (e) => {
 });
 classSelect.addEventListener('change', (e) => {
     network.send('change-class', { className: e.target.value });
+});
+stayInRoomBtn.addEventListener('click', () => {
+    isReady = false;
+    readyBtn.textContent = 'ГОТОВ';
+    showScreen('room');
+});
+
+leaveRoomBtn.addEventListener('click', () => {
+    network.send('exit-room', {});
+    isReady = false;
+    readyBtn.textContent = 'ГОТОВ';
+    showScreen('lobbyMenu');
 });
 
 network.on('join-error', (payload) => {
@@ -409,13 +423,6 @@ document.getElementById('btn-exit-room').addEventListener('click', () => {
     network.send('exit-room', {});
     isReady = false;
     readyBtn.textContent = 'ГОТОВ';
-    showScreen('lobbyMenu');
-});
-
-document.getElementById('btn-exit-to-lobby-from-stats').addEventListener('click', () => {
-    network.send('exit-room', {});
-    isReady = false;
-    readyBtn.textContent = 'НЕ ГОТОВ';
     showScreen('lobbyMenu');
 });
 

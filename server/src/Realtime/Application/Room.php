@@ -30,10 +30,25 @@ class Room
     private string $modeType = GameConfig::MODE_DEATHMATCH;
     private bool $isClassSelectionEnabled = true;
     private string $globalClassName = GameConfig::SOLDIER_CLASS;
+    private WebSocketTransport $ws;
+    private IUserRepository $userRepository;
 
 
     /** @throws RandomException */
     public function __construct(WebSocketTransport $ws, IUserRepository $userRepository)
+    {
+        $this->ws = $ws;
+        $this->userRepository = $userRepository;
+        $this->isStart = false;
+        $this->lobbyUsers = [];
+        $this->roomId = bin2hex(random_bytes(8));
+        $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
+        $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
+
+        $this->initEngine();
+    }
+
+    private function initEngine(): void
     {
         if ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
             $this->mode = new RoundBasedTeamMode();
@@ -42,24 +57,30 @@ class Room
         } else {
             $this->mode = new DeathMatchMode();
         }
-        $this->isStart = false;
-        $this->lobbyUsers = [];
-        $this->roomId = bin2hex(random_bytes(8));
+
         $map = new GameMap();
         $map->loadLevel(LevelRepository::get(LevelRepository::getDefaultId()));
         $this->registry = new PlayerRegistry();
         $this->queue = new MessageQueue();
-        $this->gameEngine = new GameEngine($ws, $this->registry, $this->queue, $map, $userRepository,  $this->mode);
-        $this->isFogEnabled = GameConfig::IS_FOG_ACTIVE;
+
+        $this->gameEngine = new GameEngine($this->ws, $this->registry, $this->queue, $map, $this->userRepository, $this->mode);
         $this->gameEngine->setFogOfWar($this->isFogEnabled);
-        $this->matchDuration = (int)GameConfig::MATCH_DURATION_S;
+        $this->gameEngine->setMatchDuration((float)$this->matchDuration);
+    }
+
+    public function resetRoom(): void
+    {
+        $this->isStart = false;
+        foreach ($this->lobbyUsers as $user) {
+            $user->setReady(false);
+        }
+
+        $this->initEngine();
     }
 
     public function addUser(int $fd, User $user): void
     {
         $lobbyUser = new LobbyUser($fd, $user->getUserId(), $user->getNickname());
-
-        $lobbyUser->setClassName(GameConfig::SOLDIER_CLASS);
 
         if (!$this->isClassSelectionEnabled) {
             $lobbyUser->setClassName($this->globalClassName);
@@ -97,14 +118,7 @@ class Room
         }
 
         $this->modeType = $newMode;
-
-        if ($this->modeType === GameConfig::MODE_TEAM_DEATHMATCH) {
-            $this->mode = new RoundBasedTeamMode();
-        } elseif ($this->modeType === GameConfig::MODE_ELIMINATION) {
-            $this->mode = new TeamDeathMatchMode();
-        } else {
-            $this->mode = new DeathMatchMode();
-        }
+        $this->initEngine();
 
         if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {
             $isRed = true;
@@ -276,6 +290,11 @@ class Room
         }
         $this->gameEngine->spawnPlayers();
         $this->isStart = true;
+    }
+
+    public function isMatchEnded(): bool
+    {
+        return $this->gameEngine->isMatchEnded();
     }
 
     public function isStarted(): bool
