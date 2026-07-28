@@ -109,10 +109,13 @@ class UserTable implements IUserRepository
 
     public function getLeaderboard(): array
     {
-        $query = "SELECT `user`.`nickname`, `stats`.`kd` 
+        $query = "SELECT `user`.`nickname`, `stats`.`kd`, `stats`.`kills`, `stats`.`deaths` 
                 FROM `user`
                 JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
-                ORDER BY `stats`.`kd` DESC
+                ORDER BY 
+                `stats`.`kills` DESC, 
+                `stats`.`deaths` ASC, 
+                `stats`.`kd` DESC
                 LIMIT :limit";
         $stmt = $this->connection->prepare($query);
         $stmt->bindValue(':limit', GameConfig::LIMIT_LEADER_BOARD, PDO::PARAM_INT);
