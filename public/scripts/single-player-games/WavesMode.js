@@ -114,6 +114,13 @@ export class WavesMode extends BaseGameTemplate {
 
         const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
 
+        if (!currentCell || !playerPosition ||
+            currentCell.row === undefined || currentCell.col === undefined ||
+            currentCell.row < 0 || currentCell.col < 0) {
+            this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
+            return;
+        }
+
         if (currentCell.row === playerPosition.row && currentCell.col === playerPosition.col) {
             this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
@@ -190,6 +197,13 @@ export class WavesMode extends BaseGameTemplate {
                     e1.y += pushY;
                     e2.x -= pushX;
                     e2.y -= pushY;
+
+                    if (this.engine.map) {
+                        e1.x = Math.max(0, Math.min(e1.x, this.engine.map.width - e1.w));
+                        e1.y = Math.max(0, Math.min(e1.y, this.engine.map.height - e1.h));
+                        e2.x = Math.max(0, Math.min(e2.x, this.engine.map.width - e2.w));
+                        e2.y = Math.max(0, Math.min(e2.y, this.engine.map.height - e2.h));
+                    }
                 }
             }
         }

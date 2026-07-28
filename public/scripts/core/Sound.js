@@ -6,7 +6,11 @@ export class Sound {
     }
 
     play() {
-        this.audio.play();
+        const playPromise = this.audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+            });
+        }
         this.isPlaying = true;
     }
 
