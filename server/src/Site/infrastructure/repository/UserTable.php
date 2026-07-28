@@ -109,7 +109,7 @@ class UserTable implements IUserRepository
 
     public function getLeaderboard(): array
     {
-        $query = "SELECT `user`.`nickname`, `user`.`user_id`
+        $query = "SELECT `user`.`user_id`
                 FROM `user`
                 JOIN `stats` ON `user`.`user_id` = `stats`.`user_id`
                 ORDER BY 
@@ -120,7 +120,7 @@ class UserTable implements IUserRepository
         $stmt = $this->connection->prepare($query);
         $stmt->bindValue(':limit', GameConfig::LIMIT_LEADER_BOARD, PDO::PARAM_INT);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void

@@ -57,7 +57,13 @@ class UserService
     public function getGlobalStats(): ?array
     {
         if (isset($_COOKIE["token"])) {
-            return $this->userRepository->getLeaderboard();
+            $usersId = $this->userRepository->getLeaderboard();
+            $stats = [];
+            foreach ($usersId as $userId) {
+                $user = $this->userRepository->getUserByUserId($userId);
+                $stats[] = ['nickname' => $user->getNickname(), 'user_id' => $userId];
+            }
+            return $stats;
         }
         return null;
     }

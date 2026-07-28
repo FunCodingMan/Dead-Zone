@@ -28,7 +28,7 @@ class User
 
     public function getNickname(): string
     {
-        return $this->nickname;
+        return $this->nickname . '#' . substr($this->user_id, 0, 4);
     }
 
     public function getPassword(): string

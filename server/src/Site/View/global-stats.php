@@ -19,6 +19,7 @@
                         </div>
                     <?php endforeach; ?>
                 </div>
+                <button class="btn">ПОИСК ИГРОКА</button>
                 <button class="btn btn-exit">НАЗАД</button>
             </div>
         </body>
