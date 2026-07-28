@@ -78,6 +78,7 @@ const gameOverTitle = document.getElementById('game-over-title');
 const gameOverSubtitle = document.getElementById('game-over-subtitle');
 const stayInRoomBtn = document.getElementById('btn-stay-in-room');
 const leaveRoomBtn = document.getElementById('btn-leave-room');
+const startErrorMessage = document.getElementById('start-error-message');
 
 let isReady = false;
 let currentRoomId = null;
@@ -112,6 +113,7 @@ function renderPlayersList(players) {
 
 network.on('stateRoom', (payload) => {
     currentRoomId = payload.roomId;
+    startErrorMessage.classList.add('hidden');
     roomIdSpan.textContent = currentRoomId;
     curCountPlayers.textContent = payload.countUsers;
     maxCountPlayers.textContent = payload.maxCountUsers;
@@ -278,6 +280,11 @@ leaveRoomBtn.addEventListener('click', () => {
     isReady = false;
     readyBtn.textContent = 'ГОТОВ';
     showScreen('lobbyMenu');
+});
+
+network.on('start-error', (payload) => {
+    startErrorMessage.textContent = payload.message;
+    startErrorMessage.classList.remove('hidden');
 });
 
 network.on('join-error', (payload) => {

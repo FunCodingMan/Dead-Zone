@@ -6,8 +6,8 @@ body, html {
     background-color: rgb(20, 20, 20);
     overflow: hidden;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
 }
 
 #gameCanvas {

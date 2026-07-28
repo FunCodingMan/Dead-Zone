@@ -129,6 +129,14 @@ class Lobby
             return;
         }
 
+        if (!$room->canStartTeamGame()) {
+            $this->ws->send($fd, [
+                "type" => "start-error",
+                "payload" => ["message" => "В командной игре должен быть хотя бы 1 игрок в каждой команде!"]
+            ]);
+            return;
+        }
+
         $room->startGame();
         foreach ($room->getFdUsers() as $fdUser) {
             $this->ws->send($fdUser, ["type" => "start-game", "payload" => ["isFogEnabled" => $room->isFogEnabled()]]);

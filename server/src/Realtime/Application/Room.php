@@ -106,6 +106,24 @@ class Room
 
         $this->lobbyUsers[$fd] = $lobbyUser;
     }
+    public function canStartTeamGame(): bool
+    {
+        if (in_array($this->modeType, [GameConfig::MODE_ELIMINATION, GameConfig::MODE_TEAM_DEATHMATCH], true)) {
+            $redCount = 0;
+            $blueCount = 0;
+
+            foreach ($this->lobbyUsers as $user) {
+                if ($user->getTeam() === GameConfig::TEAM_RED) {
+                    $redCount++;
+                } elseif ($user->getTeam() === GameConfig::TEAM_BLUE) {
+                    $blueCount++;
+                }
+            }
+            return $redCount > 0 && $blueCount > 0;
+        }
+
+        return true;
+    }
 
     public function changeModeType(string $newMode): bool
     {
