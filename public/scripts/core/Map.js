@@ -63,6 +63,11 @@ export class Map {
         const rows = graph.length;
         const cols = graph[0].length;
 
+        if (startRow < 0 || startRow >= rows || startCol < 0 || startCol >= cols ||
+            targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
+            return { row: startRow, col: startCol };
+        }
+
         const queue = [{row: startRow, col: startCol}];
         const visited = Array(rows).fill(null).map(() => Array(cols).fill(false));
         const parent = Array(rows).fill(null).map(() => Array(cols).fill(null));
@@ -93,13 +98,12 @@ export class Map {
                 const newRow = row + dr;
                 const newCol = col + dc;
 
-                if (dr !== 0 && dc !== 0) {
-                    if (graph[row][newCol] === 0 || graph[newRow][col] === 0) {
-                        continue;
-                    }
-                }
-
                 if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
+                    if (dr !== 0 && dc !== 0) {
+                        if (graph[row][newCol] === 0 || graph[newRow][col] === 0) {
+                            continue;
+                        }
+                    }
                     if (graph[newRow][newCol] === AVAILABLE_CELL && !visited[newRow][newCol]) {
                         visited[newRow][newCol] = true;
                         parent[newRow][newCol] = { row, col };
