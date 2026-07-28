@@ -36,15 +36,37 @@ class RequestDataParser implements IRequestDataParser
             }
         }
 
-        $usernamePattern = '/^[a-zA-Z0-9]([a-zA-Z0-9_-]*[a-zA-Z0-9])?$/';
-        if (!preg_match($usernamePattern, $data['username']) || strlen($data['username']) < 4) {
+        $username = $data['username'];
+        $length = strlen($username);
+
+        if ($length < 4 || $length > 32) {
             http_response_code(400);
-            throw new RuntimeException('Логин пользователя не действителен');
+            throw new RuntimeException('Логин должен быть от 4 до 32 символов!');
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $username)) {
+            http_response_code(400);
+            throw new RuntimeException('Логин должен содержать только латинские буквы, цифры, тире и нижнее подчеркивание');
+        }
+
+        if (preg_match('/^[_-]/', $username)) {
+            http_response_code(400);
+            throw new RuntimeException('Логин не может начинаться с тире или подчеркивания');
+        }
+
+        if (preg_match('/[_-]$/', $username)) {
+            http_response_code(400);
+            throw new RuntimeException('Логин не может заканчиваться тире или подчеркиванием');
+        }
+
+        if (preg_match('/[_-]{2,}/', $username)) {
+            http_response_code(400);
+            throw new RuntimeException('Логин не может содержать два спецсимвола подряд (например, "__" или "--")');
         }
 
         if (strlen($data['password']) < 6) {
             http_response_code(400);
-            throw new RuntimeException("Пароль слишком маленький. Миним 6 символов!");
+            throw new RuntimeException("Пароль слишком маленький. Минимум 6 символов!");
         }
 
         return new User(trim($data['nickname']), $data['username'], $data['password']);

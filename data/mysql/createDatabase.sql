@@ -1,4 +1,4 @@
-CREATE DATABASE game_server;
+CREATE DATABASE IF NOT EXISTS game_server;
 USE game_server;
 
 CREATE TABLE user
