@@ -83,7 +83,8 @@ const mapSelect = document.getElementById('map-select');
 const mapPreviewImg = document.getElementById('map-preview-img');
 const mapImages = {
     'classic': '../../assets/images/maps/classic.png',
-    'classic_': '../../assets/images/maps/classic_.png',
+    'dust2': '../../assets/images/maps/dust2.png',
+    'dust2_mini' : '../../assets/images/maps/dust2_mini.png',
     'open-field': '../../assets/images/maps/open-field.png'
 };
 

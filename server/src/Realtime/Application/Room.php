@@ -73,7 +73,7 @@ class Room
     {
         if ($this->isStart || !$this->isUserHost($fd)) return false;
 
-        $validMaps = ['classic', 'classic_', 'open-field'];
+        $validMaps = ['dust2', 'dust2_mini', 'classic', 'classic_', 'open-field'];
         if (!in_array($mapId, $validMaps, true)) return false;
 
         if ($this->mapId === $mapId) return true;
