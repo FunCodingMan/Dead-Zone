@@ -3,13 +3,13 @@
         <head>
             <meta charset="UTF-8">
             <title>Мёртвая зона — Таблица лидеров</title>
-            <link rel="stylesheet" href="/styles/menu.css">exitLid
+            <link rel="stylesheet" href="/styles/menu.css">
             <link href="/styles/fonts-styles.css" rel="stylesheet">
             <script src="/scripts/pages/lid/openSearchUsers.js" defer></script>
             <script src="/scripts/pages/lid/exitLid.js" defer></script>
         </head>
         <body>
-            <div class="menu-screen">
+            <div class="menu-screen">r
                 <h2 class="menu-title">ЛИДЕРЫ</h2>
                 <div class="stats">
                     <?php foreach ($stats as $index => $stat): ?>
