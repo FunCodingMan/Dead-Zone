@@ -1,6 +1,7 @@
 <?php
 namespace App\Realtime\Domain\Mode;
 
+use App\Realtime\Application\MedkitManager;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
 use App\Realtime\Domain\Model\Player;
@@ -10,6 +11,23 @@ class RoundBasedTeamMode implements GameModeInterface
     private int $redRoundWins = 0;
     private int $blueRoundWins = 0;
     private int $roundsToWin = 5;
+    private bool $medkitSpawnedThisRound = false;
+    private float $roundStartTime = 0.0;
+    public function onRoundStart(): void
+    {
+        $this->medkitSpawnedThisRound = false;
+        $this->roundStartTime = microtime(true);
+    }
+    public function manageMedkits(MedkitManager $manager, float $now): void
+    {
+        if (!$this->medkitSpawnedThisRound) {
+            if (($now - $this->roundStartTime) >= GameConfig::ELIMINATION_MEDKIT_DELAY_AFTER_START) {
+                $manager->spawn(GameConfig::ELIMINATION_MAX_MEDKITS);
+                $this->medkitSpawnedThisRound = true;
+            }
+        }
+    }
+
 
     public function assignTeams(array $players): void
     {

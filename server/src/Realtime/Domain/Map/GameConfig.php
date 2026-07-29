@@ -61,6 +61,6 @@ class GameConfig
     public const float DEATHMATCH_MEDKIT_SPAWN_INTERVAL = 30.0;
     public const int DEATHMATCH_MAX_MEDKITS = 5;
     public const float ELIMINATION_MEDKIT_DELAY_AFTER_START = 10.0;
-    public const int ELIMINATION_MAX_MEDKITS= 3;
+    public const int ELIMINATION_MAX_MEDKITS = 3;
 
 }

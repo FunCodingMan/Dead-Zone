@@ -11,19 +11,19 @@ class TeamDeathMatchMode implements GameModeInterface
 {
     private int $redScore = 0;
     private int $blueScore = 0;
-    private bool $medkitSpawnedThisRound = false;
-    private float $roundStartTime = 0.0;
+    private float $lastMedkitSpawn = 0.0;
+
     public function onRoundStart(): void
     {
-        $this->medkitSpawnedThisRound = false;
-        $this->roundStartTime = microtime(true);
+        $this->lastMedkitSpawn = microtime(true);
     }
+
     public function manageMedkits(MedkitManager $manager, float $now): void
     {
-        if (!$this->medkitSpawnedThisRound) {
-            if (($now - $this->roundStartTime) >= GameConfig::ELIMINATION_MEDKIT_DELAY_AFTER_START) {
-                $manager->spawn(GameConfig::ELIMINATION_MAX_MEDKITS);
-                $this->medkitSpawnedThisRound = true;
+        if ($manager->getActiveCount() < GameConfig::DEATHMATCH_MAX_MEDKITS) {
+            if (($now - $this->lastMedkitSpawn) >= GameConfig::DEATHMATCH_MAX_MEDKITS) {
+                $manager->spawn(1);
+                $this->lastMedkitSpawn = $now;
             }
         }
     }
