@@ -5,6 +5,7 @@ export const CONFIG = {
     SPACE_SYMBOL: " ",
     WALL_SYMBOL: "#",
     BOX_SYMBOL: "B",
+    BOSS_SYMBOL: "Q",
 
     SOLDIER_CLASS_NAME: "soldier",
     FLAMETHROWER_CLASS_NAME: "flamethrower",

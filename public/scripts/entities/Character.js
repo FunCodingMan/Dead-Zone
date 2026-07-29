@@ -10,6 +10,8 @@ const SHOT_FRAME_Y_OFFSET = 4;
 const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
+const SPREAD_FACTOR = 10;
+
 export class Character {
     constructor(spawn, width, height, spawnIndex, spotManager, resetPauseTimeCallback) {
         this.spawnPoint = spawn;
@@ -47,6 +49,227 @@ export class Character {
 
         this.currentFrequentSoundIndex = 0;
         this.initSounds();
+
+        this.bullets = [];
+        this.bulletsToRemove = [];
+
+        this.shotsFired = 0;
+        this.lastShootTime = performance.now();
+
+        this.damage = 0;
+
+        this.maxShotsAmount = 0;
+        this.shotsAmount = 0;
+
+        this.shotCooldown = 0;
+
+        this.shotOffsetForward = 0;
+        this.shotOffsetSide = 0;
+
+        this.bulletSpeed = 0;
+
+        this.bulletDrawW = 0;
+        this.bulletDrawH = 0;
+
+        this.bulletPhysW = 0;
+        this.bulletPhysH = 0;
+    }
+
+    createBullet(targetX, targetY) {
+        this.shotsAmount--;
+        this.shotsFired++;
+
+        if (this.shootSounds) {
+            this.playFrequentSound(this.shootSounds);
+        }
+
+        const centerX = this.x + this.w / 2;
+        const centerY = this.y + this.h / 2;
+
+        let spawnX = centerX + Math.cos(this.angle) * this.shotOffsetForward;
+        let spawnY = centerY + Math.sin(this.angle) * this.shotOffsetForward;
+
+        spawnX += Math.cos(this.angle + Math.PI / 2) * this.shotOffsetSide;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * this.shotOffsetSide;
+
+        let finalAngle = this.angle;
+
+        if (this.shotsFired > 1) {
+            const spreadMultiplier = Math.min(1.0, (this.shotsFired - 1) / 5.0);
+            const baseSpread = (Math.random() - 0.5) / SPREAD_FACTOR;
+            finalAngle += baseSpread * spreadMultiplier;
+        }
+
+        const directionX = Math.cos(finalAngle);
+        const directionY = Math.sin(finalAngle);
+
+        this.bullets.push({
+            x: spawnX,
+            y: spawnY,
+            xDirection: directionX,
+            yDirection: directionY,
+            bulletSpeed: this.bulletSpeed,
+            offset: 0
+        });
+    }
+
+    playHitHardSounds(bulletRect) {
+        if (this.hitHardSounds) {
+            this.playFrequentSound(this.hitHardSounds);
+        }
+    }
+
+    removeBullets() {
+        this.bulletsToRemove.sort((a, b) => b - a);
+        for (let i = 0; i < this.bulletsToRemove.length; i++) {
+            this.bullets.splice(this.bulletsToRemove[i], 1);
+        }
+        this.bulletsToRemove = [];
+    }
+
+    processBulletPhysics(bullet, enemies, targets, timeScale, bulletIndex) {
+        const actualSpeed = bullet.bulletSpeed * timeScale;
+        const steps = Math.max(1, Math.ceil(actualSpeed / 10));
+        const stepX = (bullet.xDirection * actualSpeed) / steps;
+        const stepY = (bullet.yDirection * actualSpeed) / steps;
+
+        for (let s = 0; s < steps; s++) {
+            bullet.x += stepX;
+            bullet.y += stepY;
+
+            const bulletRect = {
+                x: bullet.x - this.bulletPhysW / 2,
+                y: bullet.y - this.bulletPhysH / 2,
+                w: this.bulletPhysW,
+                h: this.bulletPhysH
+            };
+
+            const isHit = this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
+
+            if (isHit) {
+                return true;
+            }
+
+            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) {
+                return true;
+            }
+
+            if (this.map.checkCollision(bulletRect)) {
+                this.playHitHardSounds(bulletRect);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    handleBullets(map, enemies, targets, timeScale) {
+        this.bulletsToRemove = [];
+
+        this.bullets.forEach((bullet, index) => {
+            const isHit = this.processBulletPhysics(bullet, enemies, targets, timeScale, index);
+            if (isHit && !this.bulletsToRemove.includes(index)) {
+                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                    this.spotManager.addPoisonSpot(bullet.x, bullet.y);
+                }
+                
+                if (!this.bulletsToRemove.includes(index)) {
+                    this.bulletsToRemove.push(index);
+                }
+            }
+        });
+    }
+
+    drawBullets(ctx, bulletImg) {
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffaa00';
+        
+        this.bullets.forEach(bullet => {
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
+            ctx.rotate(angle);
+        
+            if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                bullet.bulletRotation += this.bulletRotationSpeed;
+                ctx.rotate(bullet.bulletRotation);
+            }
+        
+            ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
+            ctx.restore();
+        });
+        ctx.restore();
+    }
+
+    handleBulletsIntersecting(enemies, targets, bulletRect) {
+        let hasHit = false;
+
+        enemies.forEach((enemy) => {
+            if (!enemy.isAlive) return;
+
+            const entityRect = {
+                x: enemy.x,
+                y: enemy.y,
+                w: enemy.w,
+                h: enemy.h
+            };
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                this.onHitEntity(enemy, CONFIG.ENEMY_SYMBOL);
+                hasHit = true;
+            }
+        });
+
+        targets.forEach((target) => {
+            if (!target.isAlive) return;
+
+            const entityRect = {
+                x: target.x,
+                y: target.y,
+                w: target.w,
+                h: target.h
+            };
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                this.onHitEntity(target, CONFIG.TARGET_SYMBOL);
+                hasHit = true;
+            }
+        });
+
+        return hasHit;
+    }
+
+    checkEntityCollision(bulletRect, entities, symbol) {
+        if (!entities) return false;
+
+        for (const entity of entities) {
+            if (!entity.isAlive || (entity.hitpoints !== undefined && entity.hitpoints <= 0)) {
+                continue;
+            }
+
+            const entityRect = {
+                x: entity.x,
+                y: entity.y,
+                w: entity.w,
+                h: entity.h
+            };
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                this.onHitEntity(entity, symbol);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    onHitEntity(entity, symbol) {
+        entity.takeDamage(this.damage, this.map, symbol);
+
+        if (this.hitPlayerSound) {
+            this.hitPlayerSound.stop();
+            this.hitPlayerSound.play();
+        }
     }
 
     initSounds() {
