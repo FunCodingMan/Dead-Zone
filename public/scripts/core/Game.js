@@ -288,8 +288,8 @@ export class Game {
         }
 
         if (this.spotManager) {
-            this.spotManager.drawBlood(this.ctx, this.assets.blood);
             this.spotManager.drawPoison(this.ctx, this.assets.poisonSpot);
+            this.spotManager.drawBlood(this.ctx, this.assets.blood);
         }
 
         this.drawEntities();

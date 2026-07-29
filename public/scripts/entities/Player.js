@@ -14,7 +14,6 @@ const BULLET_REAL_HEIGHT = 4;
 
 const BASE_SPREAD = 5;
 const MAX_SPREAD = 15;
-const SPREAD_FACTOR = 10;
 const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
 const DAMAGE = 20;
@@ -56,23 +55,7 @@ export class Player extends Character {
         this.map = map;
         this.playerClass = playerClass || { className: CONFIG.SOLDIER_CLASS_NAME };
 
-        this.bullets = [];
-        this.shotsFired = 0;
-        this.lastShootTime = performance.now();
-
         this.speed = SPEED;
-        this.damage = DAMAGE;
-        this.maxShotsAmount = MAX_SHOTS_AMOUNT;
-        this.shotsAmount = this.maxShotsAmount;
-        this.shotCooldown = SHOOT_COOLDOWN_MS;
-        this.shotOffsetForward = DIFF_GUN_FORWARD;
-        this.shotOffsetSide = DIFF_GUN_SIDE;
-        this.bulletSpeed = BULLET_SPEED;
-
-        this.bulletDrawW = BULLET_WIDTH;
-        this.bulletDrawH = BULLET_HEIGHT;
-        this.bulletPhysW = BULLET_REAL_WIDTH;
-        this.bulletPhysH = BULLET_REAL_HEIGHT;
 
         this.isReloading = false;
         this.reloadStartTime = undefined;
@@ -84,7 +67,6 @@ export class Player extends Character {
 
         this.appliedDamage = 0;
         this.kills = 0;
-        this.bulletsToRemove = [];
 
         this.isMultiplayer = false;
         this.hitpoints = MAX_HITPOINTS;
@@ -92,6 +74,21 @@ export class Player extends Character {
         this.lastHitTime = 0;
         this.remoteEnemies = [];
         this.team = 'none';
+
+        this.damage = DAMAGE;
+        this.maxShotsAmount = MAX_SHOTS_AMOUNT;
+        this.shotsAmount = this.maxShotsAmount;
+        this.shotCooldown = SHOOT_COOLDOWN_MS;
+
+        this.shotOffsetForward = DIFF_GUN_FORWARD;
+        this.shotOffsetSide = DIFF_GUN_SIDE;
+
+        this.bulletSpeed = BULLET_SPEED;
+
+        this.bulletDrawW = BULLET_WIDTH;
+        this.bulletDrawH = BULLET_HEIGHT;
+        this.bulletPhysW = BULLET_REAL_WIDTH;
+        this.bulletPhysH = BULLET_REAL_HEIGHT;
     }
 
     update(map, canvas, zoom, enemies, targets, dt) {
@@ -250,195 +247,20 @@ export class Player extends Character {
         }
     }
 
-    createBullet(targetX, targetY) {
-        this.shotsAmount--;
-        this.shotsFired++;
-
-        if (this.shootSounds) {
-            this.playFrequentSound(this.shootSounds);
+    onHitEntity(entity, symbol) {
+        if (!this.isMultiplayer) {
+            this.appliedDamage += this.damage;
+            entity.takeDamage(this.damage, this.map, symbol);
         }
 
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
-
-        let spawnX = centerX + Math.cos(this.angle) * this.shotOffsetForward;
-        let spawnY = centerY + Math.sin(this.angle) * this.shotOffsetForward;
-
-        spawnX += Math.cos(this.angle + Math.PI / 2) * this.shotOffsetSide;
-        spawnY += Math.sin(this.angle + Math.PI / 2) * this.shotOffsetSide;
-
-        let finalAngle = this.angle;
-
-        if (this.shotsFired > 1) {
-            const spreadMultiplier = Math.min(1.0, (this.shotsFired - 1) / 5.0);
-            const baseSpread = (Math.random() - 0.5) / SPREAD_FACTOR;
-            finalAngle += baseSpread * spreadMultiplier;
+        if (this.hitPlayerSound) {
+            this.hitPlayerSound.stop();
+            this.hitPlayerSound.play();
         }
 
-        const directionX = Math.cos(finalAngle);
-        const directionY = Math.sin(finalAngle);
+        console.log('hit');
 
-        this.bullets.push({
-            x: spawnX,
-            y: spawnY,
-            xDirection: directionX,
-            yDirection: directionY,
-            bulletSpeed: this.bulletSpeed,
-            offset: 0
-        });
-    }
-
-    handleBullets(map, enemies, targets, timeScale) {
-        this.bulletsToRemove = [];
-
-        this.bullets.forEach((bullet, index) => {
-            const isHit = this.processBulletPhysics(bullet, enemies, targets, timeScale, index);
-            if (isHit && !this.bulletsToRemove.includes(index)) {
-                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
-                    this.spotManager.addPoisonSpot(bullet.x, bullet.y);
-                }
-                
-                if (!this.bulletsToRemove.includes(index)) {
-                    this.bulletsToRemove.push(index);
-                }
-            }
-        });
-    }
-
-    processBulletPhysics(bullet, enemies, targets, timeScale, bulletIndex) {
-        const actualSpeed = bullet.bulletSpeed * timeScale;
-        const steps = Math.max(1, Math.ceil(actualSpeed / 10));
-        const stepX = (bullet.xDirection * actualSpeed) / steps;
-        const stepY = (bullet.yDirection * actualSpeed) / steps;
-
-        for (let s = 0; s < steps; s++) {
-            bullet.x += stepX;
-            bullet.y += stepY;
-
-            const bulletRect = {
-                x: bullet.x - this.bulletPhysW / 2,
-                y: bullet.y - this.bulletPhysH / 2,
-                w: this.bulletPhysW,
-                h: this.bulletPhysH
-            };
-
-            const isHit = this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
-
-            if (isHit) {
-                return true;
-            }
-
-            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) {
-                return true;
-            }
-
-            if (this.map.checkCollision(bulletRect)) {
-                this.playHitHardSounds(bulletRect);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    playHitHardSounds(bulletRect) {
-        if (this.hitHardSounds) {
-            this.playFrequentSound(this.hitHardSounds);
-        }
-    }
-
-    removeBullets() {
-        this.bulletsToRemove.sort((a, b) => b - a);
-        for (let i = 0; i < this.bulletsToRemove.length; i++) {
-            this.bullets.splice(this.bulletsToRemove[i], 1);
-        }
-        this.bulletsToRemove = [];
-    }
-
-    handleBulletsIntersecting(enemies, targets, bulletRect) {
-        let hasHit = false;
-
-        enemies.forEach((enemy) => {
-            if (enemy.isAlive) {
-                const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    if (!this.isMultiplayer) {
-                        this.appliedDamage += this.damage;
-                        enemy.takeDamage(this.damage, this.map, CONFIG.ENEMY_SYMBOL);
-                    }
-                    if (this.hitPlayerSound) {
-                        this.hitPlayerSound.stop();
-                        this.hitPlayerSound.play();
-                    }
-                    this.lastHitTime = performance.now();
-                    hasHit = true;
-                }
-            }
-        });
-
-        targets.forEach((target) => {
-            if (target.isAlive) {
-                const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    if (!this.isMultiplayer) {
-                        this.appliedDamage += this.damage;
-                        target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
-                    }
-                    if (this.hitPlayerSound) {
-                        this.hitPlayerSound.stop();
-                        this.hitPlayerSound.play();
-                    }
-                    this.lastHitTime = performance.now();
-                    hasHit = true;
-                }
-            }
-        });
-
-        return hasHit;
-    }
-
-    checkEntityCollision(bulletRect, entities, symbol) {
-        if (!entities) return false;
-        for (let i = 0; i < entities.length; i++) {
-            const entity = entities[i];
-            if (!entity.isAlive || (entity.hitpoints !== undefined && entity.hitpoints <= 0)) continue;
-            const entityRect = {x: entity.x, y: entity.y, w: entity.w, h: entity.h};
-
-            if (this.map.isIntersecting(bulletRect, entityRect)) {
-                if (!this.isMultiplayer) {
-                    this.appliedDamage += this.damage;
-                    entity.takeDamage(this.damage, this.map, symbol);
-                }
-                if (this.hitPlayerSound) {
-                    this.hitPlayerSound.stop();
-                    this.hitPlayerSound.play();
-                }
-                this.lastHitTime = performance.now();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    drawBullets(ctx, bulletImg) {
-        ctx.save();
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#ffaa00';
-
-        this.bullets.forEach(bullet => {
-            ctx.save();
-            ctx.translate(bullet.x, bullet.y);
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
-            ctx.rotate(angle);
-
-            if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
-                bullet.bulletRotation += this.bulletRotationSpeed;
-                ctx.rotate(bullet.bulletRotation);
-            }
-
-            ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
-            ctx.restore();
-        });
-        ctx.restore();
+        this.lastHitTime = performance.now();
     }
 
     getAmmoText() {
