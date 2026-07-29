@@ -13,4 +13,5 @@ interface IUserRepository
     public function getLeaderboard(): array;
     public function getUserByUserId(string $userId): ?User;
     public function getAllUsersId(): ?array;
+    public function deleteUser(User $user): void;
 }

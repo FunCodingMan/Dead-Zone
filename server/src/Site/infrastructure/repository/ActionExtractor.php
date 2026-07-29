@@ -20,6 +20,7 @@ class ActionExtractor implements IActionExtractor
     private const string GLOBAL_PROFILE_URL = '/global-stats/profile';
     private const string GLOBAL_SEARCH_USERS_URL = '/global-stats/search-users';
     private const string GLOBAL_DELETE_PROFILE_URL = '/profile/delete-profile';
+    private const string USER_DELETE_ACCOUNT_URL = '/api/users/delete-account';
 
     public function setTokenCookie(string $token): void
     {
@@ -64,6 +65,7 @@ class ActionExtractor implements IActionExtractor
             $method === "POST" && $url === self::USER_REGISTRATION_URL => 'registration',
             $method === "POST" && $url === self::USER_LOGIN_URL => 'login',
             $method === "POST" && $url === self::USER_LOGOUT_URL && $hasToken => 'logout',
+            $method === "POST" && $url === self::USER_DELETE_ACCOUNT_URL && $hasToken => 'delete-account',
             $method === "GET" && $urlPath === self::USER_MODE_SELECTION_URL && $hasToken => 'mode-selection',
             $method === "GET" && $urlPath === self::USER_PROFILE_URL && $hasToken => 'profile',
             $method === "GET" && $urlPath === self::USER_SINGLEPLAYER_URL && $hasToken => 'singleplayer',

@@ -25,7 +25,7 @@ class UserService
 
     public function login(): ?User
     {
-        $data = $this->requestPayloadParser->getDataFromLogin();
+        $data = $this->requestPayloadParser->getDataFromForm();
         if (!$data) {
             return null;
         }
@@ -35,6 +35,18 @@ class UserService
             return $user;
         }
         return null;
+    }
+
+    public function deleteUser(): bool
+    {
+        $data = $this->requestPayloadParser->getDataFromForm();
+        if (!$data) return false;
+        $user = $this->userRepository->getUserByUsername($data['username']);
+        if ($user !== null && password_verify($data['password'], $user->getPassword())) {
+            $this->userRepository->deleteUser($user);
+            return true;
+        }
+        return false;
     }
 
     public function hasTokenInCookies(): bool

@@ -8,7 +8,7 @@ use RuntimeException;
 
 class RequestDataParser implements IRequestDataParser
 {
-    public function getDataFromLogin(): ?array
+    public function getDataFromForm(): ?array
     {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);

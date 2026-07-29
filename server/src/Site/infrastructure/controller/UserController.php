@@ -41,6 +41,7 @@ class UserController implements IExecuteAction
             'global-profile' => $this->showGlobalProfile(),
             'search-users' => $this->showSearchUsers(),
             'delete-profile' => $this->pagesRender->showDeleteProfile(),
+            'delete-account' => $this->deleteAccount(),
             default => $this->pagesRender->showForm(),
         };
     }
@@ -82,6 +83,21 @@ class UserController implements IExecuteAction
         $redirectUrl = "/";
         header('Content-Type: application/json');
         echo json_encode(['redirect' => $redirectUrl]);
+        die();
+    }
+
+    private function deleteAccount(): void
+    {
+        $isDelete = $this->userService->deleteUser();
+        if ($isDelete) {
+            $this->requestParser->deleteTokenCookie();
+            $redirectUrl = "/";
+            header('Content-Type: application/json');
+            echo json_encode(['redirect' => $redirectUrl]);
+        } else {
+            http_response_code(401);
+            echo json_encode(['error' => 'Неверное имя пользователя или пароль']);
+        }
         die();
     }
 

@@ -212,4 +212,27 @@ class UserTable implements IUserRepository
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
+
+    public function deleteUser(User $user): void
+    {
+        $this->connection->beginTransaction();
+
+        try {
+            $queryStat = "DELETE FROM `stats` WHERE `user_id` = :user_id";
+            $stmt = $this->connection->prepare($queryStat);
+            $stmt->execute([
+                'user_id' => $user->getUserId(),
+            ]);
+            $queryUsers = "DELETE FROM `user` WHERE `user_id` = :user_id";
+            $stmt = $this->connection->prepare($queryUsers);
+            $stmt->execute([
+                'user_id' => $user->getUserId(),
+            ]);
+            $this->connection->commit();
+        } catch (\PDOException $error) {
+            $this->connection->rollBack();
+            throw $error;
+        }
+
+    }
 }
