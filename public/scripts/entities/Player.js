@@ -16,7 +16,7 @@ const BASE_SPREAD = 5;
 const MAX_SPREAD = 15;
 const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
-const DAMAGE = 300;
+const DAMAGE = 50;
 const DIFF_GUN_FORWARD = 1;
 const DIFF_GUN_SIDE = 5;
 const MAX_SHOTS_AMOUNT = 50;
@@ -89,6 +89,8 @@ export class Player extends Character {
         this.bulletDrawH = BULLET_HEIGHT;
         this.bulletPhysW = BULLET_REAL_WIDTH;
         this.bulletPhysH = BULLET_REAL_HEIGHT;
+
+        this.canShoot = true;
     }
 
     update(map, canvas, zoom, enemies, targets, boss, dt) {
@@ -105,7 +107,7 @@ export class Player extends Character {
 
         this.move(map, enemies, targets, timeScale);
 
-        if (this.playerClass.attackType === CONFIG.SHOOT_ATTACK_TYPE || !this.playerClass.attackType) {
+        if ((this.playerClass.attackType == CONFIG.SHOOT_ATTACK_TYPE || !this.playerClass.attackType) && this.canShoot) {
             this.shoot(worldMouseX, worldMouseY);
         }
 
@@ -156,7 +158,7 @@ export class Player extends Character {
                     const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size}
                     if (this.map.isIntersecting(poisonRect, entityRect)) {
                             this.appliedDamage += this.poisonDamage;
-                            enemy.takeDamage(this.poisonDamage, this.map, CONFIG.ENEMY_SYMBOLks);
+                            enemy.takeDamage(this.poisonDamage, this.map, CONFIG.ENEMY_SYMBOL);
                         if (this.hitPlayerSound) {
                             this.hitPlayerSound.stop();
                             this.hitPlayerSound.play();

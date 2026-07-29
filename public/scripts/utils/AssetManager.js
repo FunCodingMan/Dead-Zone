@@ -30,7 +30,9 @@ export class AssetManager {
             bossLightningAttack2: new Image(),
             bossLaserAttack: new Image(),
             bossLaser: new Image(),
-            bossLightning: new Image()
+            bossLightning: new Image(),
+            bossCutscene1: new Image(),
+            bossCutscene2: new Image(),
         };
 
         this.imagePaths = {
@@ -62,7 +64,9 @@ export class AssetManager {
             bossLightningAttack2: '/assets/boss_lightning_attack_2.png',
             bossLaserAttack: '/assets/boss_laser_attack.png',
             bossLaser: '/assets/laser.png',
-            bossLightning: '/assets/lightning.png'
+            bossLightning: '/assets/lightning.png',
+            bossCutscene1: '/assets/boss_cutscene_1.png',
+            bossCutscene2: '/assets/boss_cutscene_2.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;

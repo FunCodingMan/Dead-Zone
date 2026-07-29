@@ -334,6 +334,8 @@ export class Character {
     }
 
     initSounds() {
+        this.bossRoar = new Sound('../../assets/sounds/boss_roar.mp3')
+
         this.shootSounds = [];
         for (let i = 0; i < 5; i++) {
             const newSound = new Sound('../../assets/sounds/shot.mp3');

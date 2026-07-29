@@ -11,6 +11,8 @@ const BASE_WIDTH = 1920;
 const BASE_HEIGHT = 1080;
 const BASE_ZOOM = 1.5;
 
+const BLOOD_SPOT_LIFE_TIME = 10000;
+
 export class Game {
     constructor(canvas, assets, onPauseToggle) {
         this.canvas = canvas;
@@ -216,6 +218,9 @@ export class Game {
         this.targets = [];
         this.player = null;
         this.map = null;
+        this.spotManager.bloodSpots = [];
+        this.spotManager.poisonSpots = [];
+        this.boss = null;
     }
 
     togglePause() {
@@ -267,6 +272,11 @@ export class Game {
         if (this.boss) {
             this.boss.update(this.player, dt);
         }
+
+        const current = performance.now();
+        this.spotManager.bloodSpots = this.spotManager.bloodSpots.filter(
+            spot => current - spot.spawnTime < BLOOD_SPOT_LIFE_TIME
+        );
 
         if (this.currentMode) this.currentMode.update(dt);
     }
@@ -337,16 +347,16 @@ export class Game {
 
         if (this.boss) {
             if (this.boss.isAlive) {
-                if (!this.boss.isLightning) {
-                    if (!this.boss.isLaser) {
-                        this.boss.draw(this.ctx, this.assets.bossDefault);
-                    } else {
-                        this.boss.draw(this.ctx, this.assets.bossLaserAttack)
-                    }
-                    
-                } else {
+                if (this.boss.isLaser) {
+                    this.boss.draw(this.ctx, this.assets.bossLaserAttack)
+                }
+                if (this.boss.isLightning) {
                     this.animateLightning();
                 }
+                if (this.boss.isCutscene) {
+                    this.animateCutscene();
+                }
+            
                 this.boss.drawBullets(
                     this.ctx,
                     {
@@ -384,6 +394,26 @@ export class Game {
                 this.player.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
             }
         }
+    }
+
+    animateCutscene() {
+        const currentTime = performance.now();
+
+        if (this.boss.lastCutsceneFrame == CONFIG.FIRST_CUTSCENE_FRAME) {
+            this.boss.draw(this.ctx, this.assets.bossCutscene1);
+        } else {
+            this.boss.draw(this.ctx, this.assets.bossCutscene2);
+        }
+
+        if (currentTime - this.boss.lastCutsceneFrameTime > this.boss.cutsceneAnimationCooldown) {
+            this.boss.lastCutsceneFrameTime = currentTime;
+
+            if (this.boss.lastCutsceneFrame == CONFIG.FIRST_CUTSCENE_FRAME) {
+                this.boss.lastCutsceneFrame = CONFIG.SECOND_CUTSCENE_FRAME;
+            } else {
+                this.boss.lastCutsceneFrame = CONFIG.FIRST_CUTSCENE_FRAME;
+            }
+        }   
     }
 
     animateLightning() {

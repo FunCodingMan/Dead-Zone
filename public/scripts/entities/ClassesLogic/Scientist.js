@@ -9,7 +9,7 @@ export class Scientist extends Player {
 
         this.speed = 4;
         this.damage = 10;
-        this.poisonDamage = 1;
+        this.poisonDamage = 5;
 
         this.maxShotsAmount = Infinity;
         this.shotsAmount = Infinity;

@@ -18,6 +18,7 @@ const wavesLevelData = `
 
 const MAX_WAVES = 1;
 const FPS = 60;
+const CUTSCENE_DURATION = 2000;
 
 export class WavesMode extends BaseGameTemplate {
     constructor(engine) {
@@ -25,6 +26,8 @@ export class WavesMode extends BaseGameTemplate {
 
         this.isBossPhase = false;
         this.boss = null;
+
+        this.cutsceneStartTIme;
     }
 
     getLevelData() {
@@ -73,6 +76,8 @@ export class WavesMode extends BaseGameTemplate {
 
     createBoss() {
         this.isBossPhase = true;
+        this.engine.player.canShoot = false;
+        this.cutsceneStartTIme = performance.now();
 
         const playerPosition = {
             x: this.engine.player.x,
@@ -88,6 +93,9 @@ export class WavesMode extends BaseGameTemplate {
 
         this.boss.bloodManager = this.engine.bloodManager;
         this.engine.boss = this.boss;
+        this.engine.boss.isCutscene = true;
+
+        this.engine.boss.bossRoar.play();
     }
 
     bossBehaviour() {
@@ -98,8 +106,16 @@ export class WavesMode extends BaseGameTemplate {
             this.boss.angle = Math.atan2(dy, dx) + Math.PI;
         }
 
-        this.boss.selectBossAction(this.engine.player);
-        this.boss.doBossAction(this.engine.player);
+        const current = performance.now();
+        if (current - this.cutsceneStartTIme > CUTSCENE_DURATION) {
+            this.engine.boss.isCutscene = false;
+            this.engine.player.canShoot = true;
+        }
+
+        if (!this.engine.boss.isCutscene) {
+            this.boss.selectBossAction(this.engine.player);
+            this.boss.doBossAction(this.engine.player);
+        }
     }
 
 
@@ -114,7 +130,7 @@ export class WavesMode extends BaseGameTemplate {
         if (!this.isBossPhase) {
             this.waveBehaviour(dt);
         } else {
-            if (!this.boss.isAlive && !this.boss.isDying) {
+            if (!this.engine.boss.isAlive && !this.engine.boss.isDying) {
                 this.endGame(true);
                 return;
             }
@@ -126,7 +142,7 @@ export class WavesMode extends BaseGameTemplate {
         const currentTime = performance.now();
         let aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
 
-        if (aliveEnemies.length === 0) {
+        if (aliveEnemies.length == 0) {
             if (this.currentWave >= MAX_WAVES) {
                 this.createBoss();
                 return;
@@ -169,13 +185,13 @@ export class WavesMode extends BaseGameTemplate {
         const currentCell = this.engine.map.getCharacterPositionOnGrid(enemy.x, enemy.y, enemy.w, enemy.h);
 
         if (!currentCell || !playerPosition ||
-            currentCell.row === undefined || currentCell.col === undefined ||
+            currentCell.row == undefined || currentCell.col == undefined ||
             currentCell.row < 0 || currentCell.col < 0) {
             this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
         }
 
-        if (currentCell.row === playerPosition.row && currentCell.col === playerPosition.col) {
+        if (currentCell.row == playerPosition.row && currentCell.col == playerPosition.col) {
             this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
         }
@@ -188,7 +204,7 @@ export class WavesMode extends BaseGameTemplate {
             playerPosition.col
         );
 
-        if (nextCell.row === currentCell.row && nextCell.col === currentCell.col) {
+        if (nextCell.row == currentCell.row && nextCell.col == currentCell.col) {
             this.moveEnemyTowardsPixel(enemy, this.engine.player.x, this.engine.player.y, timeScale);
             return;
         }
@@ -234,7 +250,7 @@ export class WavesMode extends BaseGameTemplate {
                 let dy = e1.y - e2.y;
                 let distance = Math.hypot(dx, dy);
 
-                if (distance === 0) {
+                if (distance == 0) {
                     dx = Math.random() - 0.5;
                     dy = Math.random() - 0.5;
                     distance = Math.hypot(dx, dy);
@@ -265,6 +281,8 @@ export class WavesMode extends BaseGameTemplate {
 
     drawUI(ctx, canvas) {
         if (!this.isInitializationReady) return;
+        if (this.engine.isGameEnded) return;
+
 
         const uiScale = canvas.height / 1080;
         const fontSize = Math.floor(50 * uiScale);

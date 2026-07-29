@@ -9,6 +9,7 @@ const BOSS_SPAWN_HEIGHT = 64;
 
 const MAX_ACTION_DURATION = 2000;
 const LIGHTNING_ANIMATION_COOLDOWN = 100;
+const CUTSCENE_ANIMATION_COOLDOWN = 100;
 
 const LIGHTNING_ACTION = "lightning";
 const LASER_ACTION = "laser";
@@ -56,9 +57,16 @@ export class Boss extends Character {
         this.map = map;
         this.hitpoints = CONFIG.BOSS_MAX_HITPOINTS;
         this.maxActionDuratiion = MAX_ACTION_DURATION;
+
         this.lightningAnimationCooldown = LIGHTNING_ANIMATION_COOLDOWN;
+        this.cutsceneAnimationCooldown = CUTSCENE_ANIMATION_COOLDOWN;
+
         this.lastLightningFrameTime = 0;
+        this.lastCutsceneFrameTime = 0;
+
         this.lastLightningFrame = CONFIG.FIRST_LIGHTNING_ANIMATION_FRAME;
+        this.lastCutsceneFrame = CONFIG.FIRST_CUTSCENE_FRAME;
+        
         this.bossActionFlag;
         this.lastActionTIme = 0;
         this.lastLightningShotTIme = 0;
@@ -72,9 +80,9 @@ export class Boss extends Character {
 
         this.isLightning = false;
         this.isLaser = false;
+        this.isCutscene = false;
 
         this.playerStartPosInWindow;
-
     }
 
     update(player, timeScale = 1) {

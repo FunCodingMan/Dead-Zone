@@ -13,18 +13,12 @@ export class SpotsManager {
         const centerY = entity.y + entity.h / 2;
         const spotSize = MAX_HITPOINTS - entity.hitpoints;
         const randomAngle = Math.random() * Math.PI * 2;
-        this.bloodSpots.push({ x: centerX, y: centerY, size: spotSize, angle: randomAngle });
+        this.bloodSpots.push({ x: centerX, y: centerY, size: spotSize, angle: randomAngle, spawnTime: performance.now() });
     }
 
     addPoisonSpot(x, y) {
         const randomAngle = Math.random() * Math.PI * 2;
-        this.poisonSpots.push({
-            x: x,
-            y: y,
-            size: POISON_SPOT_SIZE,
-            angle: randomAngle,
-            spawnTime: performance.now()
-        });
+        this.poisonSpots.push({ x: x, y: y, size: POISON_SPOT_SIZE, angle: randomAngle, spawnTime: performance.now() });
     }
 
     drawBlood(ctx, bloodImg) {
