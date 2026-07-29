@@ -39,9 +39,11 @@ class UserService
 
     public function deleteUser(): bool
     {
+        if (!isset($_COOKIE["token"])) return false;
         $data = $this->requestPayloadParser->getDataFromForm();
         if (!$data) return false;
         $user = $this->userRepository->getUserByUsername($data['username']);
+        if ($user->getToken() !== $_COOKIE["token"]) return false;
         if ($user !== null && password_verify($data['password'], $user->getPassword())) {
             $this->userRepository->deleteUser($user);
             return true;
