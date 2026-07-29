@@ -75,7 +75,7 @@ export class Character {
         this.bulletPhysH = 0;
     }
 
-    createBullet(targetX, targetY) {
+    createBullet(targetX, targetY, owner) {
         this.shotsAmount--;
         this.shotsFired++;
 
@@ -109,7 +109,13 @@ export class Character {
             xDirection: directionX,
             yDirection: directionY,
             bulletSpeed: this.bulletSpeed,
-            offset: 0
+            offset: 0,
+            owner: owner,
+            width: this.bulletDrawW,
+            height: this.bulletDrawH,
+            physWidth: this.bulletPhysW,
+            physHeight: this.bulletPhysH,
+            damage: this.damage        
         });
     }
 
@@ -127,7 +133,7 @@ export class Character {
         this.bulletsToRemove = [];
     }
 
-    processBulletPhysics(bullet, enemies, targets, timeScale, bulletIndex) {
+    processBulletPhysics(bullet, enemies, targets, boss, player, timeScale, bulletIndex) {
         const actualSpeed = bullet.bulletSpeed * timeScale;
         const steps = Math.max(1, Math.ceil(actualSpeed / 10));
         const stepX = (bullet.xDirection * actualSpeed) / steps;
@@ -138,13 +144,13 @@ export class Character {
             bullet.y += stepY;
 
             const bulletRect = {
-                x: bullet.x - this.bulletPhysW / 2,
-                y: bullet.y - this.bulletPhysH / 2,
-                w: this.bulletPhysW,
-                h: this.bulletPhysH
+                x: bullet.x - bullet.physWidth / 2,
+                y: bullet.y - bullet.physHeight / 2,
+                w: bullet.physWidth,
+                h: bullet.physHeight
             };
 
-            const isHit = this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
+            const isHit = this.handleBulletsIntersecting(enemies, targets, boss, player, bulletRect, bullet.owner, bullet.damage);
 
             if (isHit) {
                 return true;
@@ -154,21 +160,27 @@ export class Character {
                 return true;
             }
 
-            if (this.map.checkCollision(bulletRect)) {
-                this.playHitHardSounds(bulletRect);
-                return true;
+            if (bullet.type == CONFIG.BULLET_LASER_TYPE) {
+                if (this.map.laserCollision(bulletRect)) return true;
+            } else {
+                if (this.map.checkCollision(bulletRect)) {
+                    if (bullet.owner != CONFIG.BOSS_SYMBOL) {
+                            this.playHitHardSounds(bulletRect);
+                    }
+                    return true;
+                }
             }
         }
         return false;
     }
 
-    handleBullets(map, enemies, targets, timeScale) {
+    handleBullets(map, enemies, targets, boss, player, timeScale) {
         this.bulletsToRemove = [];
 
         this.bullets.forEach((bullet, index) => {
-            const isHit = this.processBulletPhysics(bullet, enemies, targets, timeScale, index);
+            const isHit = this.processBulletPhysics(bullet, enemies, targets, boss, player, timeScale, index);
             if (isHit && !this.bulletsToRemove.includes(index)) {
-                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                if (this.playerClass?.className == CONFIG.SCIENTIST_CLASS_NAME) {
                     this.spotManager.addPoisonSpot(bullet.x, bullet.y);
                 }
                 
@@ -179,62 +191,111 @@ export class Character {
         });
     }
 
-    drawBullets(ctx, bulletImg) {
+    drawBullets(ctx, bulletSprites) {
         ctx.save();
         ctx.shadowBlur = 10;
         ctx.shadowColor = '#ffaa00';
-        
+
         this.bullets.forEach(bullet => {
             ctx.save();
             ctx.translate(bullet.x, bullet.y);
+
             const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
             ctx.rotate(angle);
-        
-            if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) {
+
+            if (this.playerClass?.className == CONFIG.SCIENTIST_CLASS_NAME) {
                 bullet.bulletRotation += this.bulletRotationSpeed;
                 ctx.rotate(bullet.bulletRotation);
             }
-        
-            ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
+
+            let bulletImg;
+            if (bullet.owner == CONFIG.PLAYER_SYMBOL) {
+                if (this.playerClass.className == CONFIG.SOLDIER_CLASS_NAME) bulletImg = bulletSprites.soldier;
+                if (this.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) bulletImg = bulletSprites.flamethrower;
+                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) bulletImg = bulletSprites.scientist;
+            } else if (bullet.owner == CONFIG.BOSS_SYMBOL) {
+                if (bullet.type == CONFIG.BULLET_LIGHTNING_TYPE) {
+                    bulletImg = bulletSprites.bossLightning;
+                }
+                if (bullet.type == CONFIG.BULLET_LASER_TYPE) {
+                    bulletImg = bulletSprites.bossLaser;
+                }
+            }
+
+            if (bulletImg) {
+                ctx.drawImage(bulletImg, -bullet.width / 2, -bullet.height / 2, bullet.width, bullet.height);
+            }
+
             ctx.restore();
         });
+
         ctx.restore();
     }
 
-    handleBulletsIntersecting(enemies, targets, bulletRect) {
+    handleBulletsIntersecting(enemies, targets, boss, player, bulletRect, owner, bulletDamage) {
         let hasHit = false;
 
-        enemies.forEach((enemy) => {
-            if (!enemy.isAlive) return;
+        if (owner == CONFIG.PLAYER_SYMBOL) {
+            enemies.forEach((enemy) => {
+                if (!enemy.isAlive) return;
 
+                const entityRect = {
+                    x: enemy.x,
+                    y: enemy.y,
+                    w: enemy.w,
+                    h: enemy.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(enemy, CONFIG.ENEMY_SYMBOL, bulletDamage);
+                    hasHit = true;
+                }
+            });
+
+            targets.forEach((target) => {
+                if (!target.isAlive) return;
+
+                const entityRect = {
+                    x: target.x,
+                    y: target.y,
+                    w: target.w,
+                    h: target.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(target, CONFIG.TARGET_SYMBOL, bulletDamage);
+                    hasHit = true;
+                }
+            });
+
+            if (boss) {
+                const entityRect = {
+                    x: boss.x,
+                    y: boss.y,
+                    w: boss.w,
+                    h: boss.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(boss, CONFIG.BOSS_SYMBOL, bulletDamage);
+      
+                    hasHit = true;
+                }
+            }
+        }
+        if (owner == CONFIG.BOSS_SYMBOL) {
             const entityRect = {
-                x: enemy.x,
-                y: enemy.y,
-                w: enemy.w,
-                h: enemy.h
+                x: player.x,
+                y: player.y,
+                w: player.w,
+                h: player.h
             };
 
             if (this.map.isIntersecting(bulletRect, entityRect)) {
-                this.onHitEntity(enemy, CONFIG.ENEMY_SYMBOL);
+                this.onHitEntity(player, CONFIG.PLAYER_SYMBOL, bulletDamage);
                 hasHit = true;
             }
-        });
-
-        targets.forEach((target) => {
-            if (!target.isAlive) return;
-
-            const entityRect = {
-                x: target.x,
-                y: target.y,
-                w: target.w,
-                h: target.h
-            };
-
-            if (this.map.isIntersecting(bulletRect, entityRect)) {
-                this.onHitEntity(target, CONFIG.TARGET_SYMBOL);
-                hasHit = true;
-            }
-        });
+        }
 
         return hasHit;
     }
@@ -263,8 +324,8 @@ export class Character {
         return false;
     }
 
-    onHitEntity(entity, symbol) {
-        entity.takeDamage(this.damage, this.map, symbol);
+    onHitEntity(entity, symbol, bulletDamage) {
+         entity.takeDamage(bulletDamage, this.map, symbol);
 
         if (this.hitPlayerSound) {
             this.hitPlayerSound.stop();
@@ -278,6 +339,15 @@ export class Character {
             const newSound = new Sound('../../assets/sounds/shot.mp3');
             newSound.setVolume(0.5);
             this.shootSounds.push(newSound);
+        }
+
+        this.laserSound = new Sound('../../assets/sounds/laser.mp3');
+
+        this.lightningSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/lightning_sound.mp3');
+            newSound.setVolume(0.5);
+            this.lightningSounds.push(newSound);
         }
 
         this.flameSounds = [];
@@ -342,7 +412,7 @@ export class Character {
 
         this.hitpoints -= damage;
 
-        if (symbol == CONFIG.TARGET_SYMBOL) {
+        if (symbol == CONFIG.TARGET_SYMBOL || symbol == CONFIG.BOSS_SYMBOL) {
             this.startPulse();
             this.playFrequentSound(this.hitTargetSounds);
         } else {
@@ -368,10 +438,6 @@ export class Character {
                 }
             }
         }
-    }
-
-    drawPoisonSpot(ctx, spot) {
-
     }
 
     draw(ctx, image) {

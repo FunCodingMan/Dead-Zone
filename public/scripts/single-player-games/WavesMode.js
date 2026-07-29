@@ -2,23 +2,31 @@ import { BaseGameTemplate } from './BaseGameTemplate.js';
 import { Enemy } from '../entities/Enemy.js';
 import { CONFIG } from '../core/Config.js';
 import { Sound } from "../core/Sound.js";
+import { Boss } from '../entities/Boss.js';
 
 const wavesLevelData = `
 ################
 #P            E#
-#              #
+#   Q          #
 #       B  B   #
 #      B  B    #
 #     B  B     #
-#    B  B      #
+#    B  B Q    #
 #E            E#
 ################
 `;
 
-const MAX_WAVES = 20;
+const MAX_WAVES = 1;
 const FPS = 60;
 
 export class WavesMode extends BaseGameTemplate {
+    constructor(engine) {
+        super(engine);
+
+        this.isBossPhase = false;
+        this.boss = null;
+    }
+
     getLevelData() {
         return wavesLevelData;
     }
@@ -28,6 +36,9 @@ export class WavesMode extends BaseGameTemplate {
 
         this.currentWave = 1;
         this.lastAttackTime = 0;
+
+        this.isBossPhase = false;
+        this.boss = null;
 
         this.winSound = new Sound('../../assets/sounds/win.mp3');
         this.winSound.setVolume(0.8);
@@ -60,47 +71,90 @@ export class WavesMode extends BaseGameTemplate {
         }
     }
 
+    createBoss() {
+        this.isBossPhase = true;
+
+        const playerPosition = {
+            x: this.engine.player.x,
+            y: this.engine.player.y,
+            w: this.engine.player.w,
+            h: this.engine.player.h
+        };
+
+        this.boss = new Boss(
+            this.engine.map,
+            playerPosition
+        );
+
+        this.boss.bloodManager = this.engine.bloodManager;
+        this.engine.boss = this.boss;
+    }
+
+    bossBehaviour() {
+        const dx = this.engine.player.x - this.boss.x;
+        const dy = this.engine.player.y - this.boss.y;
+
+        if (!this.boss.isLaser) {
+            this.boss.angle = Math.atan2(dy, dx) + Math.PI;
+        }
+
+        this.boss.selectBossAction(this.engine.player);
+        this.boss.doBossAction(this.engine.player);
+    }
+
+
     update(dt) {
         if (!this.isInitializationReady) return;
-
-        const currentTime = performance.now();
 
         if (!this.engine.player.isAlive) {
             this.endGame(false);
             return;
         }
 
-        const aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
+        if (!this.isBossPhase) {
+            this.waveBehaviour(dt);
+        } else {
+            if (!this.boss.isAlive && !this.boss.isDying) {
+                this.endGame(true);
+                return;
+            }
+            this.bossBehaviour();
+        }
+    }
+
+    waveBehaviour(dt) {
+        const currentTime = performance.now();
+        let aliveEnemies = this.engine.enemies.filter(e => e.isAlive || e.isDying);
+
         if (aliveEnemies.length === 0) {
             if (this.currentWave >= MAX_WAVES) {
-                this.endGame(true);
+                this.createBoss();
                 return;
             }
 
             this.currentWave++;
             this.spawnWave();
             return;
-        } else {
-            this.engine.playRandomEnemySound();
         }
 
-        const timeScale = dt * FPS;
+        this.engine.playRandomEnemySound();
 
         aliveEnemies.forEach(enemy => {
-            if (enemy.isAlive) {
-                this.enemyPathFind(enemy, this.staticPathGraph, timeScale);
+            if (!enemy.isAlive) return;
 
-                const distance = Math.sqrt(
-                    (this.engine.player.x - enemy.x) ** 2 +
-                    (this.engine.player.y - enemy.y) ** 2
+            this.enemyPathFind(enemy, this.staticPathGraph, dt * FPS);
+            const distance = Math.hypot(this.engine.player.x - enemy.x, this.engine.player.y - enemy.y);
+
+            if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
+                this.lastAttackTime = currentTime;
+                this.engine.player.takeDamage(
+                    enemy.damage,
+                    this.engine.map,
+                    CONFIG.PLAYER_SYMBOL
                 );
-
-                if (distance < enemy.attackDistance && currentTime - this.lastAttackTime > enemy.damageCooldown) {
-                    this.lastAttackTime = currentTime;
-                    this.engine.player.takeDamage(enemy.damage, this.engine.map, CONFIG.PLAYER_SYMBOL);
-                }
             }
         });
+
 
         this.separateEnemies(aliveEnemies);
     }
@@ -219,7 +273,17 @@ export class WavesMode extends BaseGameTemplate {
         ctx.font = `bold ${fontSize}px Arial`;
         ctx.textAlign = 'center';
 
-        ctx.fillText(`ВОЛНА: ${this.currentWave}`, canvas.width / 2, 70 * uiScale);
+        if (!this.isBossPhase) {
+            ctx.fillText( `ВОЛНА: ${this.currentWave}`, canvas.width / 2, 70 * uiScale );
+        } else {
+            ctx.fillText( `___ ЗАЯЦ ___`, canvas.width / 2, 70 * uiScale);
+            const width = this.boss.hitpoints / CONFIG.BOSS_MAX_HITPOINTS * 1000;
+
+            ctx.beginPath();
+            ctx.roundRect(canvas.width / 2 - width / 2, 90 * uiScale, width, 25 * uiScale, 20);
+
+            ctx.fill();
+        }
 
         if (this.engine.player) {
             this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);
@@ -247,6 +311,10 @@ export class WavesMode extends BaseGameTemplate {
             damage: finalDamage,
             kills: finalKills
         });
+
+        if (this.boss) {
+            this.boss = null;
+        }
 
         setTimeout(() => {
             window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;

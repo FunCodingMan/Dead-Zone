@@ -1,16 +1,28 @@
 export class Sound {
-    constructor(src) {
+    constructor(src, cooldown = 500) {
         this.audio = new Audio(src);
         this.isPlaying = false;
         this.baseVolume = 1;
+
+        this.cooldown = cooldown;
+        this.lastPlayTime = 0;
     }
 
     play() {
-        const playPromise = this.audio.play();
-        if (playPromise !== undefined) {
-            playPromise.catch(error => {
-            });
+        const now = performance.now();
+
+        if (now - this.lastPlayTime < this.cooldown) {
+            return;
         }
+
+        this.lastPlayTime = now;
+
+        const playPromise = this.audio.play();
+
+        if (playPromise !== undefined) {
+            playPromise.catch(() => {});
+        }
+
         this.isPlaying = true;
     }
 
@@ -39,13 +51,21 @@ export class Sound {
         }
 
         const volumeMultiplier = 1 - (dist / maxDistance);
+
         this.audio.volume = this.baseVolume * (volumeMultiplier * volumeMultiplier);
 
         return this.audio.volume;
     }
 
     playAtDistance(sourceX, sourceY, listenerX, listenerY, maxDistance = 1200) {
-        const vol = this.updateDistanceVolume(sourceX, sourceY, listenerX, listenerY, maxDistance);
+        const vol = this.updateDistanceVolume(
+            sourceX,
+            sourceY,
+            listenerX,
+            listenerY,
+            maxDistance
+        );
+
         if (vol > 0) {
             this.play();
         }

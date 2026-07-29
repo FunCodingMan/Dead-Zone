@@ -16,7 +16,7 @@ const BASE_SPREAD = 5;
 const MAX_SPREAD = 15;
 const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
-const DAMAGE = 20;
+const DAMAGE = 300;
 const DIFF_GUN_FORWARD = 1;
 const DIFF_GUN_SIDE = 5;
 const MAX_SHOTS_AMOUNT = 50;
@@ -91,7 +91,7 @@ export class Player extends Character {
         this.bulletPhysH = BULLET_REAL_HEIGHT;
     }
 
-    update(map, canvas, zoom, enemies, targets, dt) {
+    update(map, canvas, zoom, enemies, targets, boss, dt) {
         if (!this.isAlive) return;
 
         const timeScale = (dt || 0.0166) * FPS;
@@ -125,12 +125,12 @@ export class Player extends Character {
             this.visualSpread += (BASE_SPREAD - this.visualSpread) * Math.min(1, 0.15 * timeScale);
         }
 
-        this.handleBullets(map, enemies, targets, timeScale);
+        this.handleBullets(map, enemies, targets, boss, this, timeScale);
         this.removeBullets();
-        this.handlePoisonSpots(map, enemies, targets);
+        this.handlePoisonSpots(map, enemies, targets, boss);
     }
 
-    handlePoisonSpots(map, enemies, targets) {
+    handlePoisonSpots(map, enemies, targets, boss) {
         if (!this.spotManager) return;
         const current = performance.now();
         this.spotManager.poisonSpots = this.spotManager.poisonSpots.filter(
@@ -140,6 +140,16 @@ export class Player extends Character {
         const poisonSpots = this.spotManager.poisonSpots;
 
         poisonSpots.forEach(poisonSpot => {
+            if (boss) {
+                const entityRect = {x: boss.x, y: boss.y, w: boss.w, h: boss.h};
+                const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size};
+                if (this.map.isIntersecting(poisonRect, entityRect)) {
+                    this.appliedDamage += this.poisonDamage;
+                    boss.takeDamage(this.poisonDamage, this.map, CONFIG.BOSS_SYMBOL);
+                    console.log(boss.hitpoints);
+                }
+            }
+
             enemies.forEach((enemy) => {
                 if (enemy.isAlive) {
                     const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
@@ -230,7 +240,7 @@ export class Player extends Character {
                 (this.shotsAmount > 0 || this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) &&
                 !this.isReloading
             ) {
-                this.createBullet(x, y);
+                this.createBullet(x, y, CONFIG.PLAYER_SYMBOL);
                 this.lastShootTime = now;
                 this.isShooting = true;
             } else if (this.shotsAmount <= 0 || this.isReloading) {
@@ -257,8 +267,6 @@ export class Player extends Character {
             this.hitPlayerSound.stop();
             this.hitPlayerSound.play();
         }
-
-        console.log('hit');
 
         this.lastHitTime = performance.now();
     }
@@ -308,7 +316,7 @@ export class Player extends Character {
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
 
-        const text = this.getAmmoText(); // Вызываем метод
+        const text = this.getAmmoText();
 
         const textX = imgX - (15 * uiScale);
         const textY = imgY + (scaledSize / 2) + (3 * uiScale);

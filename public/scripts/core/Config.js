@@ -11,5 +11,12 @@ export const CONFIG = {
     FLAMETHROWER_CLASS_NAME: "flamethrower",
     SCIENTIST_CLASS_NAME: "scientist",
 
-    SHOOT_ATTACK_TYPE: "shoot"
+    SHOOT_ATTACK_TYPE: "shoot",
+
+    BOSS_MAX_HITPOINTS: 5000,
+    FIRST_LIGHTNING_ANIMATION_FRAME: 1,
+    SECOND_LIGHTNING_ANIMATION_FRAME: 2,
+
+    BULLET_LASER_TYPE: "laser",
+    BULLET_LIGHTNING_TYPE: "lightning"
 }

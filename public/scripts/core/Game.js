@@ -258,10 +258,14 @@ export class Game {
 
         if (this.player) {
             if (this.isPaused && isOnline) {
-                this.player.handleBullets(this.map, this.enemies, this.targets, dt);
+                this.player.handleBullets(this.map, this.enemies, this.targets, this.boss, this.player, dt);
             } else {
-                this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets, dt);
+                this.player.update(this.map, this.canvas, this.zoom, this.enemies, this.targets, this.boss, dt);
             }
+        }
+
+        if (this.boss) {
+            this.boss.update(this.player, dt);
         }
 
         if (this.currentMode) this.currentMode.update(dt);
@@ -331,6 +335,33 @@ export class Game {
             this.currentMode.draw(this.ctx);
         }
 
+        if (this.boss) {
+            if (this.boss.isAlive) {
+                if (!this.boss.isLightning) {
+                    if (!this.boss.isLaser) {
+                        this.boss.draw(this.ctx, this.assets.bossDefault);
+                    } else {
+                        this.boss.draw(this.ctx, this.assets.bossLaserAttack)
+                    }
+                    
+                } else {
+                    this.animateLightning();
+                }
+                this.boss.drawBullets(
+                    this.ctx,
+                    {
+                        soldier: this.assets.bullet,
+                        flamethrower: this.assets.flame,
+                        scientist: this.assets.poison, 
+                        bossLightning: this.assets.bossLightning,
+                        bossLaser: this.assets.bossLaser
+                    }
+                );
+            } else if (this.boss.isDying) {
+                this.boss.drawDeath(this.ctx, this.assets.explosions, this.isPaused, this.totalPauseTime)
+            }            
+        }
+
         if (this.player) {
             if (this.player.isAlive) {
                 if (!this.player.isReloading) {
@@ -339,9 +370,37 @@ export class Game {
                 } else {
                     this.player.draw(this.ctx, this.playerReloadSprite || this.assets.reloadSoldier);
                 }
-                this.player.drawBullets(this.ctx, this.bulletSprite || this.assets.bullet);
+                this.player.drawBullets(
+                    this.ctx,
+                    {
+                        soldier: this.assets.bullet,
+                        flamethrower: this.assets.flame,
+                        scientist: this.assets.poison, 
+                        bossLightning: this.assets.bossLightning,
+                        bossLaser: this.assets.bossLaser
+                    }
+                );
             } else if (this.player.isDying) {
                 this.player.drawDeath(this.ctx, this.assets.explosions, animPaused, pauseTime);
+            }
+        }
+    }
+
+    animateLightning() {
+        const currentTime = performance.now();
+
+        if (this.boss.lastLightningFrame == CONFIG.FIRST_LIGHTNING_ANIMATION_FRAME) {
+            this.boss.draw(this.ctx, this.assets.bossLightningAttack1);
+        } else {
+            this.boss.draw(this.ctx, this.assets.bossLightningAttack2);
+        }
+
+        if (currentTime - this.boss.lastLightningFrameTime > this.boss.lightningAnimationCooldown) {
+            this.boss.lastLightningFrameTime = currentTime;
+            if (this.boss.lastLightningFrame == CONFIG.FIRST_LIGHTNING_ANIMATION_FRAME) {
+                this.boss.lastLightningFrame = CONFIG.SECOND_LIGHTNING_ANIMATION_FRAME;
+            } else {
+                this.boss.lastLightningFrame = CONFIG.FIRST_LIGHTNING_ANIMATION_FRAME;
             }
         }
     }
