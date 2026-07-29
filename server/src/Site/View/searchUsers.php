@@ -6,7 +6,7 @@
         <link rel="stylesheet" href="/styles/menu.css">
         <link href="/styles/fonts-styles.css" rel="stylesheet">
         <link rel="stylesheet" href="/styles/playerSearch.css">
-        <script src="/scripts/pages/lid/player-search.js" defer></script>
+        <script src="/scripts/pages/searchUsers/searchUsers.js" defer></script>
     </head>
     <body>
         <div class="menu-screen">
