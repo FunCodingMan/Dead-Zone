@@ -104,7 +104,8 @@ export class Map {
                             continue;
                         }
                     }
-                    if (graph[newRow][newCol] === AVAILABLE_CELL && !visited[newRow][newCol]) {
+                    const isWalkable = (graph[newRow][newCol] === AVAILABLE_CELL) || (newRow === targetRow && newCol === targetCol);
+                    if (isWalkable && !visited[newRow][newCol]) {
                         visited[newRow][newCol] = true;
                         parent[newRow][newCol] = { row, col };
                         queue.push({ row: newRow, col: newCol });
