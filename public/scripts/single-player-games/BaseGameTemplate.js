@@ -4,6 +4,7 @@ import { Map } from "../core/Map.js";
 import { CONFIG } from "../core/Config.js";
 import { Soldier } from "../entities/ClassesLogic/Soldier.js";
 import { Flamethrower } from "../entities/ClassesLogic/Flamethrower.js";
+import { Scientist } from "../entities/ClassesLogic/Scientist.js";
 
 export class BaseGameTemplate {
     constructor(engine) {
@@ -32,7 +33,7 @@ export class BaseGameTemplate {
         this.selectedClass = await selector.show();
 
         this.engine.player = this.createPlayerInstance();
-        this.engine.player.bloodManager = this.engine.bloodManager;
+        this.engine.player.spotManager = this.engine.spotManager;
     }
 
     createPlayerInstance() {
@@ -41,6 +42,8 @@ export class BaseGameTemplate {
                 return new Soldier(this.engine.map, this.engine.input, this.selectedClass);
             case CONFIG.FLAMETHROWER_CLASS_NAME:
                 return new Flamethrower(this.engine.map, this.engine.input, this.selectedClass);
+            case CONFIG.SCIENTIST_CLASS_NAME:
+                return new Scientist(this.engine.map, this.engine.input, this.selectedClass);
             default:
                 return new Soldier(this.engine.map, this.engine.input, this.selectedClass);
         }

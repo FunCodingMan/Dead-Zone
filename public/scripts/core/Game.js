@@ -1,6 +1,6 @@
 import { Input } from '../utils/Input.js';
 import { CONFIG } from './Config.js';
-import { BloodManager } from './BloodManager.js';
+import { SpotsManager  } from './SpotsManager.js';
 import { Sound } from './Sound.js';
 
 const RANDOM_SOUND_CHANCE = 0.03;
@@ -37,7 +37,7 @@ export class Game {
 
         this.isGameEnded = false;
 
-        this.bloodManager = new BloodManager();
+        this.spotManager = new SpotsManager();
 
         this.pauseStartTime = 0;
         this.totalPauseTime = 0;
@@ -146,6 +146,12 @@ export class Game {
                 this.bulletSprite = this.assets.flame;
                 this.reloadIcon = this.assets.flamethrowerReloadIcon;
                 break;
+            case CONFIG.SCIENTIST_CLASS_NAME:
+                this.playerSprite = this.assets.scientist;
+                this.playerReloadSprite = null;
+                this.bulletSprite = this.assets.poison;
+                this.reloadIcon = null;
+                break;
             default:
                 this.playerSprite = this.assets.soldier;
                 this.playerReloadSprite = this.assets.reloadSoldier;
@@ -241,6 +247,7 @@ export class Game {
     }
 
     update(dt) {
+
         if (this.player) {
             this.player.updateReload(this.isPaused, this.totalPauseTime);
         }
@@ -280,8 +287,9 @@ export class Game {
             this.map.draw(this.ctx, this.assets, camX, camY, this.canvas.width, this.canvas.height, this.zoom);
         }
 
-        if (this.bloodManager) {
-            this.bloodManager.drawBlood(this.ctx, this.assets.blood);
+        if (this.spotManager) {
+            this.spotManager.drawBlood(this.ctx, this.assets.blood);
+            this.spotManager.drawPoison(this.ctx, this.assets.poisonSpot);
         }
 
         this.drawEntities();
