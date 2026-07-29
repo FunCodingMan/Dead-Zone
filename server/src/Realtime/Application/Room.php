@@ -258,6 +258,7 @@ class Room
         $users = [];
         foreach ($this->lobbyUsers as $lobbyUser) {
             $users[] = [
+                "userId" => $lobbyUser->getUserId(),
                 "nickname" => $lobbyUser->getNickname(),
                 "isReady" => $lobbyUser->isReady(),
                 "isHost" => $lobbyUser->isHost(),
@@ -297,6 +298,15 @@ class Room
     {
         $name = trim($name);
         $this->roomName = empty($name) ? $this->roomId : substr($name, 0, 50);
+    }
+    public function getFdByUserId(string $userId): ?int
+    {
+        foreach ($this->lobbyUsers as $fd => $user) {
+            if ($user->getUserId() === $userId) {
+                return $fd;
+            }
+        }
+        return null;
     }
 
     public function deleteUser(int $fd): void

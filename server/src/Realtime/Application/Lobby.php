@@ -46,6 +46,7 @@ class Lobby
             'get-rooms' => $this->getRooms($data["fd"]),
             'change-room-name' => $this->changeRoomName($data["fd"], $payload["roomName"] ?? ""),
             'toggle-open-room' => $this->toggleOpenRoom($data["fd"], isset($payload["isOpen"]) ? (bool)$payload["isOpen"] : true),
+            'kick-player' => $this->kickPlayer($data["fd"], $payload["userId"] ?? ""),
             default => null,
         };
     }
@@ -135,6 +136,19 @@ class Lobby
         if ($room->isUserHost($fd)) {
             $room->setRoomName($roomName);
             $this->updateStateRoom($room);
+        }
+    }
+    private function kickPlayer(int $hostFd, string $targetUserId): void
+    {
+        $roomId = $this->fdToRoomId[$hostFd] ?? null;
+        if ($roomId === null) return;
+        $room = $this->rooms[$roomId];
+        if ($room->isUserHost($hostFd)) {
+            $targetFd = $room->getFdByUserId($targetUserId);
+            if ($targetFd !== null && $targetFd !== $hostFd) {
+                $this->ws->send($targetFd, ["type" => "kicked", "payload" => ["message" => "Хост выгнал вас из комнаты."]]);
+                $this->exitUser($targetFd);
+            }
         }
     }
 

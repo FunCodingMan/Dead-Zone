@@ -27,6 +27,7 @@ class MessageValidator
             'get-rooms' => $this->isValidGetRooms($data),
             'toggle-open-room' => $this->isValidToggleOpenRoom($data),
             'change-room-name' => $this->isValidChangeRoomName($data),
+            'kick-player' => $this->isValidKickPlayer($data),
             default => false,
         };
     }
@@ -148,5 +149,9 @@ class MessageValidator
     private function isValidChangeRoomName(array $data): bool
     {
         return isset($data['roomName']) && is_string($data['roomName']);
+    }
+    private function isValidKickPlayer(array $data): bool
+    {
+        return isset($data['userId']) && is_string($data['userId']);
     }
 }

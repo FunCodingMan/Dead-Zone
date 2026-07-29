@@ -111,7 +111,7 @@ const mapNames = {
 let isReady = false;
 let currentRoomId = null;
 
-function renderPlayersList(players) {
+function renderPlayersList(players, amIHost) {
     playerList.innerHTML = '';
     if (players.length === 0) {
         playerList.innerHTML = '<p>Ожидание сервера...</p>';
@@ -129,14 +129,30 @@ function renderPlayersList(players) {
         const hostIcon = player.isHost ? ' 👑' : '';
         const teamClass = player.team ? player.team : 'none';
         const classNameStr = classNames[player.className] || 'Солдат';
+
+        let kickBtnHTML = '';
+        if (amIHost && !player.isHost) {
+            kickBtnHTML = `<button class="btn-kick" data-userid="${player.userId}" title="Выгнать игрока">✖</button>`;
+        }
         playerDiv.innerHTML = `
             <span class="player-name ${teamClass}">
                 ${player.nickname}${hostIcon} <span class="player-class-label">[${classNameStr}]</span>
             </span>
-            <span class="player-status ${status}">${statusText}</span>
+            <div class="player-controls">
+                <span class="player-status ${status}">${statusText}</span>
+                ${kickBtnHTML}
+            </div>
         `;
         playerList.appendChild(playerDiv);
     });
+    if (amIHost) {
+        document.querySelectorAll('.btn-kick').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetUserId = e.target.getAttribute('data-userid');
+                network.send('kick-player', { userId: targetUserId });
+            });
+        });
+    }
 }
 
 network.on('stateRoom', (payload) => {
@@ -148,7 +164,8 @@ network.on('stateRoom', (payload) => {
     roomIdSpan.textContent = currentRoomId;
     curCountPlayers.textContent = payload.countUsers;
     maxCountPlayers.textContent = payload.maxCountUsers;
-    renderPlayersList(payload.users);
+
+    renderPlayersList(payload.users, payload.amIHost);
 
     classSelectionToggle.checked = payload.isClassSelectionEnabled;
     fogToggle.checked = payload.isFogEnabled;
@@ -210,7 +227,6 @@ network.on('stateRoom', (payload) => {
             teamSelectionControls.classList.add('hidden');
         }
     }
-    renderPlayersList(payload.users);
 
     if (payload.mapId) {
         mapSelect.value = payload.mapId;
@@ -297,6 +313,12 @@ network.on('rooms-list', (payload) => {
     });
 
     showScreen('serversList');
+});
+network.on('kicked', (payload) => {
+    alert(payload.message || "Вас выгнали из комнаты.");
+    isReady = false;
+    readyBtn.textContent = 'ГОТОВ';
+    showScreen('lobbyMenu');
 });
 
 document.querySelector('.btn-serversList').addEventListener('click', () => {
