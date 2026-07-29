@@ -20,6 +20,11 @@
                     <span id="stats-name" class="stats-result"><?php echo htmlspecialchars($user->getNickname()) ?></span>
                 </div>
 
+                <div class="stats-block stats-block-first">
+                    <p class="stats-text">Логин:</p>
+                    <span id="stats-name" class="stats-result"><?php echo htmlspecialchars($user->getUsername()) ?></span>
+                </div>
+
                 <div class="stats-block">
                     <p class="stats-text">Убийств:</p>
                     <span id="stats-kills" class="stats-result"><?php echo htmlspecialchars($user->getStats()->getKills()) ?></span>
