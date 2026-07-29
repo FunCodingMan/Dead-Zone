@@ -54,6 +54,12 @@ class PlayerRegistry
     {
         $this->playersVisible[$player->getFd()] = ["me" => $player, "others" => $others];
     }
+    public function sendVisibleMedkits(Player $player, array $medkits): void
+    {
+        if (isset($this->playersVisible[$player->getFd()])) {
+            $this->playersVisible[$player->getFd()]["medkits"] = $medkits;
+        }
+    }
 
     public function getVisiblePlayers(): array
     {

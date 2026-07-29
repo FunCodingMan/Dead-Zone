@@ -2,6 +2,7 @@
 
 namespace App\Realtime\Domain\Mode;
 
+use App\Realtime\Application\MedkitManager;
 use App\Realtime\Domain\Map\GameMap;
 use App\Realtime\Domain\Model\Player;
 
@@ -16,4 +17,6 @@ interface GameModeInterface
     public function isMatchOver(): bool;
     public function checkRoundState(array $players): ?string;
     public function getScores(): array;
+    public function onRoundStart(): void;
+    public function manageMedkits(MedkitManager $manager, float $now): void;
 }

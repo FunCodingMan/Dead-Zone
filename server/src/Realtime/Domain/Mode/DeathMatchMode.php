@@ -2,12 +2,29 @@
 
 namespace App\Realtime\Domain\Mode;
 
+use App\Realtime\Application\MedkitManager;
 use App\Realtime\Domain\Map\GameConfig;
 use App\Realtime\Domain\Map\GameMap;
 use App\Realtime\Domain\Model\Player;
 
 class DeathMatchMode implements GameModeInterface
 {
+    private float $lastMedkitSpawn = 0.0;
+
+    public function onRoundStart(): void
+    {
+        $this->lastMedkitSpawn = microtime(true);
+    }
+
+    public function manageMedkits(MedkitManager $manager, float $now): void
+    {
+        if ($manager->getActiveCount() < GameConfig::DEATHMATCH_MAX_MEDKITS) {
+            if (($now - $this->lastMedkitSpawn) >= GameConfig::DEATHMATCH_MAX_MEDKITS) {
+                $manager->spawn(1);
+                $this->lastMedkitSpawn = $now;
+            }
+        }
+    }
     public function assignTeams(array $players): void
     {
         foreach ($players as $player) {

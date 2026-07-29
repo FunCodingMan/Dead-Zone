@@ -36,6 +36,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.otherPlayers = new Map();
 
         this.killfeed = [];
+        this.medkits = [];
 
         this.lastMoveSendTime = 0;
 
@@ -204,6 +205,9 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         if (data.totalPlayers !== undefined) {
             this.totalPlayers = data.totalPlayers;
         }
+        if (data.medkits !== undefined) {
+            this.medkits = data.medkits;
+        }
 
         if (data.me && this.engine.player) {
             this.syncPlayer(data);
@@ -297,6 +301,14 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
     }
 
     draw(ctx) {
+        const medkitSprite = this.engine.assets.medkit;
+        if (medkitSprite) {
+            this.medkits.forEach(medkit => {
+                const w = medkit.w || 40;
+                const h = medkit.h || 36;
+                ctx.drawImage(medkitSprite, medkit.x, medkit.y, w, h);
+            });
+        }
         this.otherPlayers.forEach((enemy) => {
             if (enemy.isAlive && enemy.hitpoints > 0) {
                 const isFlame = enemy.className === 'flamethrower';
@@ -562,8 +574,9 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         this.network.off('spawn', this.boundOnSpawn);
         this.network.off('state', this.boundOnState);
         this.network.off('shotFired', this.boundOnShotFired);
-        this.network.off('kill-feed', this.boundOnShotFired);
+        this.network.off('kill-feed', this.boundOnKillFeed);
         this.otherPlayers.clear();
+        this.medkits = [];
 
         window.removeEventListener('blur', this.boundOnWindowBlur);
     }

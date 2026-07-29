@@ -24,6 +24,7 @@ class GameEngine
     private bool $isBetweenRounds = false;
     private float $nextRoundTime = 0.0;
     private bool $isMatchEnded = false;
+    private MedkitManager $medkitManager;
 
     public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, MessageQueue $queue, GameMap $map, IUserRepository $userRepository, GameModeInterface $gameMode, $matchDuration = GameConfig::MATCH_DURATION_S)
     {
@@ -36,6 +37,7 @@ class GameEngine
         $this->lifecycle = new MatchLifecycle($matchDuration);
         $this->resultNotifier = new MatchResultNotifier($this->ws, $this->registry, $userRepository, $this->gameMode);
         $this->combat = new CombatService($this->ws, $this->registry, $map, $this->gameMode);
+        $this->medkitManager = new MedkitManager($map);
     }
 
     public function pushData(): void
@@ -63,6 +65,7 @@ class GameEngine
         }
 
         if (!$this->isBetweenRounds) {
+            $this->medkitManager->update($now, $players, $this->gameMode);
             $roundWinner = $this->gameMode->checkRoundState($players);
             if ($roundWinner !== null) {
                 if ($this->gameMode->isMatchOver()) {
@@ -79,9 +82,12 @@ class GameEngine
     private function broadcastCurrentState(float $now): void
     {
         $players = $this->registry->getPlayers();
+        $allMedkits = $this->medkitManager->getPublicState();
         foreach ($players as $player) {
             $others = $this->visibility->getVisiblePlayers($player, $players);
             $this->registry->sendVisiblePlayers($player, $others);
+            $visibleMedkits = $this->visibility->getVisibleMedkits($player, $allMedkits);
+            $this->registry->sendVisibleMedkits($player, $visibleMedkits);
         }
 
         $visiblePlayers = $this->registry->getVisiblePlayers();

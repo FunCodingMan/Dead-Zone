@@ -27,6 +27,15 @@ class Health
             $this->deathTime = $now;
         }
     }
+    public function heal(int $amount): void
+    {
+        if ($this->isDead()) return;
+
+        $this->health += $amount;
+        if ($this->health > $this->maxHealth) {
+            $this->health = $this->maxHealth;
+        }
+    }
 
     public function reset(): void
     {
