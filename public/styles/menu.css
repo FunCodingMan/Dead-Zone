@@ -1,3 +1,7 @@
+:root {
+    --menu-scale: 1;
+}
+
 * {
     box-sizing: border-box;
     font-family: 'Spielarcade Regular', sans-serif;
@@ -17,6 +21,23 @@ body {
     justify-content: center;
     align-items: flex-start;
     overflow: hidden;
+    position: relative;
+}
+.menu-screen:not(#screen-room):not(#screen-game) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 1920px;
+    height: 1080px;
+    max-height: none;
+
+    transform: translate(-50%, -50%) scale(var(--menu-scale));
+    transform-origin: center center;
+
+    overflow: hidden;
+    margin-top: 0;
+    justify-content: center;
 }
 
 .menu-screen {
@@ -41,7 +62,7 @@ body {
 }
 
 .main-menu__logo {
-    width: 60vw;
+    width: 60%;
     max-width: 946px;
     height: auto;
 }
@@ -194,8 +215,8 @@ body {
     padding: 10px;
 }
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 @media (max-width: 768px) {

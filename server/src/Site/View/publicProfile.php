@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="/styles/menu.css">
         <link href="/styles/fonts-styles.css" rel="stylesheet">
         <script src="/scripts/pages/publicProfile/exitPublicProfile.js" defer></script>
+        <script src="/scripts/ui/scaleUI.js" defer></script>
     </head>
     <body>
         <div class="menu-screen">

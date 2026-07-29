@@ -7,6 +7,7 @@
             <link href="/styles/fonts-styles.css" rel="stylesheet">
             <script src="/scripts/pages/lid/openSearchUsers.js" defer></script>
             <script src="/scripts/pages/lid/exitLid.js" defer></script>
+            <script src="/scripts/ui/scaleUI.js" defer></script>
         </head>
         <body>
             <div class="menu-screen">r

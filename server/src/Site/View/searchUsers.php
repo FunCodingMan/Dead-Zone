@@ -7,6 +7,7 @@
         <link href="/styles/fonts-styles.css" rel="stylesheet">
         <link rel="stylesheet" href="/styles/playerSearch.css">
         <script src="/scripts/pages/searchUsers/searchUsers.js" defer></script>
+        <script src="/scripts/ui/scaleUI.js" defer></script>
     </head>
     <body>
         <div class="menu-screen">

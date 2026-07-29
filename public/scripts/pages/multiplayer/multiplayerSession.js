@@ -249,6 +249,8 @@ network.on('stateRoom', (payload) => {
         modeSelect.disabled = false;
         mapSelect.disabled = false;
         roomNameInput.disabled = false;
+        openToggle.disabled = false;
+        labelOpenToggle.classList.remove('disabled');
 
         classSelectionToggle.disabled = false;
         labelClassSelectionToggle.classList.remove('disabled');
@@ -272,9 +274,11 @@ network.on('stateRoom', (payload) => {
         modeSelect.disabled = true;
         mapSelect.disabled = true;
         roomNameInput.disabled = true;
+        openToggle.disabled = true;
 
         classSelectionToggle.disabled = true;
         labelClassSelectionToggle.classList.add('disabled');
+        labelOpenToggle.classList.add('disabled');
 
         classSelect.disabled = !payload.isClassSelectionEnabled;
     }
