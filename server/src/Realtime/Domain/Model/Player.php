@@ -107,6 +107,10 @@ class Player
         $this->posX = $x;
         $this->posY = $y;
     }
+    public function heal(int $amount): void
+    {
+        $this->health->heal($amount);
+    }
 
     public function respawn(float $x, float $y): void
     {

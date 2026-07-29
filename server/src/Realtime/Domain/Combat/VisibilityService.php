@@ -74,6 +74,49 @@ class VisibilityService
         }
         return $visiblePlayers;
     }
+    public function getVisibleMedkits(Player $observer, array $medkitsStates): array
+    {
+        if ($observer->isDead()) {
+            return [];
+        }
+
+        if (!$this->isFogOfWarEnabled) {
+            return $medkitsStates;
+        }
+
+        $visibleMedkits = [];
+        $observerState = $observer->getPublicState();
+
+        $obsX = $observerState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+        $obsY = $observerState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+        $obsAngle = $observerState["angle"];
+
+        foreach ($medkitsStates as $medkitState) {
+            $targetX = $medkitState['x'];
+            $targetY = $medkitState['y'];
+
+            $distance = hypot($targetX - $obsX, $targetY - $obsY);
+
+            if ($distance > GameConfig::VISIBILITY_RADIUS) {
+                continue;
+            }
+
+            $inFov = $this->isInFOV($obsX, $obsY, $obsAngle, $targetX, $targetY);
+            $inCloseRange = $distance <= GameConfig::RADIUS_OF_CLOSE_OBSERVE;
+
+            if (!$inFov && !$inCloseRange) {
+                continue;
+            }
+
+            if ($this->hasObstacleInSight($obsX, $obsY, $targetX, $targetY, $distance)) {
+                continue;
+            }
+
+            $visibleMedkits[] = $medkitState;
+        }
+
+        return $visibleMedkits;
+    }
 
     private function isInFOV(float $obsX, float $obsY, float $obsAngle, float $targetX, float $targetY): bool
     {

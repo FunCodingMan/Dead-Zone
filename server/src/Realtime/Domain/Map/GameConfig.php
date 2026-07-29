@@ -56,4 +56,11 @@ class GameConfig
     public const float FLAME_THROWER_SHOOT_COOLDOWN_S = 0.12;
     public const int FLAME_THROWER_RANGE_ATTACK = 250;
     public const float LIMIT_LEADER_BOARD = 10;
+    public const int MEDKIT_SIZE = 20;
+    public const int MEDKIT_HEAL = 50;
+    public const float DEATHMATCH_MEDKIT_SPAWN_INTERVAL = 30.0;
+    public const int DEATHMATCH_MAX_MEDKITS = 5;
+    public const float ELIMINATION_MEDKIT_DELAY_AFTER_START = 10.0;
+    public const int ELIMINATION_MAX_MEDKITS= 3;
+
 }

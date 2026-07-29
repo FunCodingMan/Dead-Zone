@@ -146,6 +146,22 @@ class GameMap
             'y' => $spawnsGroup[$randomKey]['y'],
         ];
     }
+    public function getFreeFloorCells(): array
+    {
+        $free = [];
+        $rows = count($this->grid);
+        if ($rows === 0) return [];
+        $cols = count($this->grid[0]);
+
+        for ($r = 0; $r < $rows; $r++) {
+            for ($c = 0; $c < $cols; $c++) {
+                if ($this->grid[$r][$c] === ' ') {
+                    $free[] = ['row' => $r, 'col' => $c];
+                }
+            }
+        }
+        return $free;
+    }
 
     public function getWidth(): int
     {

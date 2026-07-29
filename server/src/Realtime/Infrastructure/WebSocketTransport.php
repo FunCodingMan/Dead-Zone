@@ -48,9 +48,16 @@ class WebSocketTransport
             foreach ($data["others"] as $otherPlayer) {
                 $others[$otherPlayer->getUserId()] = $otherPlayer->getPublicState();
             }
+            $medkits = $data["medkits"] ?? [];
             $packet = [
                 "type" => 'state',
-                "payload" => ["me" => $me, "others" => $others, 'timeLeft' => $timeLeft, 'totalPlayers' => $totalPlayers],
+                "payload" => [
+                    "me" => $me,
+                    "others" => $others,
+                    "medkits" => $medkits,
+                    'timeLeft' => $timeLeft,
+                    'totalPlayers' => $totalPlayers
+                ],
             ];
             $this->send($fd, $packet);
         }
