@@ -44,6 +44,8 @@ export class Flamethrower extends Player {
         this.shotsAmount--;
         this.shotsFired++;
 
+        console.log('flamethrower!')
+
         if (this.flameSounds) {
             this.playFrequentSound(this.flameSounds);
         }
