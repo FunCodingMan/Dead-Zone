@@ -12,4 +12,5 @@ interface IUserRepository
     public function updateDataUser(string $userId, int $kills, int $deaths, bool $isWin, string $mode): void;
     public function getLeaderboard(): array;
     public function getUserByUserId(string $userId): ?User;
+    public function getAllUsersId(): ?array;
 }

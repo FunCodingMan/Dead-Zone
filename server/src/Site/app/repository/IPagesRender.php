@@ -17,4 +17,5 @@ interface IPagesRender
     public function showMultiplayer(): void;
     public function showGlobalStats(array $stats): void;
     public function showProfileNotFound(): void;
+    public function showSearchUsers(?array $users): void;
 }

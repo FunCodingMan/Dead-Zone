@@ -75,4 +75,18 @@ class UserService
         }
         return null;
     }
+
+    public function getAllUsers(): ?array
+    {
+        if (isset($_COOKIE["token"])) {
+            $usersId = $this->userRepository->getAllUsersId();
+            $stats = [];
+            foreach ($usersId as $userId) {
+                $user = $this->userRepository->getUserByUserId($userId);
+                $stats[] = ['nickname' => $user->getNickname(), 'user_id' => $userId];
+            }
+            return $stats;
+        }
+        return null;
+    }
 }

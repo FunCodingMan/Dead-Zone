@@ -68,7 +68,7 @@ class PagesRender implements IPagesRender
         include_once __DIR__ . "/../../View/profileNotFound.html";
     }
 
-    public function showSearchUsers(): void
+    public function showSearchUsers(?array $users): void
     {
         include_once __DIR__ . "/../../View/searchUsers.php";
     }

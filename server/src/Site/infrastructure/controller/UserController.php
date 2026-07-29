@@ -39,7 +39,7 @@ class UserController implements IExecuteAction
             'multiplayer' => $this->pagesRender->showMultiplayer(),
             'global-stats' => $this->showGlobalStats(),
             'global-profile' => $this->showGlobalProfile(),
-            'search-users' => $this->pagesRender->showSearchUsers(),
+            'search-users' => $this->showSearchUsers(),
             default => $this->pagesRender->showForm(),
         };
     }
@@ -118,5 +118,11 @@ class UserController implements IExecuteAction
         } else {
             $this->pagesRender->showProfileNotFound();
         }
+    }
+
+    private function showSearchUsers(): void
+    {
+        $users = $this->userService->getAllUsers();
+        $this->pagesRender->showSearchUsers($users);
     }
 }

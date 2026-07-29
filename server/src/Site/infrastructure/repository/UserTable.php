@@ -204,4 +204,12 @@ class UserTable implements IUserRepository
         }
         return null;
     }
+
+    public function getAllUsersId(): ?array
+    {
+        $query = "SELECT `user`.`user_id` FROM `user`";
+        $stmt = $this->connection->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
 }
