@@ -126,19 +126,25 @@ function renderPlayersList(players, amIHost) {
         playerDiv.className = 'player-item';
         const status = player.isReady ? 'ready' : 'waiting';
         const statusText = player.isReady ? 'ГОТОВ' : 'НЕ ГОТОВ';
-        const hostIcon = player.isHost ? ' 👑' : '';
         const teamClass = player.team ? player.team : 'none';
         const classNameStr = classNames[player.className] || 'Солдат';
 
         let kickBtnHTML = '';
-        if (amIHost && !player.isHost) {
-            kickBtnHTML = `<button class="btn-kick" data-userid="${player.userId}" title="Выгнать игрока">✖</button>`;
+        if (amIHost) {
+            if (!player.isHost) {
+                kickBtnHTML = `<button class="btn-kick" data-userid="${player.userId}" title="Выгнать игрока">✖</button>`;
+            } else {
+                kickBtnHTML = `<div class="kick-placeholder"></div>`;
+            }
         }
+        const hostIconHTML = player.isHost ? '<span class="player-host-icon" title="Хост комнаты">👑</span>' : '';
         playerDiv.innerHTML = `
-            <span class="player-name ${teamClass}">
-                ${player.nickname}${hostIcon} <span class="player-class-label">[${classNameStr}]</span>
-            </span>
+            <div class="player-info">
+                <span class="player-name ${teamClass}">${player.nickname}</span>
+                ${hostIconHTML}
+            </div>
             <div class="player-controls">
+                <span class="player-class-label">${classNameStr}</span>
                 <span class="player-status ${status}">${statusText}</span>
                 ${kickBtnHTML}
             </div>
