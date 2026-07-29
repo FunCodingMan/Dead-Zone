@@ -9,6 +9,17 @@ body, html {
     align-items: flex-start;
 }
 
+#screen-game {
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+}
+
 #gameCanvas {
     display: block;
     width: 100vw;
@@ -52,7 +63,7 @@ body, html {
     padding: 15px;
 }
 
-.room-settings {
+.settings {
     width: 100%;
     max-width: 750px;
     margin: 20px auto;
@@ -62,7 +73,7 @@ body, html {
     box-sizing: border-box;
 }
 
-.room-settings__title {
+.settings__title {
     margin: 0 0 10px 0;
     font-size: 20px;
     color: #fff;
@@ -77,8 +88,11 @@ body, html {
     grid-template-columns: 1fr 1fr;
     gap: 10px 15px;
 }
+.pause-settings__list {
+    display: flex;
+}
 
-.room-settings__item {
+.settings__item {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -90,12 +104,12 @@ body, html {
     transition: 0.2s;
 }
 
-.room-settings__item:hover {
+.settings__item:hover {
     background-color: #2a2a2a;
     border-color: #666;
 }
 
-.room-settings__label-text {
+.settings__label-text {
     font-size: 14px;
     line-height: 1.2;
     flex: 0 0 45%;
@@ -103,11 +117,11 @@ body, html {
     color: #ccc;
 }
 
-.room-settings__checkbox {
+.settings__checkbox {
     display: none;
 }
 
-.room-settings__custom-checkbox {
+.settings__custom-checkbox {
     width: 28px;
     height: 28px;
     background-color: #111;
@@ -116,7 +130,7 @@ body, html {
     transition: 0.2s;
 }
 
-.room-settings__custom-checkbox::after {
+.settings__custom-checkbox::after {
     content: '';
     position: absolute;
     top: 3px;
@@ -127,27 +141,27 @@ body, html {
     transition: 0.1s ease-in-out;
 }
 
-.room-settings__checkbox:checked + .room-settings__custom-checkbox {
+.settings__checkbox:checked + .settings__custom-checkbox {
     border-color: #00ff00;
 }
 
-.room-settings__checkbox:checked + .room-settings__custom-checkbox::after {
+.settings__checkbox:checked + .settings__custom-checkbox::after {
     background-color: #00ff00;
 }
 
-.room-settings__item.disabled {
+.settings__item.disabled {
     opacity: 0.5;
     cursor: not-allowed;
     pointer-events: none;
 }
 
-.room-settings__select-wrapper {
+.settings__select-wrapper {
     position: relative;
     flex: 1;
     width: auto;
 }
 
-.room-settings__select {
+.settings__select {
     width: 100%;
     padding: 6px 25px 6px 10px;
     background-color: #111;
@@ -161,7 +175,7 @@ body, html {
     appearance: none;
 }
 
-.room-settings__select-wrapper::after {
+.settings__select-wrapper::after {
     content: '▼';
     position: absolute;
     right: 12px;
@@ -172,23 +186,23 @@ body, html {
     font-size: 12px;
 }
 
-.room-settings__select:hover,
-.room-settings__select:focus {
+.settings__select:hover,
+.settings__select:focus {
     border-color: #00ff00;
 }
 
-.room-settings__select:focus + .room-settings__select-wrapper::after {
+.settings__select:focus + .settings__select-wrapper::after {
     color: #00ff00;
 }
 
-.room-settings__select:disabled {
+.settings__select:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     border-color: #444;
     background-color: #1a1a1a;
 }
 
-.room-settings__duration-controls {
+.settings__duration-controls {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -196,7 +210,7 @@ body, html {
     width: 100%;
 }
 
-.room-settings__input {
+.settings__input {
     width: 70px;
     padding: 6px 5px;
     background-color: #111;
@@ -209,23 +223,23 @@ body, html {
     transition: border-color 0.2s;
 }
 
-.room-settings__input:hover,
-.room-settings__input:focus {
+.settings__input:hover,
+.settings__input:focus {
     border-color: #00ff00;
 }
 
-.room-settings__input:disabled {
+.settings__input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
     background-color: #1a1a1a;
 }
 
-.room-settings__input::-webkit-outer-spin-button,
-.room-settings__input::-webkit-inner-spin-button {
+.settings__input::-webkit-outer-spin-button,
+.settings__input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-.room-settings__input[type=number] {
+.settings__input[type=number] {
     -moz-appearance: textfield;
 }
 
@@ -474,6 +488,6 @@ body, html {
 }
 
 @media (max-width: 768px) {
-    .room-settings { max-width: 500px; }
+    .settings { max-width: 500px; }
     .room-settings__list { grid-template-columns: 1fr; }
 }

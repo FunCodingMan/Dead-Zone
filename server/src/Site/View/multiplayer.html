@@ -66,32 +66,32 @@
                     <button class="btn btn-team blue" data-team="blue">ЗА СИНИХ</button>
                 </div>
             </div>
-            <div class="room-settings">
-                <h3 class="room-settings__title">НАСТРОЙКИ МАТЧА</h3>
+            <div class="settings">
+                <h3 class="settings__title">НАСТРОЙКИ МАТЧА</h3>
                 <div class="room-settings__list">
-                    <div class="room-settings__item" id="label-room-name" style="grid-column: 1 / -1;">
-                        <span class="room-settings__label-text">НАЗВАНИЕ КОМНАТЫ</span>
+                    <div class="settings__item" id="label-room-name" style="grid-column: 1 / -1;">
+                        <span class="settings__label-text">НАЗВАНИЕ КОМНАТЫ</span>
                         <input type="text" class="room-settings__input-text" id="room-name-input" maxlength="25" placeholder="Название...">
                     </div>
-                    <label class="room-settings__item" id="label-open-toggle">
-                        <span class="room-settings__label-text">ОТКРЫТАЯ КОМНАТА</span>
-                        <input type="checkbox" class="room-settings__checkbox" id="open-toggle">
-                        <span class="room-settings__custom-checkbox"></span>
+                    <label class="settings__item" id="label-open-toggle">
+                        <span class="settings__label-text">ОТКРЫТАЯ КОМНАТА</span>
+                        <input type="checkbox" class="settings__checkbox" id="open-toggle">
+                        <span class="settings__custom-checkbox"></span>
                     </label>
-                    <div class="room-settings__item" id="label-mode-controls">
-                        <span class="room-settings__label-text">РЕЖИМ ИГРЫ</span>
-                        <div class="room-settings__select-wrapper">
-                            <select class="room-settings__select" id="mode-select">
+                    <div class="settings__item" id="label-mode-controls">
+                        <span class="settings__label-text">РЕЖИМ ИГРЫ</span>
+                        <div class="settings__select-wrapper">
+                            <select class="settings__select" id="mode-select">
                                 <option value="deathmatch" selected>САМ ЗА СЕБЯ</option>
                                 <option value="team_deathmatch">КОМАНДНЫЙ БОЙ</option>
                                 <option value="elimination">КОМАНДНЫЙ (РАУНДЫ)</option>
                             </select>
                         </div>
                     </div>
-                    <div class="room-settings__item" id="label-map-select">
-                        <span class="room-settings__label-text">КАРТА</span>
-                        <div class="room-settings__select-wrapper">
-                            <select class="room-settings__select" id="map-select">
+                    <div class="settings__item" id="label-map-select">
+                        <span class="settings__label-text">КАРТА</span>
+                        <div class="settings__select-wrapper">
+                            <select class="settings__select" id="map-select">
                                 <option value="classic" selected>КЛАССИКА</option>
                                 <option value="dust2">DUST 2</option>
                                 <option value="dust2_mini">DUST 2 (МИНИ)</option>
@@ -105,31 +105,31 @@
                         <img id="map-preview-img" src="../../assets/images/maps/classic.png" alt="Превью карты">
                     </div>
 
-                    <label class="room-settings__item" id="label-class-selection-toggle">
-                        <span class="room-settings__label-text">СВОБ. ВЫБОР КЛАССА</span>
-                        <input type="checkbox" class="room-settings__checkbox" id="class-selection-toggle" checked>
-                        <span class="room-settings__custom-checkbox"></span>
+                    <label class="settings__item" id="label-class-selection-toggle">
+                        <span class="settings__label-text">СВОБ. ВЫБОР КЛАССА</span>
+                        <input type="checkbox" class="settings__checkbox" id="class-selection-toggle" checked>
+                        <span class="settings__custom-checkbox"></span>
                     </label>
-                    <div class="room-settings__item" id="label-class-select">
-                        <span class="room-settings__label-text">КЛАСС БОЙЦА</span>
-                        <div class="room-settings__select-wrapper">
-                            <select class="room-settings__select" id="class-select">
+                    <div class="settings__item" id="label-class-select">
+                        <span class="settings__label-text">КЛАСС БОЙЦА</span>
+                        <div class="settings__select-wrapper">
+                            <select class="settings__select" id="class-select">
                                 <option value="soldier" selected>СОЛДАТ</option>
                                 <option value="flamethrower">ОГНЕМЕТЧИК</option>
                             </select>
                         </div>
                     </div>
 
-                    <label class="room-settings__item" id="label-fog-toggle">
-                        <span class="room-settings__label-text">ТУМАН ВОЙНЫ</span>
-                        <input type="checkbox" class="room-settings__checkbox" id="fog-toggle" checked>
-                        <span class="room-settings__custom-checkbox"></span>
+                    <label class="settings__item" id="label-fog-toggle">
+                        <span class="settings__label-text">ТУМАН ВОЙНЫ</span>
+                        <input type="checkbox" class="settings__checkbox" id="fog-toggle" checked>
+                        <span class="settings__custom-checkbox"></span>
                     </label>
-                    <div class="room-settings__item" id="label-duration-controls">
-                        <span class="room-settings__label-text">ДЛИТЕЛЬНОСТЬ</span>
-                        <div class="room-settings__duration-controls">
-                            <div class="room-settings__select-wrapper">
-                                <select class="room-settings__select" id="duration-select">
+                    <div class="settings__item" id="label-duration-controls">
+                        <span class="settings__label-text">ДЛИТЕЛЬНОСТЬ</span>
+                        <div class="settings__duration-controls">
+                            <div class="settings__select-wrapper">
+                                <select class="settings__select" id="duration-select">
                                     <option value="60">1 МИНУТА</option>
                                     <option value="120">2 МИНУТЫ</option>
                                     <option value="180" selected>3 МИНУТЫ</option>
@@ -138,7 +138,7 @@
                                 </select>
                             </div>
 
-                            <input type="number" class="room-settings__input hidden" id="duration-input" placeholder="Сек" min="10" max="3600">
+                            <input type="number" class="settings__input hidden" id="duration-input" placeholder="Сек" min="10" max="3600">
                         </div>
                     </div>
                 </div>
@@ -166,11 +166,11 @@
                 <div class="menu-screen menu-choose">
                     <h2 class="menu-title">ПАУЗА</h2>
 
-                    <div class="room-settings">
-                        <h3 class="room-settings__title">КАЧЕСТВО ГРАФИКИ</h3>
-                        <div class="room-settings__list">
-                            <div class="room-settings__select-wrapper">
-                                <select id="resolution-select" class="room-settings__select">
+                    <div class="settings">
+                        <h3 class="settings__title">КАЧЕСТВО ГРАФИКИ</h3>
+                        <div class="pause-settings__list ">
+                            <div class="settings__select-wrapper">
+                                <select id="resolution-select" class="settings__select">
                                     <option value="3840x2160">4K (УЛЬТРА)</option>
                                     <option value="2560x1440">1440p (ВЫСОКОЕ)</option>
                                     <option value="1920x1080" selected>1080p (СТАНДАРТ)</option>

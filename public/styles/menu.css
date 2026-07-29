@@ -140,12 +140,12 @@ body {
     color: #adadad;
 }
 
-.room-settings__select-wrapper {
+.settings__select-wrapper {
     position: relative;
     width: 100%;
 }
 
-.room-settings__select-wrapper::after {
+.settings__select-wrapper::after {
     content: "▼";
     position: absolute;
     top: 50%;
@@ -157,7 +157,7 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.room-settings__select {
+.settings__select {
     width: 100%;
     appearance: none;
     -webkit-appearance: none;
@@ -177,17 +177,17 @@ body {
     text-transform: uppercase;
 }
 
-.room-settings__select:hover {
+.settings__select:hover {
     background-color: #2a2a2a;
     border-color: #666;
 }
 
-.room-settings__select:focus {
+.settings__select:focus {
     border-color: #00ff00;
     color: #fff;
 }
 
-.room-settings__select option {
+.settings__select option {
     background-color: #111;
     color: #fff;
     font-family: 'Spielarcade Regular', sans-serif;
@@ -205,7 +205,7 @@ body {
     .btn { font-size: 24px; padding: 12px 10px; }
     .stats { margin-left: 0; text-align: center; }
     .stats-text { font-size: 24px; }
-    .room-settings__select {
+    .settings__select {
         font-size: 16px;
         padding: 10px;
     }
