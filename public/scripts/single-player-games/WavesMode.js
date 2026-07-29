@@ -312,10 +312,6 @@ export class WavesMode extends BaseGameTemplate {
             kills: finalKills
         });
 
-        if (this.boss) {
-            this.boss = null;
-        }
-
         setTimeout(() => {
             window.location.href = `/mode-selection/singleplayer/waves-final?${params.toString()}`;
         }, 2000);
