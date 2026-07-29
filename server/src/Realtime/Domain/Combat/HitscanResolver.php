@@ -44,7 +44,7 @@ class HitscanResolver
                 return null;
             }
 
-            if (!$isFlame && $map->checkCollision(new Rect($x - 2, $y - 2, 4, 4))) {
+            if (!$isFlame && $map->checkCollision(new Rect($x - 3, $y - 3, 6, 6))) {
                 return null;
             }
 

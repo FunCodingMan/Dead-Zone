@@ -147,7 +147,7 @@ class VisibilityService
             $currentX += $dx * GameConfig::RAY_STEP;
             $currentY += $dy * GameConfig::RAY_STEP;
 
-            if ($this->map->checkCollision(new Rect($currentX - 2, $currentY - 2, 4, 4))) {
+            if ($this->map->checkCollision(new Rect($currentX - 3, $currentY - 3, 6, 6))) {
                 return true;
             }
         }
