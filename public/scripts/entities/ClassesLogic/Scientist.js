@@ -1,3 +1,4 @@
+import { CONFIG } from "../../core/Config.js";
 import { Player } from "../Player.js";
 
 const BULLET_DISTANCE = 200;
@@ -32,8 +33,6 @@ export class Scientist extends Player {
         this.bulletRotationSpeed = 0.1;
     }
     createBullet(targetX, targetY) {  
-        // this.playFrequentSound(this.flameSounds);
-
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -56,7 +55,13 @@ export class Scientist extends Player {
                 offset: 0,
                 bulletWidth: this.bulletWidth,
                 bulletHeight: this.bulletHeight,
-                bulletRotation: 0
+                bulletRotation: 0,
+                owner: CONFIG.PLAYER_SYMBOL,
+                width: this.bulletDrawW,
+                height: this.bulletDrawH,
+                physWidth: this.bulletPhysW,
+                physHeight: this.bulletPhysH,
+                damage: this.damage    
             }
         );
     }

@@ -1,3 +1,4 @@
+import { CONFIG } from "../../core/Config.js";
 import { Player } from "../Player.js";
 
 const SPREAD = 0.25;
@@ -7,7 +8,7 @@ export class Flamethrower extends Player {
     constructor(map, input, playerClass) {
         super(map, input, playerClass);
         this.speed = 3;
-        this.damage = 40;
+        this.damage = 300;
         this.maxShotsAmount = 125;
         this.shotsAmount = this.maxShotsAmount;
         this.shotCooldown = 120;
@@ -44,8 +45,6 @@ export class Flamethrower extends Player {
         this.shotsAmount--;
         this.shotsFired++;
 
-        console.log('flamethrower!')
-
         if (this.flameSounds) {
             this.playFrequentSound(this.flameSounds);
         }
@@ -78,13 +77,19 @@ export class Flamethrower extends Player {
                     yDirection: dir.y,
                     bulletSpeed: this.bulletSpeed,
                     offset: 0,
-                    isVisualOnly: i > 0
+                    isVisualOnly: i > 0,
+                    owner: CONFIG.PLAYER_SYMBOL,
+                    width: this.bulletDrawW,
+                    height: this.bulletDrawH,
+                    physWidth: this.bulletPhysW,
+                    physHeight: this.bulletPhysH,
+                    damage: this.damage    
                 });
             }, i * 30);
         }
     }
 
-    processBulletPhysics(bullet, enemies, targets, timeScale, bulletIndex) {
+    processBulletPhysics(bullet, enemies, targets, boss, player, timeScale, bulletIndex) {
         const actualSpeed = bullet.bulletSpeed * timeScale;
         const steps = Math.max(1, Math.ceil(actualSpeed / 10));
 
@@ -106,7 +111,24 @@ export class Flamethrower extends Player {
             };
 
             if (!bullet.isVisualOnly) {
-                this.handleBulletsIntersecting(enemies, targets, bulletRect, bulletIndex);
+
+                const isHit = this.handleBulletsIntersecting(
+                    enemies,
+                    targets,
+                    boss,
+                    player,
+                    bulletRect,
+                    bullet.owner,
+                    bullet.damage
+                );
+
+                if (isHit) {
+                    if (!this.bulletsToRemove.includes(bulletIndex)) {
+                        this.bulletsToRemove.push(bulletIndex);
+                    }
+
+                    return true;
+                }
             }
 
             if (this.remoteEnemies) {
@@ -121,21 +143,5 @@ export class Flamethrower extends Player {
             }
         }
         return false;
-    }
-
-    drawBullets(ctx, bulletImg) {
-        ctx.save();
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#ff4400';
-
-        this.bullets.forEach(bullet => {
-            ctx.save();
-            ctx.translate(bullet.x, bullet.y);
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
-            ctx.rotate(angle);
-            ctx.drawImage(bulletImg, -this.bulletDrawW / 2, -this.bulletDrawH / 2, this.bulletDrawW, this.bulletDrawH);
-            ctx.restore();
-        });
-        ctx.restore();
     }
 }

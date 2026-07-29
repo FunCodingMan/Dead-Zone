@@ -3,6 +3,7 @@ import { CONFIG } from "./Config.js";
 const RESPAWN_INTERVAL = 2000;
 const AVAILABLE_CELL = 1;
 const UNAVAILABLE_CELL = 0;
+const BOSS_SIZE_ON_GRID = 3;
 
 export class Map {
     constructor() {
@@ -14,6 +15,7 @@ export class Map {
         this.playerSpawns = [];
         this.enemySpawns = [];
         this.targetSpawns = [];
+        this.bossSpawns = [];
 
         this.grid = [];
         this.diedTargets = [];
@@ -119,17 +121,23 @@ export class Map {
     getSpawns(symbol, playerPosition, characterWidth, characterHeight) {
         let spawns;
 
-        if (symbol === CONFIG.PLAYER_SYMBOL) {
+        if (symbol == CONFIG.PLAYER_SYMBOL) {
             spawns = this.playerSpawns;
-        } else if (symbol === CONFIG.TARGET_SYMBOL) {
+
+        } else if (symbol == CONFIG.TARGET_SYMBOL) {
             const now = performance.now();
-            this.diedTargets = this.diedTargets.filter(d => now - d.time < RESPAWN_INTERVAL);
+            this.diedTargets = this.diedTargets.filter(
+                d => now - d.time < RESPAWN_INTERVAL
+            );
             spawns = this.targetSpawns;
-        } else if (symbol === CONFIG.ENEMY_SYMBOL) {
+
+        } else if (symbol == CONFIG.ENEMY_SYMBOL) {
             spawns = this.enemySpawns;
+
+        } else if (symbol == CONFIG.BOSS_SYMBOL) {
+            spawns = this.bossSpawns;
         }
 
-        // Защита от спавна в клетке игрока
         if (symbol !== CONFIG.PLAYER_SYMBOL && playerPosition) {
             const playerPosIndex = this.getCharacterPositionOnGrid(
                 playerPosition.x, playerPosition.y, playerPosition.w, playerPosition.h
@@ -137,13 +145,46 @@ export class Map {
 
             spawns = spawns.filter(spawn => {
                 const spawnPosIndex = this.getCharacterPositionOnGrid(
-                    spawn.x, spawn.y, characterWidth, characterHeight
+                    spawn.x, 
+                    spawn.y, 
+                    characterWidth, 
+                    characterHeight,
                 );
-                return !(spawnPosIndex.row === playerPosIndex.row && spawnPosIndex.col === playerPosIndex.col);
+
+                return !this.isPlayerInArea(symbol, playerPosIndex, spawnPosIndex);
             });
         }
 
         return spawns;
+    }
+
+    isPlayerInArea(symbol, playerIndex, spawnIndex) {
+        const mapData = this.grid;
+        const rows = mapData.length;
+        const cols = mapData[0].length;
+
+        let offsetRow;
+        let offsetCol;
+
+        let isPlayerInArea = false;
+
+        if (symbol == CONFIG.BOSS_SYMBOL) {
+            offsetRow = BOSS_SIZE_ON_GRID - 1;
+            offsetCol = BOSS_SIZE_ON_GRID - 1;
+        } else {
+            offsetRow = 0;
+            offsetCol = 0;
+        }
+
+        for (let row = spawnIndex.row; row <= spawnIndex.row + offsetRow && row < rows; row++) {
+            for (let col = spawnIndex.col; col <= spawnIndex.col + offsetCol && col < cols; col++) {
+                if (row == playerIndex.row && col == playerIndex.col) {
+                    isPlayerInArea = true;
+                }
+            }
+        }
+
+        return isPlayerInArea;
     }
 
     findFreeSpawn(symbol, playerPosition, characterWidth, characterHeight) {
@@ -183,6 +224,7 @@ export class Map {
         this.targetSpawns = [];
         this.enemySpawns = [];
         this.grid = [];
+        this.bossSpawns = [];
 
         const lines = levelString.trim().split('\n');
         this.height = lines.length * this.cellSize;
@@ -227,12 +269,19 @@ export class Map {
                             isFree: true
                         });
                         break;
+                    case CONFIG.BOSS_SYMBOL:
+                        this.bossSpawns.push({
+                            x: x + (this.cellSize - this.playerSize) / 2,
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        });
+                        break;
                 }
             }
         }
     }
     isSolidCell(row, col) {
-        if (!this.grid[row] || !this.grid[row][col]) return true; // Граница карты = стена
+        if (!this.grid[row] || !this.grid[row][col]) return true;
         const cell = this.grid[row][col];
         return cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL;
     }
@@ -249,7 +298,7 @@ export class Map {
 
         for (let row = startRow; row <= endRow; row++) {
             for (let col = startCol; col <= endCol; col++) {
-                if (this.isSolidCell(row, col)) return true; // <--- Никакого дублирования кода!
+                if (this.isSolidCell(row, col)) return true;
             }
         }
         return false;
@@ -293,6 +342,33 @@ export class Map {
             const enemy = enemies[i];
             if ((enemy.isAlive || enemy.isDying) && this.isIntersecting(rect, enemy)) return true;
         }
+        return false;
+    }
+
+    laserCollision(rect) {
+        for (let i = 0; i < this.walls.length; i++) {
+            if (this.isIntersecting(rect, this.walls[i])) {
+                const wall = this.walls[i];
+                const col = Math.floor(wall.x / this.cellSize);
+                const row = Math.floor(wall.y / this.cellSize);
+                this.grid[row][col] = CONFIG.SPACE_SYMBOL;
+                this.walls.splice(i, 1);
+                return true;
+            }
+        }
+
+
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (this.isIntersecting(rect, this.boxes[i])) {
+                const box = this.boxes[i];
+                const col = Math.floor(box.x / this.cellSize);
+                const row = Math.floor(box.y / this.cellSize);
+                this.grid[row][col] = CONFIG.SPACE_SYMBOL;
+                this.boxes.splice(i, 1);
+                return true;
+            }
+        }
+
         return false;
     }
 
