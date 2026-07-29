@@ -267,8 +267,23 @@ export class Player extends Character {
         return this.shotsAmount;
     }
 
+    drawNoAmmoHint(ctx, canvas, uiScale, scaledSize, scaledPadding) {
+        const now = performance.now();
+        let isBlinking = Math.floor(now / 400) % 2 === 0;
+
+        if (isBlinking) {
+            ctx.fillStyle = '#ff4444';
+            ctx.font = `bold ${Math.floor(36 * uiScale)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ПЕРЕЗАРЯДКА [R]', canvas.width / 2, canvas.height - scaledPadding - (scaledSize / 2));
+
+            ctx.globalAlpha = 0.5;
+        }
+    }
+
     drawReloadInterface(ctx, reloadImg, canvas) {
-        if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) return;
+        if (this.playerClass.className === CONFIG.SCIENTIST_CLASS_NAME) return;
 
         const uiScale = canvas.height / BASE_HEIGHT;
         const scaledSize = Math.floor(RELOAD_SIZE * uiScale);
@@ -280,9 +295,15 @@ export class Player extends Character {
         const imgX = canvas.width - scaledPadding - scaledSize;
         const imgY = canvas.height - scaledPadding - scaledSize;
 
+        if (this.shotsAmount <= 0 && !this.isReloading) {
+            this.drawNoAmmoHint(ctx, canvas, uiScale, scaledSize, scaledPadding);
+        }
+
         ctx.drawImage(reloadImg, imgX, imgY, scaledSize, scaledSize);
 
-        ctx.fillStyle = 'white';
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = this.shotsAmount <= 0 ? '#ff4444' : 'white';
         ctx.font = `bold ${scaledFontSize}px Arial`;
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
