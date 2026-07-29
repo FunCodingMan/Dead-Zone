@@ -19,6 +19,7 @@ class ActionExtractor implements IActionExtractor
     private const string GLOBAL_STATS_URL = '/global-stats';
     private const string GLOBAL_PROFILE_URL = '/global-stats/profile';
     private const string GLOBAL_SEARCH_USERS_URL = '/global-stats/search-users';
+    private const string GLOBAL_DELETE_PROFILE_URL = '/profile/delete-profile';
 
     public function setTokenCookie(string $token): void
     {
@@ -72,6 +73,7 @@ class ActionExtractor implements IActionExtractor
             $method === "GET" && $urlPath === self::USER_MULTIPLAYER_URL && $hasToken => 'multiplayer',
             $method === "GET" && $urlPath === self::GLOBAL_STATS_URL && $hasToken => 'global-stats',
             $method === "GET" && $urlPath === self::GLOBAL_SEARCH_USERS_URL && $hasToken => 'search-users',
+            $method === "GET" && $urlPath === self::GLOBAL_DELETE_PROFILE_URL && $hasToken => 'delete-profile',
             $method === "GET" && $urlPath === self::GLOBAL_PROFILE_URL && $hasToken && isset($_GET['user_id'])=> 'global-profile',
             $method === "GET" && isset($_COOKIE["token"]) => 'menu',
             default => null

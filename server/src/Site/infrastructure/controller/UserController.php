@@ -40,6 +40,7 @@ class UserController implements IExecuteAction
             'global-stats' => $this->showGlobalStats(),
             'global-profile' => $this->showGlobalProfile(),
             'search-users' => $this->showSearchUsers(),
+            'delete-profile' => $this->pagesRender->showDeleteProfile(),
             default => $this->pagesRender->showForm(),
         };
     }

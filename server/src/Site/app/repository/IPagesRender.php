@@ -18,4 +18,5 @@ interface IPagesRender
     public function showGlobalStats(array $stats): void;
     public function showProfileNotFound(): void;
     public function showSearchUsers(?array $users): void;
+    public function showDeleteProfile(): void;
 }

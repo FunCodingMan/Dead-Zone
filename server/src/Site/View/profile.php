@@ -77,7 +77,8 @@
                     </span>
                 </div>
             </div>
-            <button class="btn" data-target="show">НАЗАД</button>
+            <button class="btn btn-del-profile" onclick="window.location.href='/profile/delete-profile'">УДАЛИТЬ АККАУНТ</button>
+            <button class="btn btn-exit" data-target="show">НАЗАД</button>
         </div>
     </body>
 </html>

@@ -72,4 +72,9 @@ class PagesRender implements IPagesRender
     {
         include_once __DIR__ . "/../../View/searchUsers.php";
     }
+
+    public function showDeleteProfile(): void
+    {
+        include_once __DIR__ . "/../../View/deleteProfile.html";
+    }
 }
