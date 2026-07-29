@@ -20,7 +20,11 @@ export class AssetManager {
             flamethrowerReload: new Image(),
             flamethrower: new Image(),
             flamethrowerReloadIcon: new Image(),
-            medkit: new Image()
+            medkit: new Image(),
+            scientist: new Image(),
+            poison: new Image(),
+            poisonParticle: new Image(),
+            poisonSpot: new Image()
         };
 
         this.imagePaths = {
@@ -42,7 +46,11 @@ export class AssetManager {
             flamethrowerReload: '/assets/reload_flamethrower.png',
             flamethrower: '/assets/flamethrower.png',
             flamethrowerReloadIcon: '/assets/flamethrower_reload_icon.png',
-            medkit: '/assets/medkit.png'
+            medkit: '/assets/medkit.png',
+            scientist: '/assets/scientist.png',
+            poison: '/assets/poison.png',
+            poisonParticle: '/assets/poison_particle.png',
+            poisonSpot: '/assets/poison_spot.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;
