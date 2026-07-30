@@ -14,7 +14,25 @@ export class AssetManager {
             shot2: new Image(),
             heartIcon: new Image(),
             target: new Image(),
-            zombie: new Image()
+            zombie: new Image(),
+            killIcon: new Image(),
+            flame: new Image(),
+            flamethrowerReload: new Image(),
+            flamethrower: new Image(),
+            flamethrowerReloadIcon: new Image(),
+            medkit: new Image(),
+            scientist: new Image(),
+            poison: new Image(),
+            poisonParticle: new Image(),
+            poisonSpot: new Image(),
+            bossDefault: new Image(),
+            bossLightningAttack1: new Image(),
+            bossLightningAttack2: new Image(),
+            bossLaserAttack: new Image(),
+            bossLaser: new Image(),
+            bossLightning: new Image(),
+            bossCutscene1: new Image(),
+            bossCutscene2: new Image(),
         };
 
         this.imagePaths = {
@@ -30,7 +48,25 @@ export class AssetManager {
             shot2: '/assets/shot2.png',
             heartIcon: '/assets/heart.png',
             target: '/assets/target.png',
-            zombie: '/assets/zombie.png'
+            zombie: '/assets/zombie.png',
+            killIcon: '/assets/kill_icon.png',
+            flame: '/assets/flame.png',
+            flamethrowerReload: '/assets/reload_flamethrower.png',
+            flamethrower: '/assets/flamethrower.png',
+            flamethrowerReloadIcon: '/assets/flamethrower_reload_icon.png',
+            medkit: '/assets/medkit.png',
+            scientist: '/assets/scientist.png',
+            poison: '/assets/poison.png',
+            poisonParticle: '/assets/poison_particle.png',
+            poisonSpot: '/assets/poison_spot.png',
+            bossDefault: '/assets/boss.png',
+            bossLightningAttack1: '/assets/boss_lightning_attack_1.png',
+            bossLightningAttack2: '/assets/boss_lightning_attack_2.png',
+            bossLaserAttack: '/assets/boss_laser_attack.png',
+            bossLaser: '/assets/laser.png',
+            bossLightning: '/assets/lightning.png',
+            bossCutscene1: '/assets/boss_cutscene_1.png',
+            bossCutscene2: '/assets/boss_cutscene_2.png'
         };
 
         this.DEATH_FRAMES_AMOUNT = 3;

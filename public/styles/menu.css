@@ -1,41 +1,238 @@
+:root {
+    --menu-scale: 1;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: 'Spielarcade Regular', sans-serif;
+}
+html {
+    background-color: #111;
+}
+
 body {
     margin: 0;
-    background: rgb(20, 20, 20);
+    background: #111 url(../assets/menu_background.png) no-repeat center center;
+    background-size: cover;
+    background-attachment: fixed;
     color: white;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: flex-start;
+    overflow: hidden;
+    position: relative;
+}
+.menu-screen:not(#screen-room):not(#screen-game) {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+
+    width: 1920px;
+    height: 1080px;
+    max-height: none;
+
+    transform: translate(-50%, -50%) scale(var(--menu-scale));
+    transform-origin: center center;
+
+    overflow: hidden;
+    margin-top: 0;
+    justify-content: center;
 }
 
 .menu-screen {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 30px;
-    margin-top: 0;
+    gap: 15px;
+    margin-top: 2vh;
+    width: 100%;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 40px 20px;
+    box-sizing: border-box;
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+.menu-choose {
+    align-self: center;
+    align-items: center;
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.main-menu__logo {
+    width: 60%;
+    max-width: 946px;
+    height: auto;
+}
+
+.menu-title {
+    font: 64px/18px 'Spielarcade Regular', sans-serif;
+    text-align: center;
+    color: rgb(68, 68, 68);
+    margin: 20px 0 10px 0;
+    text-shadow:
+        -3px -3px 0 #afafaf,
+         3px -3px 0 #afafaf,
+        -3px  3px 0 #afafaf,
+         3px  3px 0 #afafaf;
 }
 
 .menu-buttons {
-    margin-top: 50px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 50px;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+}
+
+.main-menu-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .btn {
-    width: 1000px;
-    padding: 15px;
-    background-color: #333;
-    color: white;
-    border: 2px solid #555;
+    padding: 20px 15px 15px 20px;
+    color: #afafaf;
+    border: 2px solid #afafaf;
     cursor: pointer;
     transition: 0.2s;
     text-transform: uppercase;
-    font: 45px/18px 'Spielarcade Regular', sans-serif;
+    font: 45px 'Spielarcade Regular', sans-serif;
+    border-radius: 5px;
+    width: 60%;
+    background-color: rgb(68, 68, 68, 0.5);
 }
 
-.btn:hover {
-    background-color: #444;
+.btn-main-menu {
+    width: auto;
 }
+
+.btn:hover { background-color: rgb(68, 68, 68); color: #adadad; border: 2px solid #888;}
+.btn.disabled { opacity: 0.5; cursor: not-allowed; }
+.hidden { display: none !important; }
+
+.stats-block {
+    font: 24px/1.2 'Spielarcade Regular', sans-serif;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 7px 0;
+    border-top: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+}
+
+.stats-block-first {
+    border-top: none;
+}
+
+.stats-block-last {
+    border-bottom: none;
+}
+
+.stats-text { 
+    width: 500px;
+    margin: 0;
+    text-align: center;
+}
+
+.stats-result {
+    width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stats-block a {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+}
+
+.stats-block a:visited {
+    color: inherit;
+}
+
+.stats-block a:hover .stats-text {
+    color: #adadad;
+}
+
+.settings__select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.settings__select-wrapper::after {
+    content: "▼";
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    color: #ccc;
+    font-size: 16px;
+    pointer-events: none;
+    font-family: Arial, sans-serif;
+}
+
+.settings__select {
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+
+    background-color: #222;
+    color: #ccc;
+    font-family: 'Spielarcade Regular', sans-serif;
+    font-size: 20px;
+    text-align: center;
+
+    padding: 15px;
+    border: 2px solid #444;
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s;
+    text-transform: uppercase;
+}
+
+.settings__select:hover {
+    background-color: #2a2a2a;
+    border-color: #666;
+}
+
+.settings__select:focus {
+    border-color: #00ff00;
+    color: #fff;
+}
+
+.settings__select option {
+    background-color: #111;
+    color: #fff;
+    font-family: 'Spielarcade Regular', sans-serif;
+    padding: 10px;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@media (max-width: 768px) {
+    .menu-screen { gap: 15px; margin-top: 2vh; }
+    .menu-title { font-size: 28px; line-height: 1.2; }
+    .menu-buttons { gap: 15px; margin-top: 20px; }
+    .btn { font-size: 24px; padding: 12px 10px; }
+    .stats { margin-left: 0; text-align: center; }
+    .stats-text { font-size: 24px; }
+    .settings__select {
+        font-size: 16px;
+        padding: 10px;
+    }
+}
+
+.menu-screen::-webkit-scrollbar { width: 8px; }
+.menu-screen::-webkit-scrollbar-track { background: transparent; }
+.menu-screen::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+.menu-screen::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }

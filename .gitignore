@@ -26,3 +26,8 @@ $RECYCLE.BIN/
 # Логи сервера и временные файлы
 *.log
 *.tmp
+
+Dockerfile
+.dockerignore
+dead-zone.tar
+/docker/

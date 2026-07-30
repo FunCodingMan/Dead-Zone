@@ -8,21 +8,27 @@ export class Input {
         this.isMouseDown = false;
 
         this.onEscape = callbacks.onEscape || null;
-
-        // Привязка контекста
+        
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleKeyUp = this.handleKeyUp.bind(this);
         this.handleMouseMove = this.handleMouseMove.bind(this);
         this.handleMouseDown = this.handleMouseDown.bind(this);
         this.handleMouseUp = this.handleMouseUp.bind(this);
 
+
         window.addEventListener('keydown', this.handleKeyDown);
         window.addEventListener('keyup', this.handleKeyUp);
-        this.canvas.addEventListener('mousemove', this.handleMouseMove);
-        this.canvas.addEventListener('mousedown', this.handleMouseDown);
+        window.addEventListener('mousemove', this.handleMouseMove);
+        window.addEventListener('mousedown', this.handleMouseDown);
         window.addEventListener('mouseup', this.handleMouseUp);
 
+        window.addEventListener('blur', this.boundOnBlur);
+
         this.canvas.addEventListener('contextmenu', this.handleContextMenu);
+    }
+
+    boundOnBlur = () => {
+        this.reset();
     }
 
     handleContextMenu(e) {
@@ -30,6 +36,9 @@ export class Input {
     }
 
     handleKeyDown(e) {
+        if (e.code === 'Tab' || e.code === 'Space') {
+            e.preventDefault();
+        }
         if (!this.keys[e.code]) {
             this.justPressed[e.code] = true;
         }
@@ -47,8 +56,10 @@ export class Input {
 
     handleMouseMove(e) {
         const rect = this.canvas.getBoundingClientRect();
-        this.mouseX = e.clientX - rect.left;
-        this.mouseY = e.clientY - rect.top;
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        this.mouseX = (e.clientX - rect.left) * scaleX;
+        this.mouseY = (e.clientY - rect.top) * scaleY;
     }
 
     handleMouseDown() {
@@ -80,8 +91,9 @@ export class Input {
     destroyListeners() {
         window.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('keyup', this.handleKeyUp);
-        this.canvas.removeEventListener('mousemove', this.handleMouseMove);
-        this.canvas.removeEventListener('mousedown', this.handleMouseDown);
+        window.removeEventListener('mousemove', this.handleMouseMove);
+        window.removeEventListener('mousedown', this.handleMouseDown);
         window.removeEventListener('mouseup', this.handleMouseUp);
+        window.removeEventListener('blur', this.boundOnBlur);
     }
 }

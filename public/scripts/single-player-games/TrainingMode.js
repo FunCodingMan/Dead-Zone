@@ -1,6 +1,4 @@
 import { BaseGameTemplate } from './BaseGameTemplate.js';
-import { Map } from '../core/Map.js';
-import { Player } from '../entities/Player.js';
 import { Target } from '../entities/Target.js';
 
 const TARGETS_AMOUNT = 4;
@@ -19,40 +17,43 @@ const levelData = `
 #B   T        B#
 ################
 `;
+
 export class TrainingMode extends BaseGameTemplate {
-    init() {
-        this.engine.map = new Map();
-        this.engine.map.loadLevel(levelData);
+    getLevelData() {
+        return levelData;
+    }
 
-        this.engine.player = new Player(this.engine.map, this.engine.input);
-
-        // 3. Создаем мишени
+    setupMode() {
         this.engine.targets = [];
         for (let i = 0; i < TARGETS_AMOUNT; i++) {
             const playerPosition = {
-                x: this.engine.player.x, 
-                y: this.engine.player.y, 
-                w: this.engine.player.w, 
+                x: this.engine.player.x,
+                y: this.engine.player.y,
+                w: this.engine.player.w,
                 h: this.engine.player.h
             };
             const target = new Target(this.engine.map, playerPosition);
-            
+
             target.onDeath(() => {
                 this.engine.player.kills++;
             });
             this.engine.targets.push(target);
-        }            
+        }
+
+        this.isInitializationReady = true;
     }
 
-    update() {
+    update(dt) {
+        if (!this.isInitializationReady) return;
+
         this.engine.targets = this.engine.targets.filter(t => t.isAlive || t.isDying);
 
         const aliveTargets = this.engine.targets.filter(t => t.isAlive);
         if (aliveTargets.length < TARGETS_AMOUNT) {
             const playerPosition = {
-                x: this.engine.player.x, 
-                y: this.engine.player.y, 
-                w: this.engine.player.w, 
+                x: this.engine.player.x,
+                y: this.engine.player.y,
+                w: this.engine.player.w,
                 h: this.engine.player.h
             };
             const target = new Target(this.engine.map, playerPosition);
@@ -64,10 +65,24 @@ export class TrainingMode extends BaseGameTemplate {
     }
 
     drawUI(ctx, canvas) {
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '24px Arial';
-        ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", 20, 40);
-        ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, 20, 60);
-        ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, 20, 80);
+        if (!this.isInitializationReady) return;
+
+        const uiScale = canvas.height / 1080;
+        const fontSize = Math.floor(35 * uiScale);
+        const startX = 30 * uiScale;
+        const startY = 50 * uiScale;
+        const lineSpacing = 45 * uiScale;
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.font = `bold ${fontSize}px Arial`;
+        ctx.textAlign = 'left';
+
+        ctx.fillText("РЕЖИМ: ТРЕНИРОВКА", startX, startY);
+        ctx.fillText("НАНЕСЕНО УРОНА: " + this.engine.player.appliedDamage, startX, startY + lineSpacing);
+        ctx.fillText("УНИЧТОЖЕНО ЦЕЛЕЙ: " + this.engine.player.kills, startX, startY + lineSpacing * 2);
+
+        if (this.engine.player) {
+            this.engine.player.drawCrosshair(ctx, canvas, this.engine.isPaused);
+        }
     }
 }

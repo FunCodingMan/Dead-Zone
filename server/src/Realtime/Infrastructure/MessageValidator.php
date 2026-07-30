@@ -1,0 +1,157 @@
+<?php
+
+namespace App\Realtime\Infrastructure;
+
+use App\Realtime\Domain\Map\GameConfig;
+
+class MessageValidator
+{
+    public function isValidData(string $type, array $data): bool
+    {
+        return match ($type) {
+            'move' => $this->isValidMove($data),
+            'create-room' => $this->isValidCreateRoom($data),
+            'join-room' => $this->isValidJoinRoom($data),
+            'exit-room' => $this->isValidExitRoom($data),
+            'ready' => $this->isValidReady($data),
+            'start-game' => $this->isValidStartGame($data),
+            'shot' => $this->isValidShotPlayer($data),
+            'reload' => $this->isValidReloadPlayer($data),
+            'toggle-fog' => $this->isValidToggleFog($data),
+            'change-match-duration' => $this->isValidChangeMatchDuration($data),
+            'change-mode' => $this->isValidChangeMode($data),
+            'switch-team' => $this->isValidSwitchTeam($data),
+            'change-class' => $this->isValidChangeClass($data),
+            'change-map' => $this->isValidChangeMap($data),
+            'toggle-class-selection' => $this->isValidToggleClassSelection($data),
+            'get-rooms' => $this->isValidGetRooms($data),
+            'toggle-open-room' => $this->isValidToggleOpenRoom($data),
+            'change-room-name' => $this->isValidChangeRoomName($data),
+            'kick-player' => $this->isValidKickPlayer($data),
+            default => false,
+        };
+    }
+
+    private function isValidMove(array $data): bool
+    {
+        if (!isset($data["keys"], $data["angle"])) {
+            return false;
+        }
+
+        if (!is_array($data["keys"]) || !is_numeric($data["angle"])) {
+            return false;
+        }
+
+        if (count($data["keys"]) > 4 || count($data["keys"]) !== count(array_unique($data["keys"]))) {
+            return false;
+        }
+
+        $allowedKeys = ['w', 's', 'd', 'a'];
+        foreach ($data["keys"] as $index => $key) {
+            if (!is_string($key) || !in_array($key, $allowedKeys, true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function isValidReady(array $data): bool
+    {
+        if (!isset($data['isReady']) || !is_bool($data['isReady'])) {
+            return false;
+        }
+        return true;
+    }
+
+    private function isValidJoinRoom(array $data): bool
+    {
+        if (!isset($data['roomId']) || !is_string($data['roomId'])) {
+            return false;
+        }
+        return true;
+    }
+
+    private function isValidExitRoom(array $data): bool
+    {
+        return empty($data);
+    }
+
+        private function isValidCreateRoom(array $data): bool
+    {
+        return empty($data);
+    }
+
+    private function isValidStartGame(array $data): bool
+    {
+        return empty($data);
+    }
+
+    private function isValidShotPlayer(array $data): bool
+    {
+        return isset($data['angle']) && is_numeric($data['angle']);
+    }
+
+    private function isValidReloadPlayer(array $data): bool
+    {
+        return empty($data);
+    }
+
+    private function isValidToggleFog(array $data): bool
+    {
+        return isset($data['isEnabled']);
+    }
+    private function isValidChangeMatchDuration(array $data): bool
+    {
+        return isset($data['duration'])
+            && is_numeric($data['duration'])
+            && $data['duration'] >= GameConfig::MIN_MATCH_DURATION_S
+            && $data['duration'] <= GameConfig::MAX_MATCH_DURATION_S;
+    }
+    private function isValidChangeMode(array $data): bool
+    {
+        return isset($data['mode'])
+            && in_array($data['mode'], [
+                GameConfig::MODE_DEATHMATCH,
+                GameConfig::MODE_ELIMINATION,
+                GameConfig::MODE_TEAM_DEATHMATCH
+            ], true);
+    }
+    private function isValidSwitchTeam(array $data): bool
+    {
+        return isset($data['team'])
+            && in_array($data['team'], [GameConfig::TEAM_RED, GameConfig::TEAM_BLUE], true);
+    }
+
+    private function isValidChangeClass(array $data): bool
+    {
+        return isset($data['className'])
+            && in_array($data['className'], [GameConfig::SOLDIER_CLASS, GameConfig::FLAME_THROWER_CLASS], true);
+    }
+
+    private function isValidToggleClassSelection(array $data): bool
+    {
+        return isset($data['isEnabled']);
+    }
+
+    private function isValidChangeMap(array $data): bool
+    {
+        return isset($data['mapId']);
+    }
+    private function isValidGetRooms(array $data): bool
+    {
+        return empty($data);
+    }
+    private function isValidToggleOpenRoom(array $data): bool
+    {
+        return isset($data['isOpen']) && is_bool($data['isOpen']);
+    }
+    private function isValidChangeRoomName(array $data): bool
+    {
+        return isset($data['roomName']) && is_string($data['roomName']);
+    }
+    private function isValidKickPlayer(array $data): bool
+    {
+        return isset($data['userId']) && is_string($data['userId']);
+    }
+}

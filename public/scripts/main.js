@@ -1,6 +1,6 @@
 import { AssetManager } from './utils/AssetManager.js';
 import { Game } from './core/Game.js';
-import { initPause, togglePauseUI } from './ui/Pause.js';
+import { initPause, togglePauseUI, setPauseGameReference } from './ui/Pause.js';
 
 import { TrainingMode } from './single-player-games/TrainingMode.js';
 import { WavesMode } from './single-player-games/WavesMode.js';
@@ -16,6 +16,8 @@ async function init() {
     const assets = await assetManager.loadAll();
 
     game = new Game(canvas, assets, togglePauseUI);
+
+    setPauseGameReference(game);
 
     initPause({
         onResume: () => game.togglePause(),

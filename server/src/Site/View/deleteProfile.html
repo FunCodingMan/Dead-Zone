@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8">
+        <title>Мёртвая зона — Удаление аккаунта</title>
+        <link rel="stylesheet" href="/styles/menu.css">
+        <link href="/styles/fonts-styles.css" rel="stylesheet">
+        <link rel="stylesheet" href="/styles/deleteProfile.css">
+        <script src="/scripts/ui/scaleUI.js" defer></script>
+        <script src="/scripts/pages/deleteProfile/deleteProfile.js" defer></script>
+    </head>
+    <body>
+        <div class="menu-screen">
+            <h2 class="menu-title">УДАЛЕНИЕ АККАУНТА</h2>
+            <span class="error__message hidden"></span>
+            <form class="delete-form" onsubmit="return false;">
+                <input
+                        class="delete-input"
+                        type="text"
+                        name="username"
+                        placeholder="Логин пользователя"
+                        autocomplete="off"
+                >
+                <input
+                        class="delete-input"
+                        type="password"
+                        name="password"
+                        placeholder="Пароль"
+                        autocomplete="off"
+                >
+                <button class="btn btn-del" type="submit">УДАЛИТЬ АККАУНТ</button>
+            </form>
+            <button class="btn btn-exit" onclick="window.location.href='/profile'">ОТМЕНА</button>
+        </div>
+    </body>
+</html>

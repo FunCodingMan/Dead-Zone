@@ -5,40 +5,58 @@ const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
 const SPEED = 4;
 
-const BULLET_SPEED = 20;
-const BULLET_WIDTH = 5;
-const BULLET_HEIGHT = 10;
-const SPREAD_FACTOR = 10;
+const BULLET_SPEED = 55;
+const BULLET_WIDTH = 3;
+const BULLET_HEIGHT = 45;
+
+const BULLET_REAL_WIDTH = 4;
+const BULLET_REAL_HEIGHT = 4;
+
+const BASE_SPREAD = 5;
+const MAX_SPREAD = 15;
+const SPREAD_RECOVERY_TIME_MS = 400;
 const SHOOT_COOLDOWN_MS = 150;
-const DAMAGE = 40;
+const DAMAGE = 50;
 const DIFF_GUN_FORWARD = 1;
 const DIFF_GUN_SIDE = 5;
 const MAX_SHOTS_AMOUNT = 50;
 const RELOAD_TIME = 2000;
 
 const MAX_HITPOINTS = 100;
-const RELOAD_PADDING = 10;
-const RELOAD_SIZE = 50;
-const HP_PADDING = 10;
-const HP_SIZE = 80;
-const RELOAD_TEXT_PADDING = 20;
-const RELOAD_TEXT_SIZE = 10;
+const RELOAD_PADDING = 40;
+const RELOAD_SIZE = 80;
+const HP_PADDING = 25;
+const HP_SIZE = 120;
+const AMMUNITION_SIZE = 40;
 const HITBOX = 28;
 
+const CROSSHAIR_LINE_LEN = 15;
+const CROSSHAIR_LINE_WIDTH = 6;
+const CROSSHAIR_DOT_RADIUS = 2;
+const CROSSHAIR_HIT_DURATION = 150;
+const CROSSHAIR_HIT_SIZE = 15;
+const CROSSHAIR_HIT_OFFSET = 10;
+const CROSSHAIR_HIT_WIDTH = 6;
+const SPREAD_COOF_UI = 2;
+
+const FPS = 60;
+const BASE_HEIGHT = 1080;
+
+const POISON_SPOT_LIFE_TIME = 5000;
+
+
 export class Player extends Character {
-    constructor(map, input, resetPauseTimeCallback) {
+    constructor(map, input, playerClass, spotManager) {
         const spawn = map.findFreeSpawn(CONFIG.PLAYER_SYMBOL, null);
         const spawnIndex = map.playerSpawns.indexOf(spawn);
-        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null, resetPauseTimeCallback);
+        super(spawn, PLAYER_WIDTH, PLAYER_HEIGHT, spawnIndex, null);
+
+        this.input = input;
+        this.map = map;
+        this.playerClass = playerClass || { className: CONFIG.SOLDIER_CLASS_NAME };
 
         this.speed = SPEED;
-        this.input = input;
 
-        this.bullets = [];
-        this.shotsFired = 0;
-        this.lastShootTime = performance.now();
-        this.damage = DAMAGE;
-        this.shotsAmount = MAX_SHOTS_AMOUNT;
         this.isReloading = false;
         this.reloadStartTime = undefined;
 
@@ -50,11 +68,35 @@ export class Player extends Character {
         this.appliedDamage = 0;
         this.kills = 0;
 
-        this.map = map;
+        this.isMultiplayer = false;
+        this.hitpoints = MAX_HITPOINTS;
+        this.visualSpread = BASE_SPREAD;
+        this.lastHitTime = 0;
+        this.remoteEnemies = [];
+        this.team = 'none';
+
+        this.damage = DAMAGE;
+        this.maxShotsAmount = MAX_SHOTS_AMOUNT;
+        this.shotsAmount = this.maxShotsAmount;
+        this.shotCooldown = SHOOT_COOLDOWN_MS;
+
+        this.shotOffsetForward = DIFF_GUN_FORWARD;
+        this.shotOffsetSide = DIFF_GUN_SIDE;
+
+        this.bulletSpeed = BULLET_SPEED;
+
+        this.bulletDrawW = BULLET_WIDTH;
+        this.bulletDrawH = BULLET_HEIGHT;
+        this.bulletPhysW = BULLET_REAL_WIDTH;
+        this.bulletPhysH = BULLET_REAL_HEIGHT;
+
+        this.canShoot = true;
     }
 
-    update(map, canvas, zoom, enemies, targets) {
+    update(map, canvas, zoom, enemies, targets, boss, dt) {
         if (!this.isAlive) return;
+
+        const timeScale = (dt || 0.0166) * FPS;
         const centerX = this.x + this.w / 2;
         const centerY = this.y + this.h / 2;
 
@@ -63,44 +105,104 @@ export class Player extends Character {
 
         this.angle = Math.atan2(worldMouseY - centerY, worldMouseX - centerX);
 
-        this.move(map, enemies, targets);
-        this.shoot(worldMouseX, worldMouseY);
+        this.move(map, enemies, targets, timeScale);
 
-        if (this.input.isJustPressed('KeyR') && !this.isReloading && this.shotsAmount < MAX_SHOTS_AMOUNT) {
-            this.isReloading = true;
+        if ((this.playerClass.attackType == CONFIG.SHOOT_ATTACK_TYPE || !this.playerClass.attackType) && this.canShoot) {
+            this.shoot(worldMouseX, worldMouseY);
         }
 
-        //вызов перезарядки вынесен в Game update для обработки во время паузы
+        if (
+            this.input.isJustPressed('KeyR') && 
+            !this.isReloading && 
+            this.shotsAmount < this.maxShotsAmount && 
+            this.playerClass.className != CONFIG.SCIENTIST_CLASS_NAME
+        ) {
+            this.isReloading = true;
+            this.playReloadSound();
+        }
 
-        this.handleBullets(map, enemies, targets);
+        if (this.isShooting && this.shotsFired > 1) {
+            this.visualSpread += (MAX_SPREAD - this.visualSpread) * Math.min(1, 0.3 * timeScale);
+        } else {
+            this.visualSpread += (BASE_SPREAD - this.visualSpread) * Math.min(1, 0.15 * timeScale);
+        }
+
+        this.handleBullets(map, enemies, targets, boss, this, timeScale);
+        this.removeBullets();
+        this.handlePoisonSpots(map, enemies, targets, boss);
     }
 
-    move(map, enemies, targets) {
+    handlePoisonSpots(map, enemies, targets, boss) {
+        if (!this.spotManager) return;
+        const current = performance.now();
+        this.spotManager.poisonSpots = this.spotManager.poisonSpots.filter(
+            spot => current - spot.spawnTime < POISON_SPOT_LIFE_TIME
+        );
+
+        const poisonSpots = this.spotManager.poisonSpots;
+
+        poisonSpots.forEach(poisonSpot => {
+            if (boss) {
+                const entityRect = {x: boss.x, y: boss.y, w: boss.w, h: boss.h};
+                const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size};
+                if (this.map.isIntersecting(poisonRect, entityRect)) {
+                    this.appliedDamage += this.poisonDamage;
+                    boss.takeDamage(this.poisonDamage, this.map, CONFIG.BOSS_SYMBOL);
+                }
+            }
+
+            enemies.forEach((enemy) => {
+                if (enemy.isAlive) {
+                    const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
+                    const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size}
+                    if (this.map.isIntersecting(poisonRect, entityRect)) {
+                            this.appliedDamage += this.poisonDamage;
+                            enemy.takeDamage(this.poisonDamage, this.map, CONFIG.ENEMY_SYMBOL);
+                        if (this.hitPlayerSound) {
+                            this.hitPlayerSound.stop();
+                            this.hitPlayerSound.play();
+                        }
+                    }
+                }
+            });
+            targets.forEach((target) => {
+                if (target.isAlive) {
+                    const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
+                    const poisonRect = {x: poisonSpot.x, y: poisonSpot.y, w: poisonSpot.size, h: poisonSpot.size}
+                    if (this.map.isIntersecting(poisonRect, entityRect)) {
+                            this.appliedDamage += this.poisonDamage;
+                            target.takeDamage(this.poisonDamage, this.map, CONFIG.TARGET_SYMBOL);
+                        if (this.hitPlayerSound) {
+                            this.hitPlayerSound.stop();
+                            this.hitPlayerSound.play();
+                        }
+                    }
+                }
+            });
+        });
+    }
+
+    move(map, enemies, targets, timeScale) {
         let nextX = this.x;
         let nextY = this.y;
-
         let dx = 0;
         let dy = 0;
 
-        if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) {
-            dy -= 1;
-        }
-        if (this.input.isPressed('KeyS') || this.input.isPressed('ArrowDown')) {
-            dy += 1;
-        }
-        if (this.input.isPressed('KeyA') || this.input.isPressed('ArrowLeft')) {
-            dx -= 1;
-        }
-        if (this.input.isPressed('KeyD') || this.input.isPressed('ArrowRight')) {
-            dx += 1;
-        }
+        if (this.input.isPressed('KeyW') || this.input.isPressed('ArrowUp')) dx -= 0, dy -= 1;
+        if (this.input.isPressed('KeyS') || this.input.isPressed('ArrowDown')) dx -= 0, dy += 1;
+        if (this.input.isPressed('KeyA') || this.input.isPressed('ArrowLeft')) dx -= 1, dy -= 0;
+        if (this.input.isPressed('KeyD') || this.input.isPressed('ArrowRight')) dx += 1, dy -= 0;
+
         if (dx !== 0 || dy !== 0) {
+            if (this.stepsSound) this.stepsSound.play();
             const length = Math.sqrt(dx * dx + dy * dy);
             dx /= length;
             dy /= length;
 
-            nextX += dx * this.speed;
-            nextY += dy * this.speed;
+            nextX += dx * this.speed * timeScale;
+            nextY += dy * this.speed * timeScale;
+        } else {
+            if (this.stepsSound) this.stepsSound.stop();
         }
 
         if (nextX < 0) nextX = 0;
@@ -127,10 +229,19 @@ export class Player extends Character {
     }
 
     shoot(x, y) {
+        const now = performance.now();
+
+        if (now - this.lastShootTime >= SPREAD_RECOVERY_TIME_MS) {
+            this.shotsFired = 0;
+        }
+
         if (this.input.isMouseDown) {
-            const now = performance.now();
-            if (now - this.lastShootTime >= SHOOT_COOLDOWN_MS && this.shotsAmount > 0 && !this.isReloading) {
-                this.createBullet(x, y);
+            if (
+                now - this.lastShootTime >= this.shotCooldown && 
+                (this.shotsAmount > 0 || this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) &&
+                !this.isReloading
+            ) {
+                this.createBullet(x, y, CONFIG.PLAYER_SYMBOL);
                 this.lastShootTime = now;
                 this.isShooting = true;
             } else if (this.shotsAmount <= 0 || this.isReloading) {
@@ -141,136 +252,184 @@ export class Player extends Character {
         }
     }
 
-    createBullet(targetX, targetY) {
-        this.shotsAmount--;
-
-        const centerX = this.x + this.w / 2;
-        const centerY = this.y + this.h / 2;
-
-        let spawnX = centerX + Math.cos(this.angle) * DIFF_GUN_FORWARD;
-        let spawnY = centerY + Math.sin(this.angle) * DIFF_GUN_FORWARD;
-
-        spawnX += Math.cos(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
-        spawnY += Math.sin(this.angle + Math.PI / 2) * DIFF_GUN_SIDE;
-
-        const dx = targetX - spawnX;
-        const dy = targetY - spawnY;
-        const length = Math.sqrt(dx * dx + dy * dy);
-
-        let directionX = dx / length;
-        let directionY = dy / length;
-
-        this.shotsFired++;
-
-        if (this.shotsFired > 1) {
-            directionX += (Math.random() - 0.5) / SPREAD_FACTOR;
-            directionY += (Math.random() - 0.5) / SPREAD_FACTOR;
-        }
-
-        this.bullets.push({
-            x: spawnX, y: spawnY, xDirection: directionX, yDirection: directionY, bulletSpeed: BULLET_SPEED
-        });
-    }
-
-    handleBullets(map, enemies, targets) {
-        const toRemove = [];
-
-        this.bullets.forEach((bullet, index) => {
-            bullet.x += bullet.xDirection * bullet.bulletSpeed;
-            bullet.y += bullet.yDirection * bullet.bulletSpeed;
-
-            const bulletRect = { 
-                x: bullet.x - BULLET_WIDTH / 2, y: bullet.y - BULLET_HEIGHT / 2, w: BULLET_WIDTH, h: BULLET_HEIGHT 
-            };
-
-            this.handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, index);
-
-            if (map.checkCollision(bulletRect)) {
-                toRemove.push(index);
-            }
-        });
-
-        for (let i = toRemove.length - 1; i >= 0; i--) {
-            this.bullets.splice(toRemove[i], 1);
+    playReloadSound() {
+        if (this.reloadSound) {
+            this.reloadSound.play();
         }
     }
 
-   handleBulletsIntersecting(enemies, targets, bulletRect, toRemove, bulletIndex) {
-        enemies.forEach((enemy) => {
-            if (enemy.isAlive) {
-                const entityRect = {x: enemy.x, y: enemy.y, w: enemy.w, h: enemy.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    this.appliedDamage += this.damage;
-                    enemy.takeDamage(this.damage, this.map, CONFIG.PLAYER_SYMBOL);
-                    if (!toRemove.includes(bulletIndex)) {
-                        toRemove.push(bulletIndex);
-                    }
-                }
-            }
-        });
+    onHitEntity(entity, symbol) {
+        if (!this.isMultiplayer) {
+            this.appliedDamage += this.damage;
+            entity.takeDamage(this.damage, this.map, symbol);
+        }
 
-        targets.forEach((target) => {
-            if (target.isAlive) {
-                const entityRect = {x: target.x, y: target.y, w: target.w, h: target.h};
-                if (this.map.isIntersecting(bulletRect, entityRect)) {
-                    this.appliedDamage += this.damage;
-                    target.takeDamage(this.damage, this.map, CONFIG.TARGET_SYMBOL);
-                    if (!toRemove.includes(bulletIndex)) {
-                        toRemove.push(bulletIndex);
-                    }
-                }
-            }
-        });
+        if (this.hitPlayerSound) {
+            this.hitPlayerSound.stop();
+            this.hitPlayerSound.play();
+        }
+
+        this.lastHitTime = performance.now();
     }
 
-    drawBullets(ctx, bulletImg) {
-        this.bullets.forEach(bullet => {
-            ctx.save();
-            ctx.translate(bullet.x, bullet.y);
-            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
-            ctx.rotate(angle);
-            ctx.drawImage(bulletImg, -BULLET_WIDTH / 2, -BULLET_HEIGHT / 2, BULLET_WIDTH, BULLET_HEIGHT);
-            ctx.restore();
-        });
+    getAmmoText() {
+        return this.shotsAmount;
+    }
+
+    drawNoAmmoHint(ctx, canvas, uiScale, scaledSize, scaledPadding) {
+        const now = performance.now();
+        let isBlinking = Math.floor(now / 400) % 2 === 0;
+
+        if (isBlinking) {
+            ctx.fillStyle = '#ff4444';
+            ctx.font = `bold ${Math.floor(36 * uiScale)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('ПЕРЕЗАРЯДКА [R]', canvas.width / 2, canvas.height - scaledPadding - (scaledSize / 2));
+
+            ctx.globalAlpha = 0.5;
+        }
     }
 
     drawReloadInterface(ctx, reloadImg, canvas) {
+        if (this.playerClass.className === CONFIG.SCIENTIST_CLASS_NAME) return;
+
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const scaledSize = Math.floor(RELOAD_SIZE * uiScale);
+        const scaledPadding = Math.floor(RELOAD_PADDING * uiScale);
+        const scaledFontSize = Math.floor(AMMUNITION_SIZE * uiScale);
+
         ctx.save();
-        ctx.drawImage(
-            reloadImg,
-            canvas.width - RELOAD_PADDING - RELOAD_SIZE,
-            canvas.height - RELOAD_PADDING - RELOAD_SIZE,
-            RELOAD_SIZE, RELOAD_SIZE
-        );
-        ctx.fillStyle = 'white';
-        ctx.font = '18px Arial';
-        ctx.fillText(
-            this.shotsAmount,
-            canvas.width - RELOAD_PADDING - RELOAD_SIZE - RELOAD_TEXT_PADDING - RELOAD_TEXT_SIZE,
-            canvas.height - RELOAD_PADDING - RELOAD_TEXT_SIZE
-        );
+
+        const imgX = canvas.width - scaledPadding - scaledSize;
+        const imgY = canvas.height - scaledPadding - scaledSize;
+
+        if (this.shotsAmount <= 0 && !this.isReloading) {
+            this.drawNoAmmoHint(ctx, canvas, uiScale, scaledSize, scaledPadding);
+        }
+
+        ctx.drawImage(reloadImg, imgX, imgY, scaledSize, scaledSize);
+
+        ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = this.shotsAmount <= 0 ? '#ff4444' : 'white';
+        ctx.font = `bold ${scaledFontSize}px Arial`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+
+        const text = this.getAmmoText();
+
+        const textX = imgX - (15 * uiScale);
+        const textY = imgY + (scaledSize / 2) + (3 * uiScale);
+
+        ctx.fillText(text, textX, textY);
+
         ctx.restore();
     }
 
     drawHPInterface(ctx, hearthImg, canvas) {
-        this.hpCtx.clearRect(0, 0, HP_SIZE, HP_SIZE);
-        this.hpCtx.drawImage(hearthImg, 0, 0, HP_SIZE, HP_SIZE);
+        const uiScale = canvas.height / BASE_HEIGHT;
+        const scaledHpSize = Math.floor(HP_SIZE * uiScale);
+        const scaledHpPadding = Math.floor(HP_PADDING * uiScale);
+
+        if (this.hpCanvas.width !== scaledHpSize) {
+            this.hpCanvas.width = scaledHpSize;
+            this.hpCanvas.height = scaledHpSize;
+        }
+
+        this.hpCtx.clearRect(0, 0, scaledHpSize, scaledHpSize);
+        this.hpCtx.drawImage(hearthImg, 0, 0, scaledHpSize, scaledHpSize);
 
         this.hpCtx.globalCompositeOperation = 'source-in';
 
-        const percent = this.hitpoints / MAX_HITPOINTS;
-        const height = HP_SIZE * percent;
+        const percent = Math.max(0, this.hitpoints / MAX_HITPOINTS);
+        const height = scaledHpSize * percent;
 
         this.hpCtx.fillStyle = '#ff0000';
-        this.hpCtx.fillRect(0, HP_SIZE - height, HP_SIZE, height);
+        this.hpCtx.fillRect(0, scaledHpSize - height, scaledHpSize, height);
         this.hpCtx.globalCompositeOperation = 'source-over';
 
         ctx.save();
         ctx.globalAlpha = 0.3;
-        ctx.drawImage(hearthImg, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING, HP_SIZE, HP_SIZE);
+        ctx.drawImage(hearthImg, scaledHpPadding, canvas.height - scaledHpSize - scaledHpPadding, scaledHpSize, scaledHpSize);
         ctx.restore();
 
-        ctx.drawImage(this.hpCanvas, HP_PADDING, canvas.height - HP_SIZE - HP_PADDING);
+        ctx.drawImage(this.hpCanvas, scaledHpPadding, canvas.height - scaledHpSize - scaledHpPadding);
+    }
+
+    drawCrosshair(ctx, canvas, isPaused) {
+        if (!this.isAlive || isPaused) {
+            canvas.style.cursor = 'default';
+            if (!this.isAlive) return;
+        } else {
+            canvas.style.cursor = 'none';
+        }
+
+        if (isPaused) return;
+
+        const mouseX = this.input.mouseX;
+        const mouseY = this.input.mouseY;
+
+        const uiScale = canvas.height / BASE_HEIGHT;
+
+        const spread = this.visualSpread * uiScale * SPREAD_COOF_UI;
+        const lineLen = CROSSHAIR_LINE_LEN * uiScale;
+        const lineWidth = Math.max(1, CROSSHAIR_LINE_WIDTH * uiScale);
+        const dotRadius = Math.max(1, CROSSHAIR_DOT_RADIUS * uiScale);
+
+        ctx.save();
+        ctx.translate(mouseX, mouseY);
+
+        ctx.strokeStyle = 'rgb(255 0 0 / 0.9)';
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+
+        ctx.moveTo(0, -spread);
+        ctx.lineTo(0, -spread - lineLen);
+        ctx.moveTo(0, spread);
+        ctx.lineTo(0, spread + lineLen);
+
+        ctx.moveTo(-spread, 0);
+        ctx.lineTo(-spread - lineLen, 0);
+        ctx.moveTo(spread, 0);
+        ctx.lineTo(spread + lineLen, 0);
+
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgb(255 0 0 / 0.9)';
+        ctx.beginPath();
+        ctx.arc(0, 0, dotRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (this.lastHitTime) {
+            const now = performance.now();
+            const timeSinceHit = now - this.lastHitTime;
+            const hitDuration = CROSSHAIR_HIT_DURATION;
+
+            if (timeSinceHit < hitDuration) {
+                const alpha = 1 - (timeSinceHit / hitDuration);
+                ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.lineWidth = CROSSHAIR_HIT_WIDTH;
+
+                const hitSize = CROSSHAIR_HIT_SIZE * uiScale;
+                const offset = spread + (CROSSHAIR_HIT_OFFSET * uiScale);
+
+                ctx.beginPath();
+
+                ctx.moveTo(-offset, -offset);
+                ctx.lineTo(-offset - hitSize, -offset - hitSize);
+                ctx.moveTo(offset, -offset);
+                ctx.lineTo(offset + hitSize, -offset - hitSize);
+                ctx.moveTo(-offset, offset);
+                ctx.lineTo(-offset - hitSize, offset + hitSize);
+                ctx.moveTo(offset, offset);
+                ctx.lineTo(offset + hitSize, offset + hitSize);
+                ctx.stroke();
+            }
+        }
+        ctx.restore();
     }
 
     updateReload(isPaused, totalPauseTime) {
@@ -287,7 +446,7 @@ export class Player extends Character {
         }
 
         if (now - this.reloadStartTime >= RELOAD_TIME) {
-            this.shotsAmount = MAX_SHOTS_AMOUNT;
+            this.shotsAmount = this.maxShotsAmount;
             this.isReloading = false;
             this.reloadStartTime = undefined;
         }

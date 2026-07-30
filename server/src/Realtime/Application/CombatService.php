@@ -1,0 +1,130 @@
+<?php
+
+namespace App\Realtime\Application;
+
+use App\Realtime\Domain\Combat\HitscanResolver;
+use App\Realtime\Domain\Map\GameConfig;
+use App\Realtime\Domain\Map\GameMap;
+use App\Realtime\Domain\Mode\GameModeInterface;
+use App\Realtime\Domain\Model\Player;
+use App\Realtime\Infrastructure\WebSocketTransport;
+
+class CombatService
+{
+    private WebSocketTransport $ws;
+    private PlayerRegistry $registry;
+    private GameMap $map;
+    private GameModeInterface $mode;
+
+    public function __construct(WebSocketTransport $ws, PlayerRegistry $registry, GameMap $map, GameModeInterface $mode)
+    {
+        $this->ws = $ws;
+        $this->registry = $registry;
+        $this->map = $map;
+        $this->mode = $mode;
+    }
+
+    public function handleShot(Player $player, array $payload, float $now): void
+    {
+        if (!$player->canShoot($now)) return;
+
+        $isFirstShot = $player->isFirstShot($now);
+
+        $player->registerShot($now);
+
+        $shooterState = $player->getPublicState();
+        $angle = (float)($payload['angle'] ?? $shooterState["angle"]);
+
+        $burstCount = $player->getBurstCount();
+
+        $finalAngle = $angle + $this->calculateDynamicSpread($burstCount);
+
+        $others = $this->registry->getOthersPlayers($player);
+        $hitPlayer = HitscanResolver::resolve($player, $finalAngle, $this->map, $others);
+
+        if ($hitPlayer !== null) {
+            if ($this->mode->canDamage($player, $hitPlayer)) {
+                $damage = match ($player->getClassName()) {
+                    GameConfig::SOLDIER_CLASS => GameConfig::SOLDIER_DAMAGE,
+                    GameConfig::FLAME_THROWER_CLASS => GameConfig::FLAME_THROWER_DAMAGE
+                };
+                $hitPlayer->takeDamage($damage, $now);
+
+                if ($hitPlayer->getHealth() <= 0) {
+                    $this->mode->handleKill($player, $hitPlayer);
+                    $this->reportKillIfDead($player, $hitPlayer);
+                }
+            }
+        }
+
+        $this->notifyShot($player, $finalAngle);
+    }
+    public function setMode(GameModeInterface $mode): void
+    {
+        $this->mode = $mode;
+    }
+
+    private function calculateDynamicSpread(int $burstCount): float {
+        if ($burstCount <= 1) return 0.0;
+
+        $spreadMultiplier = min(1.0, ($burstCount - 1) / 5.0);
+
+        $baseSpread = ((mt_rand() / mt_getrandmax() - 0.5)) / GameConfig::SPREAD_FACTOR;
+
+        return $baseSpread * $spreadMultiplier;
+    }
+
+    private function randomSpread(): float
+    {
+        return ((mt_rand() / mt_getrandmax()) - 0.5) / GameConfig::SPREAD_FACTOR;
+    }
+
+    private function reportKillIfDead(Player $shooter, Player $hitPlayer): void
+    {
+        if ($hitPlayer->getHealth() > 0) return;
+
+        $message = [
+            "type" => "kill-feed",
+            "payload" => ["killer" => $shooter->getNickname(), "victim" => $hitPlayer->getNickname()],
+        ];
+
+        foreach ($this->registry->getPlayers() as $player) {
+            $this->ws->send($player->getFd(), $message);
+        }
+    }
+
+    private function notifyShot(Player $shooter, float $angle): void
+    {
+        $allPlayers = $this->registry->getPlayers();
+        $shooterState = $shooter->getPublicState();
+
+        $centerX = $shooterState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+        $centerY = $shooterState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+
+        $startX = $centerX + cos($angle) * GameConfig::DIFF_GUN_FORWARD;
+        $startY = $centerY + sin($angle) * GameConfig::DIFF_GUN_FORWARD;
+        $startX += cos($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
+        $startY += sin($angle + M_PI_2) * GameConfig::DIFF_GUN_SIDE;
+
+        foreach ($allPlayers as $observer) {
+            if ($observer === $shooter) continue;
+
+            $obsState = $observer->getPublicState();
+            $obsX = $obsState['x'] + (GameConfig::PLAYER_WIDTH / 2);
+            $obsY = $obsState['y'] + (GameConfig::PLAYER_HEIGHT / 2);
+
+            $distance = hypot($obsX - $centerX, $obsY - $centerY);
+            if ($distance > GameConfig::HEARING_RADIUS) continue;
+
+            $this->ws->send($observer->getFd(), [
+                "type" => "shotFired",
+                "payload" => [
+                    "shooterId" => $shooter->getUserId(),
+                    "angle" => $angle,
+                    "startX" => $startX,
+                    "startY" => $startY,
+                ],
+            ]);
+        }
+    }
+}

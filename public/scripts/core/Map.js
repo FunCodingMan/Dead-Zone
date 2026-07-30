@@ -3,6 +3,7 @@ import { CONFIG } from "./Config.js";
 const RESPAWN_INTERVAL = 2000;
 const AVAILABLE_CELL = 1;
 const UNAVAILABLE_CELL = 0;
+const BOSS_SIZE_ON_GRID = 3;
 
 export class Map {
     constructor() {
@@ -14,6 +15,7 @@ export class Map {
         this.playerSpawns = [];
         this.enemySpawns = [];
         this.targetSpawns = [];
+        this.bossSpawns = [];
 
         this.grid = [];
         this.diedTargets = [];
@@ -63,6 +65,11 @@ export class Map {
         const rows = graph.length;
         const cols = graph[0].length;
 
+        if (startRow < 0 || startRow >= rows || startCol < 0 || startCol >= cols ||
+            targetRow < 0 || targetRow >= rows || targetCol < 0 || targetCol >= cols) {
+            return { row: startRow, col: startCol };
+        }
+
         const queue = [{row: startRow, col: startCol}];
         const visited = Array(rows).fill(null).map(() => Array(cols).fill(false));
         const parent = Array(rows).fill(null).map(() => Array(cols).fill(null));
@@ -93,14 +100,14 @@ export class Map {
                 const newRow = row + dr;
                 const newCol = col + dc;
 
-                if (dr !== 0 && dc !== 0) {
-                    if (graph[row][newCol] === 0 || graph[newRow][col] === 0) {
-                        continue;
-                    }
-                }
-
                 if (newRow >= 0 && newRow < rows && newCol >= 0 && newCol < cols) {
-                    if (graph[newRow][newCol] === AVAILABLE_CELL && !visited[newRow][newCol]) {
+                    if (dr !== 0 && dc !== 0) {
+                        if (graph[row][newCol] === 0 || graph[newRow][col] === 0) {
+                            continue;
+                        }
+                    }
+                    const isWalkable = (graph[newRow][newCol] === AVAILABLE_CELL) || (newRow === targetRow && newCol === targetCol);
+                    if (isWalkable && !visited[newRow][newCol]) {
                         visited[newRow][newCol] = true;
                         parent[newRow][newCol] = { row, col };
                         queue.push({ row: newRow, col: newCol });
@@ -115,17 +122,23 @@ export class Map {
     getSpawns(symbol, playerPosition, characterWidth, characterHeight) {
         let spawns;
 
-        if (symbol === CONFIG.PLAYER_SYMBOL) {
+        if (symbol == CONFIG.PLAYER_SYMBOL) {
             spawns = this.playerSpawns;
-        } else if (symbol === CONFIG.TARGET_SYMBOL) {
+
+        } else if (symbol == CONFIG.TARGET_SYMBOL) {
             const now = performance.now();
-            this.diedTargets = this.diedTargets.filter(d => now - d.time < RESPAWN_INTERVAL);
+            this.diedTargets = this.diedTargets.filter(
+                d => now - d.time < RESPAWN_INTERVAL
+            );
             spawns = this.targetSpawns;
-        } else if (symbol === CONFIG.ENEMY_SYMBOL) {
+
+        } else if (symbol == CONFIG.ENEMY_SYMBOL) {
             spawns = this.enemySpawns;
+
+        } else if (symbol == CONFIG.BOSS_SYMBOL) {
+            spawns = this.bossSpawns;
         }
 
-        // Защита от спавна в клетке игрока
         if (symbol !== CONFIG.PLAYER_SYMBOL && playerPosition) {
             const playerPosIndex = this.getCharacterPositionOnGrid(
                 playerPosition.x, playerPosition.y, playerPosition.w, playerPosition.h
@@ -133,13 +146,46 @@ export class Map {
 
             spawns = spawns.filter(spawn => {
                 const spawnPosIndex = this.getCharacterPositionOnGrid(
-                    spawn.x, spawn.y, characterWidth, characterHeight
+                    spawn.x, 
+                    spawn.y, 
+                    characterWidth, 
+                    characterHeight,
                 );
-                return !(spawnPosIndex.row === playerPosIndex.row && spawnPosIndex.col === playerPosIndex.col);
+
+                return !this.isPlayerInArea(symbol, playerPosIndex, spawnPosIndex);
             });
         }
 
         return spawns;
+    }
+
+    isPlayerInArea(symbol, playerIndex, spawnIndex) {
+        const mapData = this.grid;
+        const rows = mapData.length;
+        const cols = mapData[0].length;
+
+        let offsetRow;
+        let offsetCol;
+
+        let isPlayerInArea = false;
+
+        if (symbol == CONFIG.BOSS_SYMBOL) {
+            offsetRow = BOSS_SIZE_ON_GRID - 1;
+            offsetCol = BOSS_SIZE_ON_GRID - 1;
+        } else {
+            offsetRow = 0;
+            offsetCol = 0;
+        }
+
+        for (let row = spawnIndex.row; row <= spawnIndex.row + offsetRow && row < rows; row++) {
+            for (let col = spawnIndex.col; col <= spawnIndex.col + offsetCol && col < cols; col++) {
+                if (row == playerIndex.row && col == playerIndex.col) {
+                    isPlayerInArea = true;
+                }
+            }
+        }
+
+        return isPlayerInArea;
     }
 
     findFreeSpawn(symbol, playerPosition, characterWidth, characterHeight) {
@@ -175,12 +221,11 @@ export class Map {
     }
 
     loadLevel(levelString) {
-        this.walls = [];
-        this.boxes = [];
         this.playerSpawns = [];
         this.targetSpawns = [];
         this.enemySpawns = [];
         this.grid = [];
+        this.bossSpawns = [];
 
         const lines = levelString.trim().split('\n');
         this.height = lines.length * this.cellSize;
@@ -225,48 +270,106 @@ export class Map {
                             isFree: true
                         });
                         break;
+                    case CONFIG.BOSS_SYMBOL:
+                        this.bossSpawns.push({
+                            x: x + (this.cellSize - this.playerSize) / 2,
+                            y: y + (this.cellSize - this.playerSize) / 2,
+                            isFree: true
+                        });
+                        break;
+                }
+            }
+        }
+    }
+    isSolidCell(row, col) {
+        if (!this.grid[row] || !this.grid[row][col]) return true;
+        const cell = this.grid[row][col];
+        return cell === CONFIG.WALL_SYMBOL || cell === CONFIG.BOX_SYMBOL;
+    }
+
+    isSolidPoint(x, y) {
+        return this.isSolidCell(Math.floor(y / this.cellSize), Math.floor(x / this.cellSize));
+    }
+
+    checkWallCollision(rect) {
+        const startCol = Math.floor(rect.x / this.cellSize);
+        const endCol = Math.floor((rect.x + rect.w) / this.cellSize);
+        const startRow = Math.floor(rect.y / this.cellSize);
+        const endRow = Math.floor((rect.y + rect.h) / this.cellSize);
+
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                if (this.isSolidCell(row, col)) return true;
+            }
+        }
+        return false;
+    }
+
+    draw(ctx, assets, cameraX, cameraY, canvasWidth, canvasHeight, zoom) {
+        const viewWidth = canvasWidth / zoom;
+        const viewHeight = canvasHeight / zoom;
+
+        const startCol = Math.max(0, Math.floor((cameraX - viewWidth / 2) / this.cellSize));
+        const endCol = Math.min(this.grid[0].length - 1, Math.ceil((cameraX + viewWidth / 2) / this.cellSize));
+        const startRow = Math.max(0, Math.floor((cameraY - viewHeight / 2) / this.cellSize));
+        const endRow = Math.min(this.grid.length - 1, Math.ceil((cameraY + viewHeight / 2) / this.cellSize));
+
+
+        for (let row = startRow; row <= endRow; row++) {
+            for (let col = startCol; col <= endCol; col++) {
+                const x = col * this.cellSize;
+                const y = row * this.cellSize;
+                const cell = this.grid[row][col];
+
+                ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
+
+                if (cell === CONFIG.WALL_SYMBOL) {
+                    ctx.drawImage(assets.wall, x, y, this.cellSize, this.cellSize);
+                } else if (cell === CONFIG.BOX_SYMBOL) {
+                    ctx.drawImage(assets.box, x, y, this.cellSize, this.cellSize);
                 }
             }
         }
     }
 
-    draw(ctx, assets) {
-        for (let x = 0; x < this.width; x += this.cellSize) {
-            for (let y = 0; y < this.height; y += this.cellSize) {
-                ctx.drawImage(assets.floor, x, y, this.cellSize, this.cellSize);
-            }
+    checkCollision(rect, enemies = [], targets = []) {
+        if (this.checkWallCollision(rect)) return true;
+
+        for (let i = 0; i < targets.length; i++) {
+            if (this.isIntersecting(rect, targets[i])) return true;
         }
-        for (let wall of this.walls) {
-            ctx.drawImage(assets.wall, wall.x, wall.y, wall.w, wall.h);
+
+        for (let i = 0; i < enemies.length; i++) {
+            const enemy = enemies[i];
+            if ((enemy.isAlive || enemy.isDying) && this.isIntersecting(rect, enemy)) return true;
         }
-        for (let box of this.boxes) {
-            ctx.drawImage(assets.box, box.x, box.y, box.w, box.h);
-        }
+        return false;
     }
 
-    checkCollision(rect, enemies = [], targets = []) {
-        for (let wall of this.walls) {
-            if (this.isIntersecting(rect, wall)) {
-                return true;
-            }
-        }
-        for (let box of this.boxes) {
-            if (this.isIntersecting(rect, box)) {
-                return true;
-            }
-        }
-        for (let target of targets) {
-            if (this.isIntersecting(rect, target)) {
+    laserCollision(rect) {
+        for (let i = 0; i < this.walls.length; i++) {
+            if (this.isIntersecting(rect, this.walls[i])) {
+                const wall = this.walls[i];
+                const col = Math.floor(wall.x / this.cellSize);
+                const row = Math.floor(wall.y / this.cellSize);
+                this.grid[row][col] = CONFIG.SPACE_SYMBOL;
+                this.walls.splice(i, 1);
                 return true;
             }
         }
 
-        const aliveEnemies = enemies.filter(e => e.isAlive || e.isDying);
-        for (let enemy of aliveEnemies) {
-            if (this.isIntersecting(rect, enemy)) {
+
+        for (let i = 0; i < this.boxes.length; i++) {
+            if (this.isIntersecting(rect, this.boxes[i])) {
+                const box = this.boxes[i];
+                const col = Math.floor(box.x / this.cellSize);
+                const row = Math.floor(box.y / this.cellSize);
+                this.grid[row][col] = CONFIG.SPACE_SYMBOL;
+                this.boxes.splice(i, 1);
                 return true;
             }
         }
+
         return false;
     }
 

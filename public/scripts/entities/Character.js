@@ -1,4 +1,5 @@
 import { CONFIG } from "../core/Config.js";
+import { Sound } from "../core/Sound.js";
 
 export const MAX_HITPOINTS = 100;
 const EXPLOSION_DURATION_MS = 400;
@@ -9,8 +10,10 @@ const SHOT_FRAME_Y_OFFSET = 4;
 const TARGET_PULSE_DURATION = 300;
 const TARGET_PULSE_SCALE = 0.95;
 
+const SPREAD_FACTOR = 10;
+
 export class Character {
-    constructor(spawn, width, height, spawnIndex, bloodManager, resetPauseTimeCallback) {
+    constructor(spawn, width, height, spawnIndex, spotManager, resetPauseTimeCallback) {
         this.spawnPoint = spawn;
         this.spawnIndex = spawnIndex;
         this.x = spawn.x;
@@ -37,16 +40,373 @@ export class Character {
 
         this.onDeathCallBack = null;
 
-        this.bloodManager = bloodManager;
+        this.spotManager = spotManager;
 
         this.resetPauseTime = resetPauseTimeCallback;
 
         this.currentDeathFrame;
         this.deathElapsed;
+
+        this.currentFrequentSoundIndex = 0;
+        this.initSounds();
+
+        this.bullets = [];
+        this.bulletsToRemove = [];
+
+        this.shotsFired = 0;
+        this.lastShootTime = performance.now();
+
+        this.damage = 0;
+
+        this.maxShotsAmount = 0;
+        this.shotsAmount = 0;
+
+        this.shotCooldown = 0;
+
+        this.shotOffsetForward = 0;
+        this.shotOffsetSide = 0;
+
+        this.bulletSpeed = 0;
+
+        this.bulletDrawW = 0;
+        this.bulletDrawH = 0;
+
+        this.bulletPhysW = 0;
+        this.bulletPhysH = 0;
+    }
+
+    createBullet(targetX, targetY, owner) {
+        this.shotsAmount--;
+        this.shotsFired++;
+
+        if (this.shootSounds) {
+            this.playFrequentSound(this.shootSounds);
+        }
+
+        const centerX = this.x + this.w / 2;
+        const centerY = this.y + this.h / 2;
+
+        let spawnX = centerX + Math.cos(this.angle) * this.shotOffsetForward;
+        let spawnY = centerY + Math.sin(this.angle) * this.shotOffsetForward;
+
+        spawnX += Math.cos(this.angle + Math.PI / 2) * this.shotOffsetSide;
+        spawnY += Math.sin(this.angle + Math.PI / 2) * this.shotOffsetSide;
+
+        let finalAngle = this.angle;
+
+        if (this.shotsFired > 1) {
+            const spreadMultiplier = Math.min(1.0, (this.shotsFired - 1) / 5.0);
+            const baseSpread = (Math.random() - 0.5) / SPREAD_FACTOR;
+            finalAngle += baseSpread * spreadMultiplier;
+        }
+
+        const directionX = Math.cos(finalAngle);
+        const directionY = Math.sin(finalAngle);
+
+        this.bullets.push({
+            x: spawnX,
+            y: spawnY,
+            xDirection: directionX,
+            yDirection: directionY,
+            bulletSpeed: this.bulletSpeed,
+            offset: 0,
+            owner: owner,
+            width: this.bulletDrawW,
+            height: this.bulletDrawH,
+            physWidth: this.bulletPhysW,
+            physHeight: this.bulletPhysH,
+            damage: this.damage        
+        });
+    }
+
+    playHitHardSounds(bulletRect) {
+        if (this.hitHardSounds) {
+            this.playFrequentSound(this.hitHardSounds);
+        }
+    }
+
+    removeBullets() {
+        this.bulletsToRemove.sort((a, b) => b - a);
+        for (let i = 0; i < this.bulletsToRemove.length; i++) {
+            this.bullets.splice(this.bulletsToRemove[i], 1);
+        }
+        this.bulletsToRemove = [];
+    }
+
+    processBulletPhysics(bullet, enemies, targets, boss, player, timeScale, bulletIndex) {
+        const actualSpeed = bullet.bulletSpeed * timeScale;
+        const steps = Math.max(1, Math.ceil(actualSpeed / 10));
+        const stepX = (bullet.xDirection * actualSpeed) / steps;
+        const stepY = (bullet.yDirection * actualSpeed) / steps;
+
+        for (let s = 0; s < steps; s++) {
+            bullet.x += stepX;
+            bullet.y += stepY;
+
+            const bulletRect = {
+                x: bullet.x - bullet.physWidth / 2,
+                y: bullet.y - bullet.physHeight / 2,
+                w: bullet.physWidth,
+                h: bullet.physHeight
+            };
+
+            const isHit = this.handleBulletsIntersecting(enemies, targets, boss, player, bulletRect, bullet.owner, bullet.damage);
+
+            if (isHit) {
+                return true;
+            }
+
+            if (this.remoteEnemies && this.checkEntityCollision(bulletRect, this.remoteEnemies, null)) {
+                return true;
+            }
+
+            if (bullet.type == CONFIG.BULLET_LASER_TYPE) {
+                if (this.map.laserCollision(bulletRect)) return true;
+            } else {
+                if (this.map.checkCollision(bulletRect)) {
+                    if (bullet.owner != CONFIG.BOSS_SYMBOL) {
+                            this.playHitHardSounds(bulletRect);
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    handleBullets(map, enemies, targets, boss, player, timeScale) {
+        this.bulletsToRemove = [];
+
+        this.bullets.forEach((bullet, index) => {
+            const isHit = this.processBulletPhysics(bullet, enemies, targets, boss, player, timeScale, index);
+            if (isHit && !this.bulletsToRemove.includes(index)) {
+                if (this.playerClass?.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                    this.spotManager.addPoisonSpot(bullet.x, bullet.y);
+                }
+                
+                if (!this.bulletsToRemove.includes(index)) {
+                    this.bulletsToRemove.push(index);
+                }
+            }
+        });
+    }
+
+    drawBullets(ctx, bulletSprites) {
+        ctx.save();
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffaa00';
+
+        this.bullets.forEach(bullet => {
+            ctx.save();
+            ctx.translate(bullet.x, bullet.y);
+
+            const angle = Math.atan2(bullet.yDirection, bullet.xDirection) + Math.PI / 2;
+            ctx.rotate(angle);
+
+            if (this.playerClass?.className == CONFIG.SCIENTIST_CLASS_NAME) {
+                bullet.bulletRotation += this.bulletRotationSpeed;
+                ctx.rotate(bullet.bulletRotation);
+            }
+
+            let bulletImg;
+            if (bullet.owner == CONFIG.PLAYER_SYMBOL) {
+                if (this.playerClass.className == CONFIG.SOLDIER_CLASS_NAME) bulletImg = bulletSprites.soldier;
+                if (this.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) bulletImg = bulletSprites.flamethrower;
+                if (this.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) bulletImg = bulletSprites.scientist;
+            } else if (bullet.owner == CONFIG.BOSS_SYMBOL) {
+                if (bullet.type == CONFIG.BULLET_LIGHTNING_TYPE) {
+                    bulletImg = bulletSprites.bossLightning;
+                }
+                if (bullet.type == CONFIG.BULLET_LASER_TYPE) {
+                    bulletImg = bulletSprites.bossLaser;
+                }
+            }
+
+            if (bulletImg) {
+                ctx.drawImage(bulletImg, -bullet.width / 2, -bullet.height / 2, bullet.width, bullet.height);
+            }
+
+            ctx.restore();
+        });
+
+        ctx.restore();
+    }
+
+    handleBulletsIntersecting(enemies, targets, boss, player, bulletRect, owner, bulletDamage) {
+        let hasHit = false;
+
+        if (owner == CONFIG.PLAYER_SYMBOL) {
+            enemies.forEach((enemy) => {
+                if (!enemy.isAlive) return;
+
+                const entityRect = {
+                    x: enemy.x,
+                    y: enemy.y,
+                    w: enemy.w,
+                    h: enemy.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(enemy, CONFIG.ENEMY_SYMBOL, bulletDamage);
+                    hasHit = true;
+                }
+            });
+
+            targets.forEach((target) => {
+                if (!target.isAlive) return;
+
+                const entityRect = {
+                    x: target.x,
+                    y: target.y,
+                    w: target.w,
+                    h: target.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(target, CONFIG.TARGET_SYMBOL, bulletDamage);
+                    hasHit = true;
+                }
+            });
+
+            if (boss) {
+                const entityRect = {
+                    x: boss.x,
+                    y: boss.y,
+                    w: boss.w,
+                    h: boss.h
+                };
+
+                if (this.map.isIntersecting(bulletRect, entityRect)) {
+                    this.onHitEntity(boss, CONFIG.BOSS_SYMBOL, bulletDamage);
+      
+                    hasHit = true;
+                }
+            }
+        }
+        if (owner == CONFIG.BOSS_SYMBOL) {
+            const entityRect = {
+                x: player.x,
+                y: player.y,
+                w: player.w,
+                h: player.h
+            };
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                this.onHitEntity(player, CONFIG.PLAYER_SYMBOL, bulletDamage);
+                hasHit = true;
+            }
+        }
+
+        return hasHit;
+    }
+
+    checkEntityCollision(bulletRect, entities, symbol) {
+        if (!entities) return false;
+
+        for (const entity of entities) {
+            if (!entity.isAlive || (entity.hitpoints !== undefined && entity.hitpoints <= 0)) {
+                continue;
+            }
+
+            const entityRect = {
+                x: entity.x,
+                y: entity.y,
+                w: entity.w,
+                h: entity.h
+            };
+
+            if (this.map.isIntersecting(bulletRect, entityRect)) {
+                this.onHitEntity(entity, symbol);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    onHitEntity(entity, symbol, bulletDamage) {
+         entity.takeDamage(bulletDamage, this.map, symbol);
+
+        if (this.hitPlayerSound) {
+            this.hitPlayerSound.stop();
+            this.hitPlayerSound.play();
+        }
+    }
+
+    initSounds() {
+        this.bossRoar = new Sound('../../assets/sounds/boss_roar.mp3')
+
+        this.shootSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/shot.mp3');
+            newSound.setVolume(0.5);
+            this.shootSounds.push(newSound);
+        }
+
+        this.laserSound = new Sound('../../assets/sounds/laser.mp3');
+
+        this.lightningSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/lightning_sound.mp3');
+            newSound.setVolume(0.5);
+            this.lightningSounds.push(newSound);
+        }
+
+        this.flameSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/flame_sound.mp3');
+            newSound.setVolume(0.1);
+            this.flameSounds.push(newSound);
+        }
+
+        this.hitHardSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/hit-hard.mp3');
+            newSound.setVolume(1);
+            this.hitHardSounds.push(newSound);
+        }
+
+        this.hitTargetSounds = [];
+        for (let i = 0; i < 5; i++) {
+            const newSound = new Sound('../../assets/sounds/hit-target.mp3');
+            newSound.setVolume(0.5);
+            this.hitTargetSounds.push(newSound);
+        }
+
+
+        this.hitEnemySound = new Sound('../../assets/sounds/hit.mp3');
+        this.hitEnemySound.setVolume(0.5);
+
+        this.hitPlayerSound = new Sound('../../assets/sounds/hit-player.mp3');
+        this.hitPlayerSound.setVolume(1);
+
+        this.reloadSound = new Sound('../../assets/sounds/reload.mp3');
+        this.flameReloadSound = new Sound('../../assets/sounds/flame_reload.mp3');
+
+        this.explosionSound = new Sound('../../assets/sounds/explosion.mp3');
+
+        this.stepsSound = new Sound('../../assets/sounds/steps.mp3');
     }
 
     onDeath(callback) {
         this.onDeathCallback = callback;
+    }
+
+    playFrequentSound(array, listener = null, customX = null, customY = null) {
+        const sounds = array;
+
+        const sound = sounds[this.currentFrequentSoundIndex];
+        this.currentFrequentSoundIndex = (this.currentFrequentSoundIndex + 1) % sounds.length;
+
+        sound.stop();
+        if (listener) {
+            const sX = customX !== null ? customX : this.x;
+            const sY = customY !== null ? customY : this.y;
+            sound.playAtDistance(sX, sY, listener.x, listener.y);
+        } else {
+            sound.audio.volume = sound.baseVolume;
+            sound.play();
+        }
     }
 
     takeDamage(damage, map, symbol) {
@@ -54,16 +414,20 @@ export class Character {
 
         this.hitpoints -= damage;
 
-        if (symbol === CONFIG.TARGET_SYMBOL) {
+        if (symbol == CONFIG.TARGET_SYMBOL || symbol == CONFIG.BOSS_SYMBOL) {
             this.startPulse();
+            this.playFrequentSound(this.hitTargetSounds);
         } else {
-            this.bloodManager.addBloodSpot(this);
+            this.spotManager.addBloodSpot(this);
+            this.hitEnemySound.play();
         }
 
         if (this.hitpoints <= 0) {
             this.isAlive = false;
             this.isDying = true;
             this.deathStartTime = performance.now();
+
+            this.explosionSound.play();
 
             if (this.onDeathCallback) {
                 this.onDeathCallback();
@@ -138,6 +502,8 @@ export class Character {
 
     animateShots(ctx, shot1Img, shot2Img, player) {
         if (!this.isShooting) return;
+        if (player.playerClass.className == CONFIG.FLAMETHROWER_CLASS_NAME) return;
+        if (player.playerClass.className == CONFIG.SCIENTIST_CLASS_NAME) return;
 
         const now = performance.now();
 

@@ -1,0 +1,145 @@
+<?php
+declare(strict_types=1);
+
+namespace App\Site\infrastructure\controller;
+
+use App\Site\app\repository\IActionExtractor;
+use App\Site\app\repository\IExecuteAction;
+use App\Site\app\repository\IPagesRender;
+use App\Site\app\service\UserService;
+
+class UserController implements IExecuteAction
+{
+    private IPagesRender $pagesRender;
+    private IActionExtractor $requestParser;
+    private UserService $userService;
+
+
+    public function __construct(IPagesRender $pagesRender, IActionExtractor $requestParser, UserService $userService)
+    {
+        $this->pagesRender = $pagesRender;
+        $this->requestParser = $requestParser;
+        $this->userService = $userService;
+    }
+
+    public function executeAction(): void
+    {
+        $response = $this->requestParser->getAction();
+        match ($response) {
+            'registration' => $this->registrationUser(),
+            'menu' => $this->showMenu(),
+            'login' => $this->loginUser(),
+            'logout' => $this->logoutUser(),
+            'mode-selection' => $this->pagesRender->showModeSelection(),
+            'profile' => $this->showProfile(),
+            'singleplayer' => $this->pagesRender->showSinglePlayer(),
+            'training' => $this->pagesRender->showFirstGame(),
+            'waves' => $this->pagesRender->showSecondGame(),
+            'waves-final' => $this->pagesRender->showSecondGameFinal(),
+            'multiplayer' => $this->pagesRender->showMultiplayer(),
+            'global-stats' => $this->showGlobalStats(),
+            'global-profile' => $this->showGlobalProfile(),
+            'search-users' => $this->showSearchUsers(),
+            'delete-profile' => $this->pagesRender->showDeleteProfile(),
+            'delete-account' => $this->deleteAccount(),
+            default => $this->pagesRender->showForm(),
+        };
+    }
+
+    private function registrationUser(): void
+    {
+        try {
+            $token = $this->userService->registration();
+        } catch (\RuntimeException $error) {
+            http_response_code(409);
+            echo json_encode(['error' => $error->getMessage()]);
+            die();
+        }
+        $redirectUrl = "/";
+        $this->requestParser->setTokenCookie($token);
+        header('Content-Type: application/json');
+        echo json_encode(['redirect' => $redirectUrl]);
+        die();
+    }
+
+    private function loginUser(): void
+    {
+        $user = $this->userService->login();
+        if ($user) {
+            $redirectUrl = "/";
+            $this->requestParser->setTokenCookie($user->getToken());
+            header('Content-Type: application/json');
+            echo json_encode(['redirect' => $redirectUrl]);
+        } else {
+            http_response_code(401);
+            echo json_encode(['error' => 'Неверное имя пользователя или пароль']);
+        }
+        die();
+    }
+
+    private function logoutUser(): void
+    {
+        $this->requestParser->deleteTokenCookie();
+        $redirectUrl = "/";
+        header('Content-Type: application/json');
+        echo json_encode(['redirect' => $redirectUrl]);
+        die();
+    }
+
+    private function deleteAccount(): void
+    {
+        $isDelete = $this->userService->deleteUser();
+        if ($isDelete) {
+            $this->requestParser->deleteTokenCookie();
+            $redirectUrl = "/";
+            header('Content-Type: application/json');
+            echo json_encode(['redirect' => $redirectUrl]);
+        } else {
+            http_response_code(401);
+            echo json_encode(['error' => 'Неверное имя пользователя или пароль']);
+        }
+        die();
+    }
+
+    private function showMenu(): void
+    {
+        if ($this->userService->hasTokenInCookies()) {
+            $this->pagesRender->showMenu();
+        } else {
+            http_response_code(401);
+            $this->pagesRender->showForm();
+        }
+    }
+
+    private function showProfile(): void
+    {
+        $user = $this->userService->getUser();
+        if ($user !== null) {
+            $this->pagesRender->showProfile($user);
+        }
+    }
+
+    private function showGlobalStats(): void
+    {
+        $stats = $this->userService->getGlobalStats();
+        if ($stats !== null) {
+            $this->pagesRender->showGlobalStats($stats);
+        }
+    }
+
+    private function showGlobalProfile(): void
+    {
+        $user = $this->userService->getGlobalUserById($_GET["user_id"]);
+        if ($user !== null) {
+            $this->pagesRender->showPublicProfile($user);
+        } else {
+            $this->pagesRender->showProfileNotFound();
+        }
+    }
+
+    private function showSearchUsers(): void
+    {
+        $users = $this->userService->getAllUsers();
+        $this->pagesRender->showSearchUsers($users);
+    }
+}

@@ -1,0 +1,90 @@
+.search-form {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.search-input {
+    width: 100%;
+    padding: 15px 20px;
+    font: 24px 'Spielarcade Regular', sans-serif;
+    background-color: rgba(34, 34, 34, 0.6);
+    color: #fff;
+    border: 2px solid #afafaf;
+    border-radius: 5px;
+    text-align: center;
+    outline: none;
+    box-sizing: border-box;
+    transition: 0.2s;
+}
+
+.search-input::placeholder {
+    color: #777;
+}
+
+.search-input:focus {
+    border-color: #fff;
+    background-color: rgba(34, 34, 34, 0.85);
+}
+
+.player-list {
+    width: 100%;
+    max-width: 600px;
+    height: 320px;
+    overflow-y: auto;
+    border: 2px solid #afafaf;
+    border-radius: 5px;
+    background-color: rgba(17, 17, 17, 0.5);
+    padding: 10px 15px;
+    box-sizing: border-box;
+    margin: 20px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #afafaf #222;
+}
+
+.player-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.player-list::-webkit-scrollbar-track {
+    background: #222;
+    border-radius: 4px;
+}
+
+.player-list::-webkit-scrollbar-thumb {
+    background-color: #afafaf;
+    border-radius: 4px;
+}
+
+.player-list .stats-block {
+    border: none;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.player-list .stats-block a {
+    justify-content: center;
+}
+
+.player-list-empty {
+    font: 22px 'Spielarcade Regular', sans-serif;
+    color: #777;
+    text-align: center;
+    padding: 20px 0;
+}
+
+.stats-block.hidden-by-search {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .search-input {
+        font-size: 18px;
+        padding: 12px 15px;
+    }
+    .player-list {
+        height: 260px;
+    }
+}
