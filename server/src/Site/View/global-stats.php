@@ -10,7 +10,7 @@
             <script src="/scripts/ui/scaleUI.js" defer></script>
         </head>
         <body>
-            <div class="menu-screen">r
+            <div class="menu-screen">
                 <h2 class="menu-title">ЛИДЕРЫ</h2>
                 <div class="stats">
                     <?php foreach ($stats as $index => $stat): ?>
