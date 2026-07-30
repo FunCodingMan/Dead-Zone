@@ -6,7 +6,7 @@ use App\Site\app\model\User;
 use App\Site\app\repository\IRequestDataParser;
 use RuntimeException;
 
-class echoRequestDataParser implements IRequestDataParser
+class RequestDataParser implements IRequestDataParser
 {
     public function getDataFromForm(): ?array
     {

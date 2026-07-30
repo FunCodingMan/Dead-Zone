@@ -267,8 +267,8 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
         const input = this.engine.input;
 
         const timeScale = dt * FPS;
-        const lerpFactor = Math.min(1, 0.2 * timeScale);
-
+        // const lerpFactor = Math.min(1, 0.2 * timeScale);
+        const lerpFactor = 1;
         this.otherPlayers.forEach(remotePlayer => {
             remotePlayer.updateInterpolation(lerpFactor, this.engine.map, this.engine.player, this.engine.otherPlayers);
         });
