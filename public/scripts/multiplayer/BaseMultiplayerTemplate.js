@@ -238,9 +238,7 @@ export class BaseMultiplayerTemplate extends BaseGameTemplate {
 
     checkSendReloadData() {
         const player = this.engine.player;
-        console.log('RELOAD')
         if (player.isReloading && !this.reloadPacketSent) {
-            console.log('RELOAD: TRUE');
             this.network.send('reload', {});
             this.reloadPacketSent = true;
         } else if (!player.isReloading) {

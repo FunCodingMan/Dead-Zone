@@ -12,7 +12,6 @@
         });
         let formDataJson = JSON.stringify(formDataObj);
 
-        console.log(formDataJson);
 
         try {
             let response = await fetch('/api/users/delete-account', {

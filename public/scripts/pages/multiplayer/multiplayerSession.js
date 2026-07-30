@@ -198,7 +198,6 @@ network.on('stateRoom', (payload) => {
         }
     }
     network.on('round_end', (payload) => {
-        console.log('РАУНД ОКОНЧЕН!', payload);
 
         let text = 'НИЧЬЯ';
         roundBannerText.className = 'round-banner__text color-draw';
@@ -219,7 +218,6 @@ network.on('stateRoom', (payload) => {
     });
 
     network.on('round_start', () => {
-        console.log('НОВЫЙ РАУНД НАЧАЛСЯ!');
 
         roundBanner.classList.add('hidden');
     });
@@ -421,12 +419,12 @@ network.on('join-error', (payload) => {
 });
 
 network.on('start-game',  async(payload) => {
-    console.log('ИГРА НАЧАЛАСЬ!');
 
     const assets = await assetsPromise;
 
     showScreen('game');
 
+    roundBanner.classList.add('hidden');
 
     if (!game) {
         game = new Game(canvas, assets, togglePauseUI);
@@ -449,7 +447,7 @@ network.on('start-game',  async(payload) => {
 });
 
 network.on('game-over', (payload) => {
-    console.log('МАТЧ ОКОНЧЕН!', payload);
+    roundBanner.classList.add('hidden');
     if (game) {
         game.stop();
         game.isGameEnded = true;

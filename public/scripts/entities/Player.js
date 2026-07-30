@@ -148,7 +148,6 @@ export class Player extends Character {
                 if (this.map.isIntersecting(poisonRect, entityRect)) {
                     this.appliedDamage += this.poisonDamage;
                     boss.takeDamage(this.poisonDamage, this.map, CONFIG.BOSS_SYMBOL);
-                    console.log(boss.hitpoints);
                 }
             }
 

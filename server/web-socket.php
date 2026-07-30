@@ -33,7 +33,6 @@ $server->on('open', function ($server, $request) use ($connectionUser) {
 });
 
 $server->on('message', function ($server, $frame) use ($ws, $lobby) {
-    echo "Получено от #{$frame->fd}: {$frame->data}\n";
     $data = $ws->parse($frame->fd, $frame->data);
     if (empty($data)) {
         return;

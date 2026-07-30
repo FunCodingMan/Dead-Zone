@@ -99,7 +99,6 @@ export class Game {
 
     downloadMapPreview() {
         if (!this.map) {
-            console.warn("Карта еще не загружена!");
             return;
         }
 
@@ -122,8 +121,6 @@ export class Game {
         link.download = 'map_preview.png';
         link.href = tempCanvas.toDataURL('image/png');
         link.click();
-
-        console.log("Превью карты успешно скачано!");
     }
 
     initializeClassSprites() {

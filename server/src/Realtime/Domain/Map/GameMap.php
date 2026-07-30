@@ -118,7 +118,6 @@ class GameMap
 
     public function findFreeSpawn(string $symbol): array
     {
-        echo $symbol;
         if (empty($this->spawns[$symbol])) {
             $symbol = GameConfig::SYMBOL_PLAYER;
         }
