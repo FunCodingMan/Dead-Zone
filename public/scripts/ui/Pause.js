@@ -4,7 +4,7 @@ export function initPause(callbacks) {
     const btnContinue = document.getElementById('btn-continue');
     const btnNewGame = document.getElementById('btn-new-game');
     const btnExit = document.querySelector('.pause-btn-back');
-    const resolutionSelect = document.getElementById('resolution-select'); // Находим наш селект
+    const resolutionSelect = document.getElementById('resolution-select');
 
     if (btnContinue) {
         btnContinue.replaceWith(btnContinue.cloneNode(true));

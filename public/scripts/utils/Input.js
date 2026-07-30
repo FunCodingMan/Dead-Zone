@@ -8,8 +8,7 @@ export class Input {
         this.isMouseDown = false;
 
         this.onEscape = callbacks.onEscape || null;
-
-        // Привязка контекста
+        
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.handleKeyUp = this.handleKeyUp.bind(this);
         this.handleMouseMove = this.handleMouseMove.bind(this);

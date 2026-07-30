@@ -3,6 +3,7 @@ import { CONFIG } from '../core/Config.js';
 
 const PLAYER_WIDTH = 28;
 const PLAYER_HEIGHT = 48;
+const SPREAD = 0.25;
 
 export class RemotePlayer extends Character {
     constructor(id, initialX, initialY) {
@@ -50,10 +51,9 @@ export class RemotePlayer extends Character {
             this.playFrequentSound(this.flameSounds, localPlayer);
         }
 
-        // Тот же трюк: 1 пакет от сервера = 4 визуальные искры на клиенте
         for (let i = 0; i < 4; i++) {
             setTimeout(() => {
-                const spreadAngle = angle + (Math.random() - 0.5) * 0.25; // 0.25 = SPREAD
+                const spreadAngle = angle + (Math.random() - 0.5) * SPREAD;
                 this.bullets.push({
                     x: startX,
                     y: startY,
