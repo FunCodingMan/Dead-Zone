@@ -39,7 +39,7 @@ class GameConfig
     public const int MAX_HEALTH_PLAYER = 100;
     public const float SPREAD_RECOVERY_TIME_S = 0.4;
     public const int SOLDIER_DAMAGE = 20;
-    public const int FLAME_THROWER_DAMAGE = 40;
+    public const int FLAME_THROWER_DAMAGE = 30;
     public const string MODE_DEATHMATCH = 'deathmatch';
     public const string MODE_TEAM_DEATHMATCH = 'team_deathmatch';
     public const string MODE_ELIMINATION = 'elimination';

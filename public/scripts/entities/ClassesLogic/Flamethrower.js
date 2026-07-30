@@ -8,7 +8,7 @@ export class Flamethrower extends Player {
     constructor(map, input, playerClass) {
         super(map, input, playerClass);
         this.speed = 3;
-        this.damage = 50;
+        this.damage = 30;
         this.maxShotsAmount = 125;
         this.shotsAmount = this.maxShotsAmount;
         this.shotCooldown = 120;
