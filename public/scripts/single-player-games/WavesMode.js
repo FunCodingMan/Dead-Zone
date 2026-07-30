@@ -5,18 +5,28 @@ import { Sound } from "../core/Sound.js";
 import { Boss } from '../entities/Boss.js';
 
 const wavesLevelData = `
-################
-#P            E#
-#   Q          #
-#       B  B   #
-#      B  B    #
-#     B  B     #
-#    B  B Q    #
-#E            E#
-################
+###################
+######## E ########
+####           ####
+###      B      ###
+##    B     B    ##
+##               ##
+##   B   Q   B   ##
+##               ##
+#                 #
+#E   B   P   B   E#
+#                 #
+##               ##
+##   B   Q   B   ##
+##               ##
+##    B     B    ##
+###      B      ###
+####           ####
+######## E ########
+###################
 `;
 
-const MAX_WAVES = 1;
+const MAX_WAVES = 10;
 const FPS = 60;
 const CUTSCENE_DURATION = 2000;
 
